@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -23,6 +23,7 @@ export default function ApplicantLogin() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const captchaRef = useRef(null);
   const { applicantLogin, registerApplicant } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -56,20 +57,39 @@ export default function ApplicantLogin() {
     return true
   }
 
-  // Make callbacks global so reCAPTCHA can call them
+  // Load reCAPTCHA script dynamically and render widget
   useEffect(() => {
-    window.onCaptchaSuccess = (token) => {
-      setCaptchaToken(token)
-      setCaptchaError('')
+    if (step === 'register') {
+      // Load script if not already loaded
+      if (!window.grecaptcha) {
+        const script = document.createElement('script')
+        script.src = 'https://www.google.com/recaptcha/api.js?render=explicit'
+        script.async = true
+        script.defer = true
+        script.onload = () => renderCaptcha()
+        document.head.appendChild(script)
+      } else {
+        renderCaptcha()
+      }
     }
-    window.onCaptchaExpired = () => {
-      setCaptchaToken(null)
+  }, [step])
+
+  function renderCaptcha() {
+    if (captchaRef.current && window.grecaptcha) {
+      // Clear existing widget
+      captchaRef.current.innerHTML = ''
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.render(captchaRef.current, {
+          sitekey: '6LfVkYYsAAAAAHZRTOBbm4mJ1BV8Kn4Dg4s18CZX',
+          callback: (token) => {
+            setCaptchaToken(token)
+            setCaptchaError('')
+          },
+          'expired-callback': () => setCaptchaToken(null)
+        })
+      })
     }
-    return () => {
-      delete window.onCaptchaSuccess
-      delete window.onCaptchaExpired
-    }
-  }, [])
+  }
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -343,20 +363,12 @@ export default function ApplicantLogin() {
                   ⚠️ {passwordError}
                 </p>
               )}
-              {/* reCAPTCHA */}
-              <div style={{ margin: '8px 0' }}>
-                <div
-                  className="g-recaptcha"
-                  data-sitekey="6LfVkYYsAAAAAHZRTOBbm4mJ1BV8Kn4Dg4s18CZX"
-                  data-callback="onCaptchaSuccess"
-                  data-expired-callback="onCaptchaExpired"
-                ></div>
-                {captchaError && (
-                  <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
-                    ⚠️ {captchaError}
-                  </p>
-                )}
-              </div>
+              <div ref={captchaRef} style={{ margin: '8px 0' }}></div>
+              {captchaError && (
+                <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
+                  ⚠️ {captchaError}
+                </p>
+              )}
               <button className="btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Creating...' : 'Create account →'}
               </button>
