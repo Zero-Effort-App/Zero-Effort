@@ -30,6 +30,21 @@ app.post('/api/create-account', async (req, res) => {
     })
     if (error) {
       console.error('Supabase createUser error:', error)
+      
+      // If user already exists, update instead of create
+      if (error?.code === 'email_exists') {
+        const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+        const existingUser = existingUsers.users.find(u => u.email === email)
+        
+        if (existingUser) {
+          await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
+            password,
+            user_metadata: metadata 
+          })
+          return res.json({ success: true, message: 'Account updated successfully' })
+        }
+      }
+      
       return res.status(400).json({ error: error.message })
     }
     console.log('User created successfully:', data.user?.id)

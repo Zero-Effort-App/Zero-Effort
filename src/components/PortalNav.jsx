@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-export default function PortalNav({ portalTag, links, userInitials, userName }) {
+export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo }) {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -108,7 +108,21 @@ export default function PortalNav({ portalTag, links, userInitials, userName }) 
         {!isMobile && (
           <>
             <div className="user-chip">
-              <div className="user-av">{userInitials || '??'}</div>
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt="Company Logo"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid var(--border)'
+                  }}
+                />
+              ) : (
+                <div className="user-av">{userInitials || '??'}</div>
+              )}
               <span className="user-name">{userName || 'User'}</span>
             </div>
             <button className="nav-logout" onClick={handleLogout}>Log out</button>

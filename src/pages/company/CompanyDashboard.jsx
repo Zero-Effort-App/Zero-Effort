@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime } from '../../lib/db';
+import CompanyLogo from '../../components/CompanyLogo';
 
 export default function CompanyDashboard() {
   const { company } = useOutletContext();

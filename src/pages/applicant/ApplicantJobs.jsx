@@ -3,6 +3,14 @@ import { useOutletContext, useLocation } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
+import CompanyLogo from '../../components/CompanyLogo';
+
+function displaySalary(salary) {
+  if (!salary) return 'Not specified'
+  const clean = salary.toString().replace(/[^0-9]/g, '')
+  if (!clean) return salary
+  return `₱${clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` 
+}
 
 // Skeleton card component
 function SkeletonCard() {
@@ -77,8 +85,8 @@ export default function ApplicantJobs() {
     const q = search.toLowerCase();
     const matchQ = j.title?.toLowerCase().includes(q) || j.co?.toLowerCase().includes(q);
     const matchType = !filterType || j.type === filterType;
-    const matchDept = !filterDept || j.dept === filterDept;
-    return matchQ && matchType && matchDept;
+    const matchDepartment = !filterDept || j.department === filterDept;
+    return matchQ && matchType && matchDepartment;
   });
 
   const selectedJob = selected ? jobs.find(j => j.id === selected) : null;
@@ -168,10 +176,10 @@ export default function ApplicantJobs() {
               <div className="jlcard-co">{j.co}</div>
               <div style={{ display: 'flex', gap: 4, marginBottom: '.4rem' }}>
                 <span className="pill" style={{ fontSize: '.62rem' }}>⏱ {j.type}</span>
-                <span className="pill" style={{ fontSize: '.62rem' }}>{j.dept}</span>
+                <span className="pill" style={{ fontSize: '.62rem' }}>{j.department}</span>
               </div>
               <div className="jlcard-meta">
-                <span className="jlcard-sal">{j.sal}</span>
+                <span className="jlcard-sal">{j.salary}</span>
                 <span className="jlcard-date">{j.ago}</span>
               </div>
             </div>
@@ -191,9 +199,7 @@ export default function ApplicantJobs() {
           {selectedJob ? (
             <>
               <div className="dp-head">
-                <div className="dp-logo" style={{ background: selectedCo.color ? selectedCo.color + '20' : 'rgba(99,102,241,.12)', color: selectedCo.color || '#6366f1' }}>
-                  {ini(selectedCo.name)}
-                </div>
+                <CompanyLogo company={selectedCo} size={52} />
                 <div>
                   <div className="dp-title">{selectedJob.title}</div>
                   <div className="dp-co">{selectedJob.co} · Zero Effort</div>
@@ -201,7 +207,7 @@ export default function ApplicantJobs() {
               </div>
               <div className="dp-chips">
                 <span className="dp-chip">⏱ {selectedJob.type}</span>
-                <span className="dp-chip">{selectedJob.dept}</span>
+                <span className="dp-chip">{selectedJob.department}</span>
                 <span className="dp-chip">📅 {selectedJob.ago}</span>
                 {selectedJob.isNew && <span className="dp-chip" style={{ color: 'var(--amber)', borderColor: 'rgba(245,158,11,.2)' }}>✦ New</span>}
               </div>
@@ -209,7 +215,7 @@ export default function ApplicantJobs() {
               <div className="sal-box">
                 <div>
                   <div style={{ fontSize: '.65rem', color: 'var(--text2)', marginBottom: 2 }}>Monthly Salary</div>
-                  <div className="sal-val">{selectedJob.sal}</div>
+                  <div className="sal-val">{displaySalary(selectedJob.salary)}</div>
                 </div>
                 <span className="sal-note">per month</span>
               </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { useToast } from '../../contexts/ToastContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CompanyLogin() {
@@ -11,8 +13,10 @@ export default function CompanyLogin() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
   const { companyLogin } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const { theme } = useTheme();
 
   async function handleLogin() {
@@ -33,11 +37,34 @@ export default function CompanyLogin() {
     setForgotLoading(true);
     setError('');
     try {
-      // Add forgot password logic here if needed
-      setShowForgotPassword(false);
-      // Show success message or redirect
+      // Check if email exists in company_users
+      const { data: companyUser } = await supabase
+        .from('company_users')
+        .select('company_id, email')
+        .eq('email', forgotEmail)
+        .maybeSingle();
+
+      if (!companyUser) {
+        setError('No company account found with this email');
+        return;
+      }
+
+      // Insert reset request
+      const { error } = await supabase
+        .from('password_reset_requests')
+        .insert([{
+          company_id: companyUser.company_id,
+          email: forgotEmail,
+          status: 'pending'
+        }]);
+
+      if (error) throw error;
+
+      setForgotSuccess(true);
+      showToast('Reset request sent! The admin will contact you shortly.', 'success');
+
     } catch (err) {
-      setError(err.message || 'Failed to send password reset');
+      setError(err.message || 'Failed to send reset request');
     } finally {
       setForgotLoading(false);
     }
@@ -94,22 +121,31 @@ export default function CompanyLogin() {
 
           {error && <p className="auth-error">{error}</p>}
 
-          <form onSubmit={handleForgotPassword}>
-            <div className="fgroup">
-              <label>Email address</label>
-              <input
-                className="finput"
-                type="email"
-                placeholder="hr@yourcompany.com"
-                value={forgotEmail}
-                onChange={e => setForgotEmail(e.target.value)}
-              />
+          {forgotSuccess ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+              <h3>Reset Request Sent!</h3>
+              <p>The admin will contact you shortly to help reset your password.</p>
             </div>
+          ) : (
+            <form onSubmit={handleForgotPassword}>
+              <div className="fgroup">
+                <label>Email address</label>
+                <input
+                  className="finput"
+                  type="email"
+                  placeholder="hr@yourcompany.com"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                  required
+                />
+              </div>
 
-            <button className="btn-primary" type="submit" disabled={forgotLoading}>
-              {forgotLoading ? 'Sending...' : 'Request Password Reset →'}
-            </button>
-          </form>
+              <button className="btn-primary" type="submit" disabled={forgotLoading}>
+                {forgotLoading ? 'Sending...' : 'Request Password Reset →'}
+              </button>
+            </form>
+          )}
 
           <p style={{ textAlign: 'center', marginTop: '16px' }}>
             <button className="link-btn" onClick={() => setShowForgotPassword(false)}>

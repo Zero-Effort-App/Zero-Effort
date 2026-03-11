@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanies, addCompany, updateCompany, removeCompany as removeCompanyDb, addActivityLog, checkCompanyAccountExists } from '../../lib/db';
+import { getCompanies, addCompany, updateCompany, removeCompany as removeCompanyDb, addActivityLog, checkCompanyAccountExists, uploadCompanyLogo } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
+import CompanyLogo from '../../components/CompanyLogo';
 
 // Skeleton card component
 function SkeletonCard() {
@@ -28,6 +29,7 @@ export default function AdminCompanies() {
   const [companiesWithAccounts, setCompaniesWithAccounts] = useState([]);
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [logoFile, setLogoFile] = useState(null);
   const { showToast } = useToast();
 
   const loadCompanies = useCallback(async () => {
@@ -73,9 +75,19 @@ export default function AdminCompanies() {
 
   async function handleAddCompany(formData) {
     try {
-      const newCo = await addCompany(formData);
+      let logoUrl = null;
+      if (logoFile) {
+        // Upload logo first, then use the returned URL
+        const newCo = await addCompany(formData);
+        logoUrl = await uploadCompanyLogo(logoFile, newCo.id);
+        // Update company with logo URL
+        await updateCompany(newCo.id, { logo_url: logoUrl });
+      } else {
+        await addCompany(formData);
+      }
       await addActivityLog('company', '🏢', `New company '${formData.name}' added to the park`, 'Admin · System');
       closeModal();
+      setLogoFile(null);
       showToast('Company added successfully!');
       loadCompanies();
     } catch (err) {
@@ -206,9 +218,7 @@ export default function AdminCompanies() {
           <div key={c.id} className="co-card-admin">
             <div onClick={() => openDetail(c)} style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '.75rem' }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: c.color ? c.color + '20' : 'rgba(99,102,241,.12)', color: c.color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.82rem', fontWeight: 800, border: '1px solid var(--border)', flexShrink: 0 }}>
-                  {c.logo_initials || c.name?.slice(0, 2).toUpperCase()}
-                </div>
+                <CompanyLogo company={c} size={42} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{c.name}</div>
                   <div style={{ fontSize: '.72rem', color: 'var(--text2)' }}>{c.industry}</div>
@@ -270,7 +280,7 @@ export default function AdminCompanies() {
 
       {/* Add Modal */}
       <Modal isOpen={modal.type === 'add'} onClose={closeModal}>
-        <AddCompanyForm onSubmit={handleAddCompany} onClose={closeModal} companies={companies} />
+        <AddCompanyForm onSubmit={handleAddCompany} onClose={closeModal} companies={companies} logoFile={logoFile} setLogoFile={setLogoFile} />
       </Modal>
 
       {/* Disable Confirm */}
@@ -303,10 +313,10 @@ export default function AdminCompanies() {
             </div>
             <div className="warn-box">
               <div className="warn-box-icon">⚠️</div>
-              <div className="warn-box-text">Permanently remove <strong>{modal.data.name}</strong> from Zero Effort?</div>
+              <div className="warn-box-text">This company will be removed from the system. You can add them again at any time.</div>
             </div>
             <div className="btn-row">
-              <button className="btn-confirm-danger" onClick={() => handleRemove(modal.data)}>Remove company</button>
+              <button className="btn-confirm-danger" onClick={() => handleRemove(modal.data)}>Remove Company</button>
               <button className="btn-cancel" onClick={closeModal}>Cancel</button>
             </div>
           </div>
@@ -332,9 +342,7 @@ function CompanyDetail({ company, onDisable, onRemove, onEnable, onClose }) {
         <button className="m-close" onClick={onClose}>✕</button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
-        <div style={{ width: 52, height: 52, borderRadius: 12, background: company.color ? company.color + '20' : 'rgba(99,102,241,.12)', color: company.color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800, border: '1px solid var(--border)' }}>
-          {company.logo_initials || company.name?.slice(0, 2).toUpperCase()}
-        </div>
+        <CompanyLogo company={company} size={52} />
         <div>
           <div style={{ fontSize: '.82rem', fontWeight: 600, color: 'var(--text2)' }}>{company.email}</div>
           <div style={{ fontSize: '.72rem', color: 'var(--text3)' }}>{company.location}</div>
@@ -361,7 +369,7 @@ function CompanyDetail({ company, onDisable, onRemove, onEnable, onClose }) {
   );
 }
 
-function AddCompanyForm({ onSubmit, onClose, companies }) {
+function AddCompanyForm({ onSubmit, onClose, companies, logoFile, setLogoFile }) {
   const DEFAULT_INDUSTRIES = [
     'Electronics & High-Precision Assembly',
     'Automotive & Transport Equipment',
@@ -439,6 +447,15 @@ function AddCompanyForm({ onSubmit, onClose, companies }) {
           </datalist>
         </div>
         <div className="fgroup"><label className="flabel">Logo Initials</label><input className="finput" value={form.logo_initials} onChange={e => handleChange('logo_initials', e.target.value)} placeholder="NT" maxLength={3} /></div>
+      </div>
+      <div className="fgroup">
+        <label className="flabel">Company Logo (optional)</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={e => setLogoFile(e.target.files[0])}
+        />
+        {logoFile && <span style={{ fontSize: '12px', color: 'var(--text2)' }}>✅ {logoFile.name}</span>}
       </div>
       <div className="fgroup"><label className="flabel">Description</label><textarea className="ftextarea" value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="Brief company description..." /></div>
       <div className="msep">Contact Info</div>

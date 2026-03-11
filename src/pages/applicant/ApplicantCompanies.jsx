@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCompanies, getJobs } from '../../lib/db';
+import CompanyLogo from '../../components/CompanyLogo';
 
 export default function ApplicantCompanies() {
   const [companies, setCompanies] = useState([]);
@@ -55,9 +56,7 @@ export default function ApplicantCompanies() {
       <div className="co-grid stagger">
         {filtered.map(c => (
           <div key={c.id} className="co-card" onClick={() => viewJobs(c.id)}>
-            <div className="co-logo" style={{ background: c.bg, color: c.clr }}>
-              {c.logo_initials || ini(c.name)}
-            </div>
+            <CompanyLogo company={c} size={48} />
             <div className="co-name">{c.name}</div>
             <div className="co-ind">{c.industry}</div>
             <div className="co-desc">{c.description?.slice(0, 120)}{c.description?.length > 120 ? '…' : ''}</div>

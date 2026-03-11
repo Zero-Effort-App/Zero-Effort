@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCompanies, getJobs, getEvents, getActivityLog, getLiveStats, formatTime } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
+import CompanyLogo from '../../components/CompanyLogo';
 
 export default function AdminOverview() {
   const [stats, setStats] = useState({ totalCompanies: 0, totalJobs: 0, totalApplications: 0, totalEvents: 0 });
@@ -135,9 +136,7 @@ export default function AdminOverview() {
         {companies.map(c => (
           <div key={c.id} className="scard" style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '.5rem' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 9, background: c.color ? c.color + '20' : 'rgba(99,102,241,.12)', color: c.color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.72rem', fontWeight: 800, border: '1px solid var(--border)' }}>
-                {c.logo_initials || c.name?.slice(0, 2).toUpperCase()}
-              </div>
+              <CompanyLogo company={c} size={36} />
               <div>
                 <div style={{ fontSize: '.82rem', fontWeight: 700 }}>{c.name}</div>
                 <div style={{ fontSize: '.68rem', color: 'var(--text2)' }}>{c.industry}</div>

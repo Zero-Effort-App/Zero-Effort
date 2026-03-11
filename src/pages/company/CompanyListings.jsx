@@ -3,6 +3,14 @@ import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, addJob, updateJob, removeJob as removeJobDb, addActivityLog, formatDate } from '../../lib/db';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
+import SalaryInput from '../../components/SalaryInput';
+
+function displaySalary(salary) {
+  if (!salary) return 'Not specified'
+  const clean = salary.toString().replace(/[^0-9]/g, '')
+  if (!clean) return salary
+  return `₱${clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` 
+}
 
 export default function CompanyListings() {
   const { company } = useOutletContext();
@@ -13,7 +21,7 @@ export default function CompanyListings() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterDept, setFilterDept] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [resumeFile, setResumeFile] = useState(null);
   const [portfolioUrl, setPortfolioUrl] = useState('');
@@ -40,10 +48,10 @@ export default function CompanyListings() {
 
   const filtered = jobs.filter(j => {
     const q = search.toLowerCase();
-    const matchQ = j.title?.toLowerCase().includes(q) || j.dept?.toLowerCase().includes(q);
+    const matchQ = j.title?.toLowerCase().includes(q) || j.department?.toLowerCase().includes(q);
     const matchSt = !filterStatus || j.status === filterStatus.toLowerCase();
-    const matchDept = !filterDept || j.dept === filterDept;
-    return matchQ && matchSt && matchDept;
+    const matchDepartment = !filterDepartment || j.department === filterDepartment;
+    return matchQ && matchSt && matchDepartment;
   });
 
   function getTypeClass(type) {
@@ -73,9 +81,9 @@ export default function CompanyListings() {
       const jobData = {
         company_id: company.id,
         title: formData.title,
-        department: formData.department || formData.dept, // Use department field
+        department: formData.department,
         type: formData.type,
-        salary: formData.sal || '—',
+        salary: formData.salary || '—',
         description: formData.description,
         requirements: typeof formData.requirements === 'string' 
           ? formData.requirements.split(',').map(r => r.trim()).filter(Boolean)
@@ -104,8 +112,19 @@ export default function CompanyListings() {
       // Ensure department field is properly mapped
       const updateData = {
         ...formData,
-        department: formData.department || formData.dept
+        department: formData.department
       };
+      
+      console.log('Job update payload:', {
+        title: updateData.title,
+        department: updateData.department,
+        type: updateData.type,
+        salary: updateData.salary,
+        description: updateData.description,
+        requirements: updateData.requirements,
+        status: updateData.status
+      });
+      
       await updateJob(jobId, updateData);
       closeModal();
       showToast('Listing updated!');
@@ -164,7 +183,7 @@ export default function CompanyListings() {
           <option value="">All statuses</option>
           <option>Active</option><option>Paused</option><option>Closed</option>
         </select>
-        <select className="fi" value={filterDept} onChange={e => setFilterDept(e.target.value)}>
+        <select className="fi" value={filterDepartment} onChange={e => setFilterDepartment(e.target.value)}>
           <option value="">All departments</option>
           <option>Engineering</option><option>Design</option>
           <option>Operations</option><option>Marketing</option>
@@ -178,7 +197,7 @@ export default function CompanyListings() {
         <tbody>
           {filtered.map(j => (
             <tr key={j.id}>
-              <td><div className="job-title-cell">{j.title}</div><div className="job-dept-pill">{j.dept}</div></td>
+              <td><div className="job-title-cell">{j.title}</div><div className="job-dept-pill">{j.department}</div></td>
               <td><span className={`job-type-pill ${getTypeClass(j.type)}`}>{j.type}</span></td>
               <td>
                 <span className={`listing-status ${getStatusClass(j.status)}`}>
@@ -260,9 +279,9 @@ export default function CompanyListings() {
 function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
   const [form, setForm] = useState({
     title: initialData?.title || '',
-    dept: initialData?.dept || 'Engineering',
+    department: initialData?.department || 'Engineering',
     type: initialData?.type || 'Full-time',
-    sal: initialData?.sal || '',
+    salary: initialData?.salary || '',
     description: initialData?.description || initialData?.desc || '',
     requirements: initialData?.requirements ? initialData.requirements.join('\n') : (initialData?.reqs ? initialData.reqs.join('\n') : ''),
   });
@@ -276,12 +295,11 @@ function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
     // Prepare form data with correct field mapping
     const jobData = {
       title: form.title,
-      dept: form.dept,
+      department: form.department,
       type: form.type,
-      sal: form.sal || '—',
+      salary: form.salary || '—',
       description: form.description,
       requirements: form.requirements.split('\n').filter(Boolean),
-      department: form.dept, // Add department field for database
     };
     
     console.log('JobForm submitting data:', jobData);
@@ -301,7 +319,7 @@ function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
       <div className="fgroup"><label className="flabel">Job Title</label><input className="finput" value={form.title} onChange={e => handleChange('title', e.target.value)} placeholder="e.g. Senior Frontend Developer" /></div>
       <div className="frow">
         <div className="fgroup"><label className="flabel">Department</label>
-          <select className="fselect" value={form.dept} onChange={e => handleChange('dept', e.target.value)}>
+          <select className="fselect" value={form.department} onChange={e => handleChange('department', e.target.value)}>
             <option>Engineering</option><option>Design</option><option>Operations</option><option>Marketing</option>
           </select>
         </div>
@@ -311,7 +329,13 @@ function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
           </select>
         </div>
       </div>
-      <div className="fgroup"><label className="flabel">Salary Range</label><input className="finput" value={form.sal} onChange={e => handleChange('sal', e.target.value)} placeholder="e.g. ₱45K–₱75K/mo" /></div>
+      <div className="fgroup">
+        <label className="flabel">Salary Range</label>
+        <SalaryInput
+          value={form.salary}
+          onChange={val => handleChange('salary', val)}
+        />
+      </div>
       <div className="msep">Role Description</div>
       <div className="fgroup"><label className="flabel">Role Overview</label><textarea className="ftextarea" style={{ minHeight: 90 }} value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="Describe the role..." /></div>
       <div className="fgroup"><label className="flabel">Requirements <span style={{ color: 'var(--text3)', fontWeight: 400, fontSize: '.68rem', textTransform: 'none', letterSpacing: 0 }}>(one per line)</span></label>

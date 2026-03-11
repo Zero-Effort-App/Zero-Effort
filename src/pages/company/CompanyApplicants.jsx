@@ -50,7 +50,7 @@ export default function CompanyApplicants() {
         date: formatDate(a.applied_at),
         jobTitle: a.jobs?.title || '—',
         jobType: a.jobs?.type || '',
-        jobDept: a.jobs?.dept || '',
+        jobDept: a.jobs?.department || '',
         cover: a.cover_letter || '',
         hasResume: !!a.resume_url,
         hasPortfolio: !!a.portfolio_url,

@@ -45,7 +45,7 @@ export async function removeCompany(companyId) {
 }
 
 export async function getCompanyProfile(companyId) {
-  const { data, error } = await supabase.from('companies').select('*').eq('id', companyId).single();
+  const { data, error } = await supabase.from('companies').select('*').eq('id', companyId).maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -271,8 +271,8 @@ export async function uploadFile(file, bucket, applicantId) {
   const bucketName = bucket === 'resumes' ? 'Resumes' : 
                      bucket === 'portfolios' ? 'Portfolios' : bucket
   
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${applicantId}-${Date.now()}.${fileExt}` 
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${applicantId}-${Date.now()}.${fileExt}`; 
   
   const { data, error } = await supabase.storage
     .from(bucketName)
@@ -285,9 +285,54 @@ export async function uploadFile(file, bucket, applicantId) {
   
   const { data: urlData } = supabase.storage
     .from(bucketName)
-    .getPublicUrl(fileName)
+    .getPublicUrl(fileName);
   
   return urlData.publicUrl
+}
+
+export async function uploadCompanyLogo(file, companyId) {
+  try {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `company-${companyId}-${Date.now()}.${fileExt}` 
+
+    const { error } = await supabase.storage
+      .from('logos')
+      .upload(fileName, file, { cacheControl: '3600', upsert: true })
+
+    if (error) throw error
+
+    const { data: urlData } = supabase.storage
+      .from('logos')
+      .getPublicUrl(fileName)
+
+    return urlData.publicUrl
+  } catch (error) {
+    console.error('uploadCompanyLogo error:', error)
+    throw error
+  }
+}
+
+export async function getRecentHires(limit = 10) {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .select(`
+        id,
+        status,
+        applied_at,
+        applicants(first_name, last_name),
+        jobs(title, companies(name))
+      `)
+      .eq('status', 'accepted')
+      .order('applied_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error('getRecentHires error:', error)
+    return []
+  }
 }
 
 // ── LIVE STATS ──

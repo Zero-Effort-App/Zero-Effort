@@ -42,6 +42,7 @@ export default function ApplicantLayout() {
         links={links}
         userInitials={initials}
         userName={displayName}
+        companyLogo={null}
       />
       <Outlet context={{ profile }} />
     </>

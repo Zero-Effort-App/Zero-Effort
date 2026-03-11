@@ -58,6 +58,7 @@ export default function CompanyLayout() {
         links={links}
         userInitials={initials}
         userName={company?.name?.split(' ')[0] || 'Company'}
+        companyLogo={company?.logo_url || null}
       />
       <Outlet context={{ company, setCompany }} />
     </>

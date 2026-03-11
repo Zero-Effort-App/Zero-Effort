@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { updateCompany, getCompanyJobs, getCompanyApplications, getCompanies } from '../../lib/db';
+import { updateCompany, getCompanyJobs, getCompanyApplications, getCompanies, uploadCompanyLogo } from '../../lib/db';
 import { useToast } from '../../contexts/ToastContext';
 
 export default function CompanyProfile() {
@@ -28,6 +28,7 @@ export default function CompanyProfile() {
     name: '', industry: '', description: '', email: '', phone: '', location: '', website: '',
   });
   const [industryInput, setIndustryInput] = useState('');
+  const [logoFile, setLogoFile] = useState(null);
   const [customIndustries, setCustomIndustries] = useState(
     () => JSON.parse(localStorage.getItem('company_custom_industries') || '[]')
   );
@@ -100,8 +101,14 @@ export default function CompanyProfile() {
         localStorage.setItem('company_custom_industries', JSON.stringify(updated));
       }
       
-      const updated = await updateCompany(company.id, { ...form, industry: industryInput, tags });
+      let logoUrl = company.logo_url || null;
+      if (logoFile) {
+        logoUrl = await uploadCompanyLogo(logoFile, company.id);
+      }
+      
+      const updated = await updateCompany(company.id, { ...form, industry: industryInput, tags, logo_url: logoUrl });
       setCompany(prev => ({ ...prev, ...updated }));
+      setLogoFile(null);
       showToast('Profile saved successfully!');
     } catch (err) {
       showToast('Error saving profile.');
@@ -121,6 +128,7 @@ export default function CompanyProfile() {
     });
     setIndustryInput(company.industry || '');
     setTags(company.tags || []);
+    setLogoFile(null);
   }
 
   if (!company) return null;
@@ -132,9 +140,24 @@ export default function CompanyProfile() {
       <div className="profile-grid">
         <div>
           <div className="profile-card">
-            <div className="profile-logo" style={{ background: company.color ? company.color + '20' : 'rgba(99,102,241,.12)', color: company.color || '#6366f1' }}>
-              {initials}
-            </div>
+            {company?.logo_url ? (
+              <img
+                src={company.logo_url}
+                alt={company.name}
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '16px',
+                  objectFit: 'contain',
+                  background: 'var(--surface2)',
+                  border: '1px solid var(--border)'
+                }}
+              />
+            ) : (
+              <div className="profile-logo" style={{ background: company.color ? company.color + '20' : 'rgba(99,102,241,.12)', color: company.color || '#6366f1' }}>
+                {initials}
+              </div>
+            )}
             <div className="profile-name">{form.name}</div>
             <div className="profile-ind">{form.industry}</div>
             <div className="profile-stat"><span className="profile-stat-label">Status</span><span className="profile-stat-val" style={{ color: 'var(--success)' }}>● Active Tenant</span></div>
@@ -165,6 +188,20 @@ export default function CompanyProfile() {
           </div>
           <div className="fgroup"><label className="flabel">Company Description</label>
             <textarea className="ftextarea" style={{ minHeight: 90 }} value={form.description} onChange={e => handleChange('description', e.target.value)} />
+          </div>
+          <div className="fgroup">
+            <label className="flabel">Company Logo</label>
+            {company?.logo_url && !logoFile && (
+              <img src={company.logo_url} alt="Current Logo"
+                style={{ height: '60px', borderRadius: '10px', marginBottom: '8px', border: '1px solid var(--border)' }}
+              />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setLogoFile(e.target.files[0])}
+            />
+            {logoFile && <span style={{ fontSize: '12px', color: 'var(--text2)' }}>✅ {logoFile.name} — will upload on save</span>}
           </div>
           <div className="frow">
             <div className="fgroup"><label className="flabel">Contact Email</label><input className="finput" value={form.email} onChange={e => handleChange('email', e.target.value)} /></div>

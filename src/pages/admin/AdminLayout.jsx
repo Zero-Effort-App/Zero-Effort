@@ -45,6 +45,7 @@ export default function AdminLayout() {
         links={links}
         userInitials={initials}
         userName={profile?.full_name?.split(' ')[0] || 'Admin'}
+        companyLogo={null}
       />
       <Outlet />
     </>
