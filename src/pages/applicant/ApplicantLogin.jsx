@@ -170,7 +170,7 @@ export default function ApplicantLogin() {
       const { error } = await supabase.auth.verifyOtp({
         email: registeredEmail,
         token: otp,
-        type: 'email'
+        type: 'signup'
       })
 
       if (error) throw error
