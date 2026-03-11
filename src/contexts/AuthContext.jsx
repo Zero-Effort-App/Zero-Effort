@@ -109,21 +109,23 @@ export function AuthProvider({ children }) {
 
 async function verifyRegistrationOTP({ email, token, firstName, lastName, phone }) {
   try {
-    // Step 1: Verify OTP
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'magiclink'
     })
+    console.log('verifyOtp data:', JSON.stringify(data))
+    console.log('verifyOtp error:', error)
     if (error) throw error
 
-    // Step 2: Get user from session
     const { data: sessionData } = await supabase.auth.getSession()
+    console.log('session data:', JSON.stringify(sessionData))
+
     const user = data?.user || sessionData?.session?.user
-    
+    console.log('user:', JSON.stringify(user))
+
     if (!user) throw new Error('Could not get user after verification')
 
-    // Step 3: Create applicant record
     const { error: insertError } = await supabase
       .from('applicants')
       .insert([{
