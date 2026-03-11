@@ -202,8 +202,8 @@ export default function CompanyApplicants() {
                     rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', textDecoration: 'none', cursor: 'pointer' }}
                   >
-                    <span>🌐</span><span>Portfolio</span>
-                    <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View →</span>
+                    <span>📁</span><span>Portfolio</span>
+                    <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View Portfolio →</span>
                   </a>
                 )}
               </div>

@@ -39,7 +39,7 @@ export default function ApplicantJobs() {
   const [filterDept, setFilterDept] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [resumeFile, setResumeFile] = useState(null);
-  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [portfolioFile, setPortfolioFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,16 +100,25 @@ export default function ApplicantJobs() {
       showToast('Resume file must be under 5MB', 'error');
       return;
     }
+    if (portfolioFile && portfolioFile.size > 5 * 1024 * 1024) {
+      showToast('Portfolio file must be under 5MB', 'error');
+      return;
+    }
     
     try {
       setIsSubmitting(true);
       
       let resumeUrl = null;
-      let finalPortfolioUrl = portfolioUrl || null;
+      let portfolioUrl = null;
 
       // Upload resume if file selected
       if (resumeFile) {
         resumeUrl = await uploadFile(resumeFile, 'resumes', profile.id);
+      }
+
+      // Upload portfolio if file selected
+      if (portfolioFile) {
+        portfolioUrl = await uploadFile(portfolioFile, 'Portfolios', profile.id);
       }
 
       // Submit application with file URLs
@@ -118,7 +127,7 @@ export default function ApplicantJobs() {
         applicant_id: profile.id,
         cover_letter: coverLetter,
         resume_url: resumeUrl,
-        portfolio_url: finalPortfolioUrl,
+        portfolio_url: portfolioUrl,
         status: 'pending'
       });
 
@@ -126,7 +135,7 @@ export default function ApplicantJobs() {
       
       // Reset form
       setResumeFile(null);
-      setPortfolioUrl('');
+      setPortfolioFile(null);
       setCoverLetter('');
       
     } catch (err) {
@@ -274,14 +283,20 @@ export default function ApplicantJobs() {
               {resumeFile && <span style={{ fontSize: '.78rem', color: 'var(--success)' }}>✅ {resumeFile.name}</span>}
             </div>
             <div className="fgroup">
-              <label className="flabel">Portfolio URL <span style={{ color: 'var(--text3)', fontSize: '.68rem', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optional)</span></label>
+              <label>Portfolio (optional)</label>
               <input
-                type="url"
-                placeholder="https://your-portfolio.com"
-                value={portfolioUrl}
-                onChange={e => setPortfolioUrl(e.target.value)}
-                style={{ marginBottom: '0.5rem' }}
+                type="file"
+                accept=".pdf,.doc,.docx,.zip,.jpg,.jpeg,.png"
+                onChange={e => setPortfolioFile(e.target.files[0])}
               />
+              {portfolioFile && (
+                <span style={{ fontSize: '12px', color: 'var(--text2)', marginTop: '4px' }}>
+                  ✅ {portfolioFile.name}
+                </span>
+              )}
+              <span style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '2px' }}>
+                Accepted: PDF, Word, ZIP, or image files (max 5MB)
+              </span>
             </div>
 
             <div className="msep">Cover letter</div>
