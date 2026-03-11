@@ -74,7 +74,6 @@ export function AuthProvider({ children }) {
 
   async function sendRegistrationOTP({ email, password, firstName, lastName, phone }) {
   try {
-    // Step 1: Create auth user via Express server
     const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -87,19 +86,19 @@ export function AuthProvider({ children }) {
     const result = await response.json()
     if (!response.ok) throw new Error(result.error || 'Registration failed')
 
-    // Step 2: Send OTP for verification
+    const userId = result?.user?.id
+    if (!userId) throw new Error('Could not retrieve user ID')
+
+    // Send OTP
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: null,
-      }
+      options: { shouldCreateUser: false }
     })
     if (otpError) throw otpError
 
-    // Store user id for later
-    return { userId: result.user.id }
+    return { userId }
   } catch (error) {
+    console.error('sendRegistrationOTP error:', error)
     if (error.message?.includes('already registered') || error.message?.includes('email_exists')) {
       throw new Error('This email is already registered. Please sign in instead.')
     }
@@ -107,35 +106,52 @@ export function AuthProvider({ children }) {
   }
 }
 
-async function verifyRegistrationOTP({ email, token, firstName, lastName, phone }) {
+async function verifyRegistrationOTP({ email, token, firstName, lastName, phone, userId }) {
   try {
+    // Verify OTP using signup type for registration flow
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
-      type: 'magiclink'
+      type: 'signup'
     })
-    console.log('verifyOtp data:', JSON.stringify(data))
-    console.log('verifyOtp error:', error)
     if (error) throw error
 
-    const { data: sessionData } = await supabase.auth.getSession()
-    console.log('session data:', JSON.stringify(sessionData))
+    // Get user from the verifyOtp response first, then fallback to session, then fallback to passed userId
+    let user = data?.user
+    
+    if (!user) {
+      // Fallback to session if user not in response
+      const { data: sessionData } = await supabase.auth.getSession()
+      user = sessionData?.session?.user
+    }
+    
+    // Final fallback - use the userId we stored during registration
+    if (!user && userId) {
+      user = { id: userId, email }
+    }
+    
+    if (!user || !user.id) throw new Error('Could not retrieve user after verification')
 
-    const user = data?.user || sessionData?.session?.user
-    console.log('user:', JSON.stringify(user))
-
-    if (!user) throw new Error('Could not get user after verification')
-
-    const { error: insertError } = await supabase
+    // Check if applicant record already exists
+    const { data: existing } = await supabase
       .from('applicants')
-      .insert([{
-        id: user.id,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone
-      }])
-    if (insertError) throw insertError
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    // Only insert if not already exists
+    if (!existing) {
+      const { error: insertError } = await supabase
+        .from('applicants')
+        .insert([{
+          id: user.id,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone
+        }])
+      if (insertError) throw insertError
+    }
 
     return { success: true }
   } catch (error) {

@@ -44,14 +44,14 @@ app.post('/api/create-account', async (req, res) => {
             password,
             user_metadata: metadata 
           })
-          return res.json({ success: true, message: 'Account updated successfully' })
+          return res.json({ success: true, user: { id: existingUser.id } })
         }
       }
       
       return res.status(400).json({ error: error.message })
     }
     console.log('User created successfully:', data.user?.id)
-    return res.json({ success: true, user: data.user })
+    return res.json({ success: true, user: { id: data.user.id } })
   } catch (err) {
     console.error('Server error:', err)
     return res.status(500).json({ error: err.message })

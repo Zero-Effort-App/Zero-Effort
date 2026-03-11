@@ -138,9 +138,9 @@ export default function ApplicantLogin() {
     console.log('Step 4: Captcha response status:', captchaRes.status)
     if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
     console.log('Step 5: Sending OTP...')
-    await sendRegistrationOTP({ email, password, firstName, lastName, phone })
-    console.log('Step 6: OTP sent! Showing OTP screen...')
-    setPendingRegistration({ email, password, firstName, lastName, phone })
+    const { userId } = await sendRegistrationOTP({ email, password, firstName, lastName, phone })
+    console.log('Step 6: OTP sent! User ID:', userId)
+    setPendingRegistration({ email, password, firstName, lastName, phone, userId })
     setRegisteredEmail(email)
     setShowOTP(true)
     console.log('Step 7: showOTP set to true')
@@ -162,7 +162,8 @@ export default function ApplicantLogin() {
       token: otp,
       firstName: pendingRegistration.firstName,
       lastName: pendingRegistration.lastName,
-      phone: pendingRegistration.phone
+      phone: pendingRegistration.phone,
+      userId: pendingRegistration.userId
     })
 
     showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
@@ -177,13 +178,14 @@ export default function ApplicantLogin() {
 
   async function handleResendOTP() {
   try {
-    await sendRegistrationOTP({ 
+    const { userId } = await sendRegistrationOTP({ 
       email: registeredEmail,
       password: pendingRegistration.password,
       firstName: pendingRegistration.firstName,
       lastName: pendingRegistration.lastName,
       phone: pendingRegistration.phone
     })
+    setPendingRegistration(prev => ({ ...prev, userId }))
     showToast('New code sent! Check your email.', 'success')
     setOtp('')
   } catch (err) {
