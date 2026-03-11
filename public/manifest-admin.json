@@ -1,0 +1,14 @@
+{
+  "name": "Zero Effort Admin",
+  "short_name": "ZE Admin",
+  "description": "Admin dashboard for Zero Effort",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/zero-effort-icon-white.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/zero-effort-icon-white.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

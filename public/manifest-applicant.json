@@ -1,0 +1,14 @@
+{
+  "name": "Zero Effort Jobs",
+  "short_name": "Zero Effort",
+  "description": "Find your next role at Zero Effort",
+  "start_url": "/applicant",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/zero-effort-icon-white.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/zero-effort-icon-white.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
