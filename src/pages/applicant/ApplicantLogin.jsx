@@ -130,18 +130,18 @@ export default function ApplicantLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: captchaToken })
     })
-    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
+    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed. Please try again.')
 
-    // Send OTP only - no account created yet
-    await sendRegistrationOTP({ email })
+    // Send OTP (creates auth user + sends OTP)
+    await sendRegistrationOTP({ email, password, firstName, lastName, phone })
 
-    // Store registration data for after OTP verification
+    // Store pending registration data
     setPendingRegistration({ email, password, firstName, lastName, phone })
     setRegisteredEmail(email)
     setShowOTP(true)
 
   } catch (err) {
-    setError(err.message || 'Failed to send verification code')
+    setError(err.message || 'Registration failed. Please try again.')
     if (window.grecaptcha) window.grecaptcha.reset()
     setCaptchaToken(null)
   } finally {
@@ -157,7 +157,6 @@ export default function ApplicantLogin() {
     await verifyRegistrationOTP({
       email: pendingRegistration.email,
       token: otp,
-      password: pendingRegistration.password,
       firstName: pendingRegistration.firstName,
       lastName: pendingRegistration.lastName,
       phone: pendingRegistration.phone
@@ -175,7 +174,13 @@ export default function ApplicantLogin() {
 
   async function handleResendOTP() {
   try {
-    await sendRegistrationOTP({ email: registeredEmail })
+    await sendRegistrationOTP({ 
+      email: registeredEmail,
+      password: pendingRegistration.password,
+      firstName: pendingRegistration.firstName,
+      lastName: pendingRegistration.lastName,
+      phone: pendingRegistration.phone
+    })
     showToast('New code sent! Check your email.', 'success')
     setOtp('')
   } catch (err) {

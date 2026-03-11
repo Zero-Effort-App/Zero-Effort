@@ -72,24 +72,41 @@ export function AuthProvider({ children }) {
     return { session: data.session, profile: applicant };
   }
 
-  async function sendRegistrationOTP({ email }) {
+  async function sendRegistrationOTP({ email, password, firstName, lastName, phone }) {
   try {
-    // Just send OTP - don't create account yet
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true }
+    // Step 1: Create auth user via Express server
+    const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        metadata: { first_name: firstName, last_name: lastName }
+      })
     })
-    if (error) throw error
-    return { success: true }
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Registration failed')
+
+    // Step 2: Send OTP for verification
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false }
+    })
+    if (otpError) throw otpError
+
+    // Store user id for later
+    return { userId: result.user.id }
   } catch (error) {
-    console.error('sendRegistrationOTP error:', error)
+    if (error.message?.includes('already registered') || error.message?.includes('email_exists')) {
+      throw new Error('This email is already registered. Please sign in instead.')
+    }
     throw error
   }
 }
 
-async function verifyRegistrationOTP({ email, token, password, firstName, lastName, phone }) {
+async function verifyRegistrationOTP({ email, token, firstName, lastName, phone }) {
   try {
-    // Step 1: Verify OTP first
+    // Step 1: Verify OTP
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
@@ -97,13 +114,7 @@ async function verifyRegistrationOTP({ email, token, password, firstName, lastNa
     })
     if (error) throw error
 
-    // Step 2: Update password since OTP login doesn't set password
-    const { error: passwordError } = await supabase.auth.updateUser({
-      password
-    })
-    if (passwordError) throw passwordError
-
-    // Step 3: Now create applicant record in database
+    // Step 2: Create applicant record ONLY after OTP verified
     const { error: insertError } = await supabase
       .from('applicants')
       .insert([{

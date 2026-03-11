@@ -22,10 +22,13 @@ app.post('/api/create-account', async (req, res) => {
   const { email, password, metadata } = req.body
   console.log('Create account request:', { email, passwordLength: password?.length, metadata })
   try {
+    // Check if this is an applicant account (based on metadata structure)
+    const isApplicant = metadata && (metadata.first_name || metadata.last_name)
+    
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: !isApplicant, // Don't auto-confirm for applicants
       user_metadata: metadata || {}
     })
     if (error) {
