@@ -130,4 +130,22 @@ app.post('/api/reset-password', async (req, res) => {
   }
 })
 
+app.post('/api/verify-captcha', async (req, res) => {
+  const { token } = req.body
+  try {
+    const response = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=6LfVkYYsAAAAAPttKjRM093xuuxktLbMtW7WIgYT&response=${token}`,
+      { method: 'POST' }
+    )
+    const data = await response.json()
+    if (data.success) {
+      res.json({ success: true })
+    } else {
+      res.status(400).json({ error: 'CAPTCHA verification failed' })
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'CAPTCHA verification error' })
+  }
+})
+
 app.listen(3002, () => console.log('Admin API server running on port 3002'))

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -9,13 +9,20 @@ export default function ApplicantLogin() {
   const [step, setStep] = useState('choose');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [captchaError, setCaptchaError] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { applicantLogin, registerApplicant } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -36,8 +43,41 @@ export default function ApplicantLogin() {
     }
   }
 
+  function validatePasswords() {
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return false
+    }
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      return false
+    }
+    setPasswordError('')
+    return true
+  }
+
+  // Make callbacks global so reCAPTCHA can call them
+  useEffect(() => {
+    window.onCaptchaSuccess = (token) => {
+      setCaptchaToken(token)
+      setCaptchaError('')
+    }
+    window.onCaptchaExpired = () => {
+      setCaptchaToken(null)
+    }
+    return () => {
+      delete window.onCaptchaSuccess
+      delete window.onCaptchaExpired
+    }
+  }, [])
+
   async function handleRegister(e) {
     e.preventDefault();
+    if (!validatePasswords()) return
+    if (!captchaToken) {
+      setCaptchaError('Please complete the CAPTCHA verification')
+      return
+    }
     if (!firstName || !lastName || !email || !password) {
       setError('Please fill in all required fields');
       return;
@@ -51,9 +91,10 @@ export default function ApplicantLogin() {
         lastName,     // last name from form
         email,        // email from form
         phone,        // phone from form
-        password      // password from form
+        password,     // password from form
+        captchaToken  // captcha token
       );
-      navigate('/applicant/home');
+      setRegistrationSuccess(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -232,7 +273,90 @@ export default function ApplicantLogin() {
               </div>
               <div className="fgroup"><label className="flabel">Email address</label><input className="finput" type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
               <div className="fgroup"><label className="flabel">Phone number</label><input className="finput" type="tel" placeholder="+63 9XX XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-              <div className="fgroup"><label className="flabel">Password</label><input className="finput" type="password" placeholder="Create a strong password" value={password} onChange={e => setPassword(e.target.value)} /></div>
+              {/* Password field */}
+              <div className="fgroup">
+                <label className="flabel">Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="finput"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    style={{ paddingRight: '44px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text2)',
+                      fontSize: '16px',
+                      padding: 0
+                    }}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+              {/* Confirm Password field */}
+              <div className="fgroup">
+                <label className="flabel">Confirm Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="finput"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    style={{ paddingRight: '44px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text2)',
+                      fontSize: '16px',
+                      padding: 0
+                    }}
+                  >
+                    {showConfirmPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+              {/* Password error message */}
+              {passwordError && (
+                <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '-8px' }}>
+                  ⚠️ {passwordError}
+                </p>
+              )}
+              {/* reCAPTCHA */}
+              <div style={{ margin: '8px 0' }}>
+                <div
+                  className="g-recaptcha"
+                  data-sitekey="6LfVkYYsAAAAAHZRTOBbm4mJ1BV8Kn4Dg4s18CZX"
+                  data-callback="onCaptchaSuccess"
+                  data-expired-callback="onCaptchaExpired"
+                ></div>
+                {captchaError && (
+                  <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
+                    ⚠️ {captchaError}
+                  </p>
+                )}
+              </div>
               <button className="btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Creating...' : 'Create account →'}
               </button>
@@ -266,6 +390,27 @@ export default function ApplicantLogin() {
                 {forgotLoading ? 'Sending...' : 'Send Reset Link →'}
               </button>
             </form>
+          </div>
+        )}
+
+        {/* Registration Success */}
+        {registrationSuccess && (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📧</div>
+            <h2 style={{ fontWeight: 800, marginBottom: '8px' }}>Check your email!</h2>
+            <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px' }}>
+              We sent a confirmation link to <strong>{email}</strong>. 
+              Please check your inbox and click the link to activate your account.
+            </p>
+            <p style={{ color: 'var(--text2)', fontSize: '13px' }}>
+              Already confirmed?{' '}
+              <button
+                onClick={() => { setRegistrationSuccess(false); setStep('login') }}
+                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700 }}
+              >
+                Sign in here
+              </button>
+            </p>
           </div>
         )}
       </div>
