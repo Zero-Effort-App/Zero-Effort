@@ -92,35 +92,54 @@ export default function ApplicantLogin() {
   }
 
   async function handleRegister(e) {
-    e.preventDefault();
-    if (!validatePasswords()) return
-    if (!captchaToken) {
-      setCaptchaError('Please complete the CAPTCHA verification')
+  e.preventDefault()
+  if (!validatePasswords()) return
+  if (!captchaToken) {
+    setCaptchaError('Please complete the CAPTCHA verification')
+    return
+  }
+
+  try {
+    setLoading(true)
+    setError('')
+
+    // Verify captcha first
+    const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: captchaToken })
+    })
+
+    if (!captchaRes.ok) {
+      setError('CAPTCHA verification failed. Please try again.')
+      // Reset captcha
+      if (window.grecaptcha) window.grecaptcha.reset()
+      setCaptchaToken(null)
       return
     }
-    if (!firstName || !lastName || !email || !password) {
-      setError('Please fill in all required fields');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      console.log('Register form values:', { firstName, lastName, email, phone });
-      await registerApplicant(
-        firstName,    // first name from form
-        lastName,     // last name from form
-        email,        // email from form
-        phone,        // phone from form
-        password,     // password from form
-        captchaToken  // captcha token
-      );
-      setRegistrationSuccess(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+
+    // Register applicant
+    await registerApplicant(
+      firstName,    // first name from form
+      lastName,     // last name from form
+      email,        // email from form
+      phone,        // phone from form
+      password,     // password from form
+      captchaToken  // captcha token
+    )
+
+    setRegistrationSuccess(true)
+
+  } catch (err) {
+    console.error('Registration error:', err)
+    setError(err.message || 'Registration failed. Please try again.')
+    // Reset captcha on error
+    if (window.grecaptcha) window.grecaptcha.reset()
+    setCaptchaToken(null)
+  } finally {
+    setLoading(false)
   }
+}
 
   async function handleForgotPassword(e) {
     e.preventDefault();

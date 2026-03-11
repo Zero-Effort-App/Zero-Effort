@@ -68,14 +68,6 @@ export function AuthProvider({ children }) {
 
   async function registerApplicant(firstName, lastName, email, phone, password, captchaToken) {
   try {
-    // Verify captcha first
-    const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: captchaToken })
-    })
-    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed. Please try again.')
-    
     // Step 1: Create Supabase Auth account via Express server
     const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
       method: 'POST',
