@@ -303,6 +303,14 @@ export default function ApplicantLogin() {
             {error && (
               <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
                 {error}
+                {error.includes('already registered') && (
+                  <button
+                    onClick={() => setStep('login')}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700, marginLeft: '4px' }}
+                  >
+                    Sign in here →
+                  </button>
+                )}
               </div>
             )}
             <form onSubmit={handleRegister}>

@@ -120,6 +120,11 @@ export function AuthProvider({ children }) {
 
   } catch (error) {
     console.error('registerApplicant error:', error)
+    if (error.message?.includes('duplicate key') || 
+        error.message?.includes('applicants_email_key') ||
+        error.message?.includes('User already registered')) {
+      throw new Error('This email is already registered. Please sign in instead.')
+    }
     throw error
   }
 }
