@@ -90,7 +90,10 @@ export function AuthProvider({ children }) {
     // Step 2: Send OTP for verification
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false }
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: null,
+      }
     })
     if (otpError) throw otpError
 
