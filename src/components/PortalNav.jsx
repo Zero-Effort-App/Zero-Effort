@@ -30,10 +30,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
   return (
     <nav style={{
-      height: '72px',
+      height: '60px',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 24px',
+      padding: '0 16px',
       position: 'sticky',
       top: 0,
       zIndex: 50,
@@ -45,7 +45,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
           alt="Zero Effort"
           style={{ 
-            height: '40px', 
+            height: '36px', 
             width: 'auto', 
             maxWidth: '120px',
             objectFit: 'contain'
