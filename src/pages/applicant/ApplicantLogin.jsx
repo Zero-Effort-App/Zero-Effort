@@ -114,38 +114,40 @@ export default function ApplicantLogin() {
 
   async function handleRegister(e) {
   e.preventDefault()
-  if (!validatePasswords()) return
+  console.log('Step 1: Form submitted')
+  if (!validatePasswords()) {
+    console.log('Step 1a: Password validation failed')
+    return
+  }
   if (!captchaToken) {
+    console.log('Step 1b: No captcha token')
     setCaptchaError('Please complete the CAPTCHA verification')
     return
   }
-
+  console.log('Step 2: Starting registration...')
   try {
-    setLoading(true)
+    setIsLoading(true)
     setError('')
-
-    // Verify captcha
+    console.log('Step 3: Verifying captcha...')
     const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: captchaToken })
     })
-    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed. Please try again.')
-
-    // Send OTP (creates auth user + sends OTP)
+    console.log('Step 4: Captcha response status:', captchaRes.status)
+    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
+    console.log('Step 5: Sending OTP...')
     await sendRegistrationOTP({ email, password, firstName, lastName, phone })
-
-    // Store pending registration data
+    console.log('Step 6: OTP sent! Showing OTP screen...')
     setPendingRegistration({ email, password, firstName, lastName, phone })
     setRegisteredEmail(email)
     setShowOTP(true)
-
+    console.log('Step 7: showOTP set to true')
   } catch (err) {
-    setError(err.message || 'Registration failed. Please try again.')
-    if (window.grecaptcha) window.grecaptcha.reset()
-    setCaptchaToken(null)
+    console.error('Registration error:', err)
+    setError(err.message || 'Registration failed')
   } finally {
-    setLoading(false)
+    setIsLoading(false)
   }
 }
 

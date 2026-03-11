@@ -117,11 +117,17 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone 
     })
     if (error) throw error
 
-    // Step 2: Create applicant record ONLY after OTP verified
+    // Step 2: Get user from session
+    const { data: sessionData } = await supabase.auth.getSession()
+    const user = data?.user || sessionData?.session?.user
+    
+    if (!user) throw new Error('Could not get user after verification')
+
+    // Step 3: Create applicant record
     const { error: insertError } = await supabase
       .from('applicants')
       .insert([{
-        id: data.user.id,
+        id: user.id,
         email,
         first_name: firstName,
         last_name: lastName,
