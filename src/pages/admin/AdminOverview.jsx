@@ -67,7 +67,7 @@ export default function AdminOverview() {
     setResetLoading(true);
     
     try {
-      const response = await fetch('http://localhost:3002/api/reset-password', {
+      const response = await fetch('https://zero-effort-server.onrender.com/api/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: selectedRequest.email, newPassword })

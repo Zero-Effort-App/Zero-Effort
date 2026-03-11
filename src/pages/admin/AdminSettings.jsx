@@ -31,7 +31,7 @@ export default function AdminSettings() {
     console.log('Creating admin account for:', email, 'with password length:', password.length);
 
     // Create admin account via local API (bypasses rate limits)
-    const response = await fetch('http://localhost:3002/api/create-account', {
+    const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -105,7 +105,7 @@ async function handleCreateAdmin(formData) {
     console.log('Deleting admin account with ID:', admin.id, 'email:', admin.email);
 
     // Get user's auth ID first
-    const userResponse = await fetch('http://localhost:3002/api/get-user-by-email', {
+    const userResponse = await fetch('https://zero-effort-server.onrender.com/api/get-user-by-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: admin.email })
@@ -116,7 +116,7 @@ async function handleCreateAdmin(formData) {
       console.warn('Could not find auth user, proceeding with database deletion only');
     } else {
       // Delete auth account via API
-      const deleteResponse = await fetch('http://localhost:3002/api/delete-account', {
+      const deleteResponse = await fetch('https://zero-effort-server.onrender.com/api/delete-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userResult.user.id })

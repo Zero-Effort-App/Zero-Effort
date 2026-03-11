@@ -69,7 +69,7 @@ export function AuthProvider({ children }) {
   async function registerApplicant(firstName, lastName, email, phone, password) {
   try {
     // Step 1: Create Supabase Auth account via Express server
-    const response = await fetch('http://localhost:3002/api/create-account', {
+    const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

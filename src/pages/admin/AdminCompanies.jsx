@@ -133,7 +133,7 @@ export default function AdminCompanies() {
       }
 
       // Step 2: Create account via local API (bypasses rate limits)
-      const response = await fetch('http://localhost:3002/api/create-account', {
+      const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
