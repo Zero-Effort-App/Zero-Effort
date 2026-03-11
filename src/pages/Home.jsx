@@ -108,10 +108,21 @@ export default function Home() {
         {showInstall && (
           <button
             onClick={handleInstall}
-            className="btn-primary"
-            style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--text1)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
           >
-            📲 Install Zero Effort App
+            📲 Install App
           </button>
         )}
 
