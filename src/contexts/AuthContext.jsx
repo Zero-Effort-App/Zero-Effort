@@ -108,11 +108,11 @@ export function AuthProvider({ children }) {
 
 async function verifyRegistrationOTP({ email, token, firstName, lastName, phone, userId }) {
   try {
-    // Verify OTP using signup type for registration flow
+    // Verify OTP using email type for registration flow
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
-      type: 'signup'
+      type: 'email'
     })
     if (error) throw error
 
