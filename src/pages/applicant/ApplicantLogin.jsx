@@ -43,8 +43,9 @@ export default function ApplicantLogin() {
   const [otpError, setOtpError] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [pendingRegistration, setPendingRegistration] = useState(null);
   const captchaRef = useRef(null);
-  const { applicantLogin, registerApplicant } = useAuth();
+  const { applicantLogin, sendRegistrationOTP, verifyRegistrationOTP } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { theme } = useTheme();
@@ -123,38 +124,24 @@ export default function ApplicantLogin() {
     setLoading(true)
     setError('')
 
-    // Verify captcha first
+    // Verify captcha
     const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: captchaToken })
     })
+    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
 
-    if (!captchaRes.ok) {
-      setError('CAPTCHA verification failed. Please try again.')
-      // Reset captcha
-      if (window.grecaptcha) window.grecaptcha.reset()
-      setCaptchaToken(null)
-      return
-    }
+    // Send OTP only - no account created yet
+    await sendRegistrationOTP({ email })
 
-    // Register applicant
-    const result = await registerApplicant(
-      firstName,    // first name from form
-      lastName,     // last name from form
-      email,        // email from form
-      phone,        // phone from form
-      password,     // password from form
-      captchaToken  // captcha token
-    )
-
+    // Store registration data for after OTP verification
+    setPendingRegistration({ email, password, firstName, lastName, phone })
     setRegisteredEmail(email)
     setShowOTP(true)
 
   } catch (err) {
-    console.error('Registration error:', err)
-    setError(err.message || 'Registration failed. Please try again.')
-    // Reset captcha on error
+    setError(err.message || 'Failed to send verification code')
     if (window.grecaptcha) window.grecaptcha.reset()
     setCaptchaToken(null)
   } finally {
@@ -163,41 +150,38 @@ export default function ApplicantLogin() {
 }
 
   async function handleVerifyOTP() {
-    try {
-      setOtpLoading(true)
-      setOtpError('')
+  try {
+    setOtpLoading(true)
+    setOtpError('')
 
-      const { error } = await supabase.auth.verifyOtp({
-        email: registeredEmail,
-        token: otp,
-        type: 'signup'
-      })
+    await verifyRegistrationOTP({
+      email: pendingRegistration.email,
+      token: otp,
+      password: pendingRegistration.password,
+      firstName: pendingRegistration.firstName,
+      lastName: pendingRegistration.lastName,
+      phone: pendingRegistration.phone
+    })
 
-      if (error) throw error
+    showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
+    navigate('/jobs/home')
 
-      showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
-      navigate('/jobs/home')
-
-    } catch (err) {
-      setOtpError(err.message || 'Invalid or expired code. Please try again.')
-    } finally {
-      setOtpLoading(false)
-    }
+  } catch (err) {
+    setOtpError(err.message || 'Invalid or expired code. Please try again.')
+  } finally {
+    setOtpLoading(false)
   }
+}
 
   async function handleResendOTP() {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: registeredEmail
-      })
-      if (error) throw error
-      showToast('New code sent! Check your email.', 'success')
-      setOtp('')
-    } catch (err) {
-      setOtpError(err.message || 'Failed to resend code.')
-    }
+  try {
+    await sendRegistrationOTP({ email: registeredEmail })
+    showToast('New code sent! Check your email.', 'success')
+    setOtp('')
+  } catch (err) {
+    setOtpError(err.message || 'Failed to resend code.')
   }
+}
 
   async function handleForgotPassword(e) {
     e.preventDefault();

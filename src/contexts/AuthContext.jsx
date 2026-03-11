@@ -72,54 +72,52 @@ export function AuthProvider({ children }) {
     return { session: data.session, profile: applicant };
   }
 
-  async function registerApplicant(firstName, lastName, email, phone, password, captchaToken) {
+  async function sendRegistrationOTP({ email }) {
   try {
-    // Step 1: Create Supabase Auth account with OTP
-    const { data, error } = await supabase.auth.signUp({
+    // Just send OTP - don't create account yet
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
-      options: {
-        emailRedirectTo: null,
-        data: {
-          first_name: firstName,
-          last_name: lastName
-        }
-      }
+      options: { shouldCreateUser: true }
     })
-    
+    if (error) throw error
+    return { success: true }
+  } catch (error) {
+    console.error('sendRegistrationOTP error:', error)
+    throw error
+  }
+}
+
+async function verifyRegistrationOTP({ email, token, password, firstName, lastName, phone }) {
+  try {
+    // Step 1: Verify OTP first
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'magiclink'
+    })
     if (error) throw error
 
-    console.log('Auth account created:', data.user?.id)
+    // Step 2: Update password since OTP login doesn't set password
+    const { error: passwordError } = await supabase.auth.updateUser({
+      password
+    })
+    if (passwordError) throw passwordError
 
-    // Step 2: Insert into applicants table
-    const { data: applicantData, error: applicantError } = await supabase
+    // Step 3: Now create applicant record in database
+    const { error: insertError } = await supabase
       .from('applicants')
       .insert([{
-        email: email,
+        id: data.user.id,
+        email,
         first_name: firstName,
         last_name: lastName,
-        phone: phone || null,
-        password_hash: null
+        phone
       }])
-      .select()
-      .single()
+    if (insertError) throw insertError
 
-    if (applicantError) {
-      console.error('Applicants table insert error:', applicantError)
-      throw applicantError
-    }
-
-    console.log('Applicant record created:', applicantData)
-
-    return { success: true, user: data.user }
-
+    return { success: true }
   } catch (error) {
-    console.error('registerApplicant error:', error)
-    if (error.message?.includes('duplicate key') || 
-        error.message?.includes('applicants_email_key') ||
-        error.message?.includes('User already registered')) {
-      throw new Error('This email is already registered. Please sign in instead.')
-    }
+    console.error('verifyRegistrationOTP error:', error)
     throw error
   }
 }
@@ -162,7 +160,8 @@ export function AuthProvider({ children }) {
     adminLogin,
     companyLogin,
     applicantLogin,
-    registerApplicant,
+    sendRegistrationOTP,
+    verifyRegistrationOTP,
     checkSession,
     logout,
     setProfile,
