@@ -139,7 +139,7 @@ export default function ApplicantLogin() {
     }
 
     // Register applicant
-    await registerApplicant(
+    const result = await registerApplicant(
       firstName,    // first name from form
       lastName,     // last name from form
       email,        // email from form
@@ -147,6 +147,15 @@ export default function ApplicantLogin() {
       password,     // password from form
       captchaToken  // captcha token
     )
+
+    // After registerApplicant succeeds, send OTP
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        shouldCreateUser: false
+      }
+    })
+    if (otpError) console.error('OTP send error:', otpError)
 
     setRegisteredEmail(email)
     setShowOTP(true)

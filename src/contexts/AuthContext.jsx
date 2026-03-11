@@ -68,23 +68,25 @@ export function AuthProvider({ children }) {
 
   async function registerApplicant(firstName, lastName, email, phone, password, captchaToken) {
   try {
-    // Step 1: Create Supabase Auth account via Express server
-    const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        password,
-        metadata: { full_name: `${firstName} ${lastName}`, role: 'applicant' }
-      })
+    // Step 1: Create Supabase Auth account with OTP
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: null,
+        data: {
+          first_name: firstName,
+          last_name: lastName
+        }
+      }
     })
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.error)
+    
+    if (error) throw error
 
-    console.log('Auth account created:', result.user?.id)
+    console.log('Auth account created:', data.user?.id)
 
     // Step 2: Insert into applicants table
-    const { data, error } = await supabase
+    const { data: applicantData, error: applicantError } = await supabase
       .from('applicants')
       .insert([{
         email: email,
@@ -96,27 +98,14 @@ export function AuthProvider({ children }) {
       .select()
       .single()
 
-    if (error) {
-      console.error('Applicants table insert error:', error)
-      throw error
+    if (applicantError) {
+      console.error('Applicants table insert error:', applicantError)
+      throw applicantError
     }
 
-    console.log('Applicant record created:', data)
+    console.log('Applicant record created:', applicantData)
 
-    // Step 3: Sign in immediately after registration
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    if (signInError) throw signInError
-
-    // Step 4: Set profile context
-    setProfile({
-      ...data,
-      role: 'applicant'
-    })
-
-    return { success: true }
+    return { success: true, user: data.user }
 
   } catch (error) {
     console.error('registerApplicant error:', error)
