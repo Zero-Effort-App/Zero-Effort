@@ -134,19 +134,23 @@ app.post('/api/reset-password', async (req, res) => {
 })
 
 app.post('/api/verify-captcha', async (req, res) => {
-  const { token } = req.body
   try {
+    const { token } = req.body
+    if (!token) return res.status(400).json({ error: 'No token provided' })
+
     const response = await fetch(
       `https://www.google.com/recaptcha/api/siteverify?secret=6LfVkYYsAAAAAPttKjRM093xuuxktLbMtW7WIgYT&response=${token}`,
       { method: 'POST' }
     )
     const data = await response.json()
+    
     if (data.success) {
       res.json({ success: true })
     } else {
       res.status(400).json({ error: 'CAPTCHA verification failed' })
     }
   } catch (error) {
+    console.error('Captcha verify error:', error)
     res.status(500).json({ error: 'CAPTCHA verification error' })
   }
 })
