@@ -252,14 +252,16 @@ export default function ApplicantLogin() {
                 src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'}
                 alt="Zero Effort"
                 style={{ 
-                  height: '80px', 
-                  width: '80px', 
+                  height: '60px', 
+                  width: '60px', 
+                  maxWidth: '80px',
+                  maxHeight: '80px',
                   objectFit: 'contain',
                   flexShrink: 0
                 }}
               />
               <span style={{ 
-                fontSize: '22px', 
+                fontSize: 'clamp(18px, 5vw, 22px)', 
                 fontWeight: 800, 
                 letterSpacing: '-0.5px',
                 color: 'var(--text1)',

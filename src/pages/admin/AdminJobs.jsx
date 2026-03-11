@@ -142,51 +142,53 @@ export default function AdminJobs() {
         </select>
       </div>
 
-      <table className="listings-table">
-        <thead>
-          <tr>
-            <th>Job Title</th>
-            <th>Company</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Posted</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(j => (
-            <tr key={j.id}>
-              <td>
-                <div className="job-title-cell">{j.title}</div>
-                <div className="job-dept-pill">{j.department}</div>
-              </td>
-              <td style={{ fontSize: '.78rem' }}>{j.companies?.name || '—'}</td>
-              <td><span className={`job-type-pill ${getTypeClass(j.type)}`}>{j.type}</span></td>
-              <td>
-                <span className={`listing-status ${getStatusClass(j.status)}`}>
-                  <span className="ls-dot" />{j.status?.charAt(0).toUpperCase() + j.status?.slice(1)}
-                </span>
-              </td>
-              <td style={{ fontSize: '.72rem', color: 'var(--text2)', fontFamily: 'var(--mono)' }}>{formatDate(j.posted_at)}</td>
-              <td>
-                <div className="tbl-actions">
-                  <button className="tbl-btn" onClick={() => setModal({ type: 'edit', data: j })}>Edit</button>
-                  <button className="tbl-btn danger" onClick={() => setModal({ type: 'remove', data: j })}>Remove</button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {filtered.length === 0 && !isLoading && (
+      <div className="tbl-wrap">
+        <table className="listings-table">
+          <thead>
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text3)', padding: '2rem' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🗂️</div>
-                <p>No job postings yet</p>
-                <p style={{ fontSize: '.7rem', marginTop: '0.5rem' }}>Job postings will appear here once added</p>
-              </td>
+              <th>Job Title</th>
+              <th>Company</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Posted</th>
+              <th>Actions</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map(j => (
+              <tr key={j.id}>
+                <td>
+                  <div className="job-title-cell">{j.title}</div>
+                  <div className="job-dept-pill">{j.department}</div>
+                </td>
+                <td style={{ fontSize: '.78rem' }}>{j.companies?.name || '—'}</td>
+                <td><span className={`job-type-pill ${getTypeClass(j.type)}`}>{j.type}</span></td>
+                <td>
+                  <span className={`listing-status ${getStatusClass(j.status)}`}>
+                    <span className="ls-dot" />{j.status?.charAt(0).toUpperCase() + j.status?.slice(1)}
+                  </span>
+                </td>
+                <td style={{ fontSize: '.72rem', color: 'var(--text2)', fontFamily: 'var(--mono)' }}>{formatDate(j.posted_at)}</td>
+                <td>
+                  <div className="tbl-actions">
+                    <button className="tbl-btn" onClick={() => setModal({ type: 'edit', data: j })}>Edit</button>
+                    <button className="tbl-btn danger" onClick={() => setModal({ type: 'remove', data: j })}>Remove</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && !isLoading && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text3)', padding: '2rem' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🗂️</div>
+                  <p>No job postings yet</p>
+                  <p style={{ fontSize: '.7rem', marginTop: '0.5rem' }}>Job postings will appear here once added</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <Modal isOpen={modal.type === 'remove'} onClose={() => setModal({ type: null, data: null })}>
         {modal.data && (

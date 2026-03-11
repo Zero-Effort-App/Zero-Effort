@@ -33,15 +33,21 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       height: '72px',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 24px'
+      padding: '0 24px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      background: 'var(--surface)',
+      borderBottom: '1px solid var(--border)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <img
           src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
           alt="Zero Effort"
           style={{ 
-            height: '52px', 
+            height: '40px', 
             width: 'auto', 
+            maxWidth: '120px',
             objectFit: 'contain'
           }}
         />
@@ -60,7 +66,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             fontSize: '24px',
             cursor: 'pointer',
             padding: '8px',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            marginLeft: 'auto'
           }}
         >
           {isMobileMenuOpen ? '✕' : '☰'}
@@ -68,25 +75,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       )}
       
       {/* Navigation links - desktop vs mobile */}
-      {isMobile ? (
-        isMobileMenuOpen && (
-          <div className="nav-mobile-dropdown">
-            {links.map(link => (
-              <button
-                key={link.path}
-                className={`nav-link-mobile ${location.pathname === link.path ? 'active' : ''}`}
-                onClick={() => {
-                  navigate(link.path);
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                {link.label}
-                {link.badge > 0 && <span className="nbadge" />}
-              </button>
-            ))}
-          </div>
-        )
-      ) : (
+      {!isMobile && (
         <div className="nav-links">
           {links.map(link => (
             <button
@@ -101,7 +90,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         </div>
       )}
       
-      <div className="nav-right">
+      <div className="nav-right" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
         <button className="nav-theme-btn" onClick={toggleTheme}>
           {theme === 'dark' ? '🌙' : '☀️'}
         </button>
@@ -129,6 +118,46 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           </>
         )}
       </div>
+      
+      {/* Mobile dropdown menu */}
+      {isMobile && isMobileMenuOpen && (
+        <div className="nav-mobile-dropdown">
+          {links.map(link => (
+            <button
+              key={link.path}
+              className={`nav-link-mobile ${location.pathname === link.path ? 'active' : ''}`}
+              onClick={() => {
+                navigate(link.path);
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              {link.label}
+              {link.badge > 0 && <span className="nbadge" />}
+            </button>
+          ))}
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+            <div className="user-chip" style={{ marginBottom: '12px' }}>
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt="Company Logo"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid var(--border)'
+                  }}
+                />
+              ) : (
+                <div className="user-av">{userInitials || '??'}</div>
+              )}
+              <span className="user-name">{userName || 'User'}</span>
+            </div>
+            <button className="nav-logout" onClick={handleLogout} style={{ width: '100%' }}>Log out</button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

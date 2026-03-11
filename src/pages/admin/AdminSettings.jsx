@@ -169,33 +169,35 @@ async function handleCreateAdmin(formData) {
         <button className="btn-acc" onClick={() => setModal({ type: 'add', data: null })}>+ Add Admin</button>
       </div>
 
-      <table className="listings-table">
-        <thead>
-          <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Created</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {admins.map(admin => (
-            <tr key={admin.id}>
-              <td style={{ fontWeight: 700 }}>{admin.full_name}</td>
-              <td style={{ fontSize: '.78rem', color: 'var(--text2)' }}>{admin.email}</td>
-              <td style={{ fontSize: '.72rem', color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{new Date(admin.created_at).toLocaleDateString()}</td>
-              <td>
-                <div className="admin-actions">
-                  <button onClick={() => setModal({ type: 'delete', data: admin })}>Delete</button>
-                </div>
-              </td>
+      <div className="tbl-wrap">
+        <table className="listings-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Created</th>
+              <th>Actions</th>
             </tr>
-          ))}
-          {admins.length === 0 && (
-            <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text3)', padding: '2rem' }}>No admin accounts found.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {admins.map(admin => (
+              <tr key={admin.id}>
+                <td style={{ fontWeight: 700 }}>{admin.full_name}</td>
+                <td style={{ fontSize: '.78rem', color: 'var(--text2)' }}>{admin.email}</td>
+                <td style={{ fontSize: '.72rem', color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{new Date(admin.created_at).toLocaleDateString()}</td>
+                <td>
+                  <div className="admin-actions">
+                    <button onClick={() => setModal({ type: 'delete', data: admin })}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {admins.length === 0 && (
+              <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text3)', padding: '2rem' }}>No admin accounts found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Add Admin Modal */}
       <Modal isOpen={modal.type === 'add'} onClose={closeModal}>
