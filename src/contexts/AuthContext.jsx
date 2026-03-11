@@ -55,6 +55,12 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
+    // Check if email is confirmed
+    if (!data.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      throw new Error('Please verify your email first. Check your inbox for the OTP code.');
+    }
+
     const { data: applicant, error: apError } = await supabase
       .from('applicants')
       .select('*')

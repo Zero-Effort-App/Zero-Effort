@@ -148,15 +148,6 @@ export default function ApplicantLogin() {
       captchaToken  // captcha token
     )
 
-    // After registerApplicant succeeds, send OTP
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: false
-      }
-    })
-    if (otpError) console.error('OTP send error:', otpError)
-
     setRegisteredEmail(email)
     setShowOTP(true)
 
@@ -179,7 +170,7 @@ export default function ApplicantLogin() {
       const { error } = await supabase.auth.verifyOtp({
         email: registeredEmail,
         token: otp,
-        type: 'signup'
+        type: 'email'
       })
 
       if (error) throw error
