@@ -30,7 +30,6 @@ import CompanyProfile from './pages/company/CompanyProfile';
 // Applicant
 import ApplicantLanding from './pages/applicant/ApplicantLanding';
 import ApplicantLogin from './pages/applicant/ApplicantLogin';
-import ApplicantConfirm from './pages/applicant/ApplicantConfirm';
 import ApplicantLayout from './pages/applicant/ApplicantLayout';
 import ApplicantHome from './pages/applicant/ApplicantHome';
 import ApplicantJobs from './pages/applicant/ApplicantJobs';
@@ -79,7 +78,6 @@ export default function App() {
               <Route path="/applicant">
                 <Route index element={<ApplicantLanding />} />
                 <Route path="login" element={<ApplicantLogin />} />
-                <Route path="confirm" element={<ApplicantConfirm />} />
                 <Route path="reset-password" element={<ApplicantResetPassword />} />
                 <Route element={<ApplicantLayout />}>
                   <Route path="home" element={<ApplicantHome />} />

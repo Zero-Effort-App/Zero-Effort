@@ -33,12 +33,16 @@ export default function ApplicantLogin() {
   const [passwordError, setPasswordError] = useState('');
   const [captchaToken, setCaptchaToken] = useState(null);
   const [captchaError, setCaptchaError] = useState('');
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const captchaRef = useRef(null);
   const { applicantLogin, registerApplicant } = useAuth();
   const navigate = useNavigate();
@@ -144,7 +148,8 @@ export default function ApplicantLogin() {
       captchaToken  // captcha token
     )
 
-    setRegistrationSuccess(true)
+    setRegisteredEmail(email)
+    setShowOTP(true)
 
   } catch (err) {
     console.error('Registration error:', err)
@@ -156,6 +161,43 @@ export default function ApplicantLogin() {
     setLoading(false)
   }
 }
+
+  async function handleVerifyOTP() {
+    try {
+      setOtpLoading(true)
+      setOtpError('')
+
+      const { error } = await supabase.auth.verifyOtp({
+        email: registeredEmail,
+        token: otp,
+        type: 'signup'
+      })
+
+      if (error) throw error
+
+      showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
+      navigate('/jobs/home')
+
+    } catch (err) {
+      setOtpError(err.message || 'Invalid or expired code. Please try again.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  async function handleResendOTP() {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: registeredEmail
+      })
+      if (error) throw error
+      showToast('New code sent! Check your email.', 'success')
+      setOtp('')
+    } catch (err) {
+      setOtpError(err.message || 'Failed to resend code.')
+    }
+  }
 
   async function handleForgotPassword(e) {
     e.preventDefault();
@@ -238,235 +280,291 @@ export default function ApplicantLogin() {
           </div>
         </div>
 
-        {/* Step 1: Choose */}
-        {step === 'choose' && (
-          <div className="step active">
-            <div className="step-h">Do you have an account?</div>
-            <div className="step-s">Choose an option to continue</div>
-            <div className="choice-cards">
-              <div className="cc" onClick={() => { setStep('login'); setError(''); }}>
-                <div className="cc-ico a">🔑</div>
-                <div className="cc-body">
-                  <div className="cc-label">Yes, I have an account</div>
-                  <div className="cc-hint">Sign in to continue your job search</div>
-                </div>
-                <span className="cc-arr">›</span>
-              </div>
-              <div className="cc" onClick={() => { setStep('register'); setError(''); }}>
-                <div className="cc-ico b">✨</div>
-                <div className="cc-body">
-                  <div className="cc-label">No, I'm new here</div>
-                  <div className="cc-hint">Create a free account in seconds</div>
-                </div>
-                <span className="cc-arr">›</span>
-              </div>
-            </div>
-            <div className="form-note" style={{ marginTop: '1rem' }}>
-              <span style={{ cursor: 'pointer' }} onClick={() => navigate('/applicant')}>← Back to home</span>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2a: Login */}
-        {step === 'login' && (
-          <div className="step active">
-            <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
-            <div className="step-h">Welcome back 👋</div>
-            <div className="step-s">Sign in to your Zero Effort account</div>
-            {error && (
-              <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
-                {error}
-              </div>
-            )}
-            <form onSubmit={handleLogin}>
-              <div className="fgroup">
-                <label className="flabel">Email address</label>
-                <input className="finput" type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-              </div>
-              <div className="fgroup">
-                <label className="flabel">Password</label>
-                <input className="finput" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
-              </div>
-              <button className="btn-primary" type="submit" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign in →'}
-              </button>
-            </form>
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <button 
-                type="button" 
-                onClick={() => { setStep('forgot'); setError(''); setForgotEmail(email); }}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: 'var(--accent)', 
-                  fontSize: '.75rem', 
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
-              >
-                Forgot Password?
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2b: Register */}
-        {step === 'register' && (
-          <div className="step active">
-            <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
-            <div className="step-h">Create your account</div>
-            <div className="step-s">Join Zero Effort for free</div>
-            {error && (
-              <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
-                {error}
-                {error.includes('already registered') && (
-                  <button
-                    onClick={() => setStep('login')}
-                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700, marginLeft: '4px' }}
-                  >
-                    Sign in here →
-                  </button>
-                )}
-              </div>
-            )}
-            <form onSubmit={handleRegister}>
-              <div className="frow">
-                <div className="fgroup"><label className="flabel">First name</label><input className="finput" placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} /></div>
-                <div className="fgroup"><label className="flabel">Last name</label><input className="finput" placeholder="Dela Cruz" value={lastName} onChange={e => setLastName(e.target.value)} /></div>
-              </div>
-              <div className="fgroup"><label className="flabel">Email address</label><input className="finput" type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
-              <div className="fgroup"><label className="flabel">Phone number</label><input className="finput" type="tel" placeholder="+63 9XX XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-              {/* Password field */}
-              <div className="fgroup">
-                <label className="flabel">Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    className="finput"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    style={{ paddingRight: '44px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text2)',
-                      fontSize: '16px',
-                      padding: 0
-                    }}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-              </div>
-              {/* Confirm Password field */}
-              <div className="fgroup">
-                <label className="flabel">Confirm Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    className="finput"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    style={{ paddingRight: '44px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text2)',
-                      fontSize: '16px',
-                      padding: 0
-                    }}
-                  >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-              </div>
-              {/* Password error message */}
-              {passwordError && (
-                <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '-8px' }}>
-                  ⚠️ {passwordError}
-                </p>
-              )}
-              <div ref={captchaRef} style={{ margin: '8px 0' }}></div>
-              {captchaError && (
-                <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
-                  ⚠️ {captchaError}
-                </p>
-              )}
-              <button className="btn-primary" type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create account →'}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Step 2c: Forgot Password */}
-        {step === 'forgot' && (
-          <div className="step active">
-            <button className="back-btn" onClick={() => setStep('login')}>← Back</button>
-            <div className="step-h">Reset Password</div>
-            <div className="step-s">Enter your email to receive a password reset link</div>
-            {error && (
-              <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
-                {error}
-              </div>
-            )}
-            <form onSubmit={handleForgotPassword}>
-              <div className="fgroup">
-                <label className="flabel">Email address</label>
-                <input 
-                  className="finput" 
-                  type="email" 
-                  placeholder="you@email.com" 
-                  value={forgotEmail} 
-                  onChange={e => setForgotEmail(e.target.value)} 
-                />
-              </div>
-              <button className="btn-primary" type="submit" disabled={forgotLoading}>
-                {forgotLoading ? 'Sending...' : 'Send Reset Link →'}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Registration Success */}
-        {registrationSuccess && (
-          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+        {showOTP ? (
+          <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📧</div>
-            <h2 style={{ fontWeight: 800, marginBottom: '8px' }}>Check your email!</h2>
+            <h2 style={{ fontWeight: 800, marginBottom: '8px' }}>Verify your email</h2>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px' }}>
-              We sent a confirmation link to <strong>{email}</strong>. 
-              Please check your inbox and click the link to activate your account.
+              We sent a 6-digit code to <strong>{registeredEmail}</strong>. Enter it below to activate your account.
             </p>
-            <p style={{ color: 'var(--text2)', fontSize: '13px' }}>
-              Already confirmed?{' '}
-              <button
-                onClick={() => { setRegistrationSuccess(false); setStep('login') }}
-                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700 }}
-              >
-                Sign in here
-              </button>
-            </p>
+
+            <div className="fgroup" style={{ textAlign: 'left' }}>
+              <label>6-digit verification code</label>
+              <input
+                className="finput"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={otp}
+                onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                style={{ fontSize: '24px', letterSpacing: '8px', textAlign: 'center' }}
+              />
+            </div>
+
+            {otpError && (
+              <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
+                ⚠️ {otpError}
+              </p>
+            )}
+
+            <button
+              className="btn-primary"
+              onClick={handleVerifyOTP}
+              disabled={otpLoading || otp.length !== 6}
+              style={{ width: '100%', marginTop: '16px' }}
+            >
+              {otpLoading ? 'Verifying...' : 'Verify Email →'}
+            </button>
+
+            <button
+              onClick={handleResendOTP}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                marginTop: '12px'
+              }}
+            >
+              Didn't receive it? Resend code
+            </button>
           </div>
+        ) : (
+          <>
+            {/* Step 1: Choose */}
+            {step === 'choose' && (
+              <div className="step active">
+                <div className="step-h">Do you have an account?</div>
+                <div className="step-s">Choose an option to continue</div>
+                <div className="choice-cards">
+                  <div className="cc" onClick={() => { setStep('login'); setError(''); }}>
+                    <div className="cc-ico a">🔑</div>
+                    <div className="cc-body">
+                      <div className="cc-label">Yes, I have an account</div>
+                      <div className="cc-hint">Sign in to continue your job search</div>
+                    </div>
+                    <span className="cc-arr">›</span>
+                  </div>
+                  <div className="cc" onClick={() => { setStep('register'); setError(''); }}>
+                    <div className="cc-ico b">✨</div>
+                    <div className="cc-body">
+                      <div className="cc-label">No, I'm new here</div>
+                      <div className="cc-hint">Create a free account in seconds</div>
+                    </div>
+                    <span className="cc-arr">›</span>
+                  </div>
+                </div>
+                <div className="form-note" style={{ marginTop: '1rem' }}>
+                  <span style={{ cursor: 'pointer' }} onClick={() => navigate('/applicant')}>← Back to home</span>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2a: Login */}
+            {step === 'login' && (
+              <div className="step active">
+                <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
+                <div className="step-h">Welcome back 👋</div>
+                <div className="step-s">Sign in to your Zero Effort account</div>
+                {error && (
+                  <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={handleLogin}>
+                  <div className="fgroup">
+                    <label className="flabel">Email address</label>
+                    <input className="finput" type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+                  </div>
+                  <div className="fgroup">
+                    <label className="flabel">Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="finput"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--text2)',
+                          fontSize: '16px',
+                          padding: 0
+                        }}
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+                  <button className="btn-primary" type="submit" disabled={loading}>
+                    {loading ? 'Signing in...' : 'Sign in →'}
+                  </button>
+                </form>
+                <div style={{ marginTop: '.75rem', textAlign: 'center' }}>
+                  <button
+                    onClick={() => setStep('forgot')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--accent)',
+                      cursor: 'pointer',
+                      fontSize: '.78rem'
+                    }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2b: Register */}
+            {step === 'register' && (
+              <div className="step active">
+                <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
+                <div className="step-h">Create your account</div>
+                <div className="step-s">Join Zero Effort for free</div>
+                {error && (
+                  <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
+                    {error}
+                    {error.includes('already registered') && (
+                      <button
+                        onClick={() => setStep('login')}
+                        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700, marginLeft: '4px' }}
+                      >
+                        Sign in here →
+                      </button>
+                    )}
+                  </div>
+                )}
+                <form onSubmit={handleRegister}>
+                  <div className="frow">
+                    <div className="fgroup"><label className="flabel">First name</label><input className="finput" placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} /></div>
+                    <div className="fgroup"><label className="flabel">Last name</label><input className="finput" placeholder="Dela Cruz" value={lastName} onChange={e => setLastName(e.target.value)} /></div>
+                  </div>
+                  <div className="fgroup"><label className="flabel">Email address</label><input className="finput" type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
+                  <div className="fgroup"><label className="flabel">Phone number</label><input className="finput" type="tel" placeholder="+63 9XX XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} /></div>
+                  {/* Password field */}
+                  <div className="fgroup">
+                    <label className="flabel">Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="finput"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create a strong password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--text2)',
+                          fontSize: '16px',
+                          padding: 0
+                        }}
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+                  {/* Confirm Password field */}
+                  <div className="fgroup">
+                    <label className="flabel">Confirm Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="finput"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--text2)',
+                          fontSize: '16px',
+                          padding: 0
+                        }}
+                      >
+                        {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+                  {/* Password error message */}
+                  {passwordError && (
+                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '-8px' }}>
+                      ⚠️ {passwordError}
+                    </p>
+                  )}
+                  <div ref={captchaRef} style={{ margin: '8px 0' }}></div>
+                  {captchaError && (
+                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
+                      ⚠️ {captchaError}
+                    </p>
+                  )}
+                  <button className="btn-primary" type="submit" disabled={loading}>
+                    {loading ? 'Creating...' : 'Create account →'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Step 2c: Forgot Password */}
+            {step === 'forgot' && (
+              <div className="step active">
+                <button className="back-btn" onClick={() => setStep('login')}>← Back</button>
+                <div className="step-h">Reset Password</div>
+                <div className="step-s">Enter your email to receive a password reset link</div>
+                {error && (
+                  <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={handleForgotPassword}>
+                  <div className="fgroup">
+                    <label className="flabel">Email address</label>
+                    <input 
+                      className="finput" 
+                      type="email" 
+                      placeholder="you@email.com" 
+                      value={forgotEmail} 
+                      onChange={e => setForgotEmail(e.target.value)} 
+                    />
+                  </div>
+                  <button className="btn-primary" type="submit" disabled={forgotLoading}>
+                    {forgotLoading ? 'Sending...' : 'Send Reset Link →'}
+                  </button>
+                </form>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
