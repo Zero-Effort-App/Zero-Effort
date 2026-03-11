@@ -2,7 +2,7 @@
   "name": "Zero Effort Jobs",
   "short_name": "Zero Effort",
   "description": "Find your next role at Zero Effort",
-  "start_url": "/jobs",
+  "start_url": "/applicant",
   "display": "standalone",
   "background_color": "#0f1117",
   "theme_color": "#0f1117",
