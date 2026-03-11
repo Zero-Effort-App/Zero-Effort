@@ -167,7 +167,7 @@ export default function ApplicantLogin() {
     })
 
     showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
-    navigate('/jobs/home')
+    navigate('/applicant/home')
 
   } catch (err) {
     setOtpError(err.message || 'Invalid or expired code. Please try again.')
