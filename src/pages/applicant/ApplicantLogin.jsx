@@ -269,17 +269,17 @@ export default function ApplicantLogin() {
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📧</div>
             <h2 style={{ fontWeight: 800, marginBottom: '8px' }}>Verify your email</h2>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px' }}>
-              We sent a 6-digit code to <strong>{registeredEmail}</strong>. Enter it below to activate your account.
+              We sent an 8-digit code to <strong>{registeredEmail}</strong>. Enter it below to activate your account.
             </p>
 
             <div className="fgroup" style={{ textAlign: 'left' }}>
-              <label>6-digit verification code</label>
+              <label>8-digit verification code</label>
               <input
                 className="finput"
                 type="text"
                 inputMode="numeric"
-                maxLength={6}
-                placeholder="000000"
+                maxLength={8}
+                placeholder="00000000"
                 value={otp}
                 onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                 style={{ fontSize: '24px', letterSpacing: '8px', textAlign: 'center' }}
@@ -295,7 +295,7 @@ export default function ApplicantLogin() {
             <button
               className="btn-primary"
               onClick={handleVerifyOTP}
-              disabled={otpLoading || otp.length !== 6}
+              disabled={otpLoading || otp.length !== 8}
               style={{ width: '100%', marginTop: '16px' }}
             >
               {otpLoading ? 'Verifying...' : 'Verify Email →'}
