@@ -27,6 +27,9 @@ export default function ApplicantProfile() {
         .eq('id', user.id)
         .single()
 
+      console.log('Profile data loaded:', data)
+      console.log('photo_url from DB:', data?.photo_url)
+
       if (data) {
         setFormData({
           first_name: data.first_name || '',
@@ -37,7 +40,7 @@ export default function ApplicantProfile() {
         setPhotoUrl(data.photo_url || '')
       }
     }
-    loadProfile()
+    if (user) loadProfile()
   }, [user]);
 
   async function handlePhotoUpload(e) {
