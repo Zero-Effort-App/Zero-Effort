@@ -1,25 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-
-const BOT_RESPONSES = {
-  password: `🔐 Password Reset:\n1. Go to the login page\n2. Click "Forgot Password?"\n3. Enter your email address\n4. Check your inbox for reset instructions\n💡 Check your spam folder if you don't see it!`,
-  apply: `📝 How to Apply:\n1. Browse jobs in the Jobs section\n2. Click on a job you like\n3. Click the "Apply" button\n4. Upload your resume and fill the form\n5. Submit and track in Applications!`,
-  default: `👋 Hi! I'm Zelo, your Zero Effort assistant!\n\nI can help you with:\n• How to apply for jobs\n• Password reset\n• Company information\n• Available positions\n\nJust ask me anything!` 
-}
-
-function getResponse(msg) {
-  const m = msg.toLowerCase()
-  if (m.includes('password') || m.includes('reset') || m.includes('forgot')) return BOT_RESPONSES.password
-  if (m.includes('apply') || m.includes('application') || m.includes('how to')) return BOT_RESPONSES.apply
-  return BOT_RESPONSES.default
-}
 
 export default function ZeloChatbot() {
   const { theme } = useTheme()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { from: 'bot', text: `👋 Hi! I'm Zelo! How can I help you today?` }
+    { role: 'assistant', content: `👋 Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,44 +18,105 @@ export default function ZeloChatbot() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  async function fetchJobsAndCompanies() {
+    try {
+      const { data: jobs } = await supabase
+        .from('jobs')
+        .select('title, type, department, salary, description, requirements, companies(name, industry)')
+        .eq('status', 'active')
+
+      const { data: companies } = await supabase
+        .from('companies')
+        .select('name, industry, description, tags')
+        .eq('is_active', true)
+
+      return { jobs: jobs || [], companies: companies || [] }
+    } catch {
+      return { jobs: [], companies: [] }
+    }
+  }
+
   async function handleSend() {
-    if (!input.trim()) return
-    const userMsg = input.trim()
+    if (!input.trim() || loading) return
+    const userMessage = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { from: 'user', text: userMsg }])
+
+    const newMessages = [...messages, { role: 'user', content: userMessage }]
+    setMessages(newMessages)
     setLoading(true)
 
-    // Check for companies/jobs queries and fetch from Supabase
-    const m = userMsg.toLowerCase()
-    let botText = ''
-
     try {
-      if (m.includes('compan') || m.includes('hiring')) {
-        const { data } = await supabase.from('companies').select('name, industry').eq('is_active', true)
-        if (data && data.length > 0) {
-          const list = data.map(c => `• ${c.name} — ${c.industry}`).join('\n')
-          botText = `🏢 Companies Currently Hiring:\n\n${list}\n\n💡 Go to Companies section to see their open positions!` 
-        } else {
-          botText = 'No companies are currently hiring. Check back soon!'
-        }
-      } else if (m.includes('job') || m.includes('position') || m.includes('opening')) {
-        const { data } = await supabase.from('jobs').select('title, type, companies(name)').eq('status', 'active')
-        if (data && data.length > 0) {
-          const list = data.slice(0, 5).map(j => `• ${j.title} at ${j.companies?.name} (${j.type})`).join('\n')
-          botText = `💼 Open Positions:\n\n${list}\n\n💡 Go to Browse Jobs to see all ${data.length} positions!` 
-        } else {
-          botText = 'No open positions right now. Check back soon!'
-        }
-      } else {
-        botText = getResponse(userMsg)
-      }
-    } catch (err) {
-      botText = getResponse(userMsg)
-    }
+      // Fetch real data from Supabase
+      const { jobs, companies } = await fetchJobsAndCompanies()
 
-    setLoading(false)
-    setMessages(prev => [...prev, { from: 'bot', text: botText }])
+      const jobsList = jobs.length > 0
+        ? jobs.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary} — Requirements: ${j.requirements?.join(', ')}`).join('\n')
+        : 'No active job listings currently.'
+
+      const companiesList = companies.length > 0
+        ? companies.map(c => `- ${c.name} (${c.industry}): ${c.description}`).join('\n')
+        : 'No active companies currently.'
+
+      const systemPrompt = `You are Zelo, a friendly and helpful career assistant for Zero Effort — a job portal in the Philippines. You help applicants find the right job based on their skills and interests.
+
+Here are the CURRENT ACTIVE JOB LISTINGS:
+${jobsList}
+
+Here are the CURRENT ACTIVE COMPANIES:
+${companiesList}
+
+Your behavior:
+- Be conversational, warm, and encouraging
+- Ask about the user's skills, experience, and interests to recommend the best jobs
+- Only recommend jobs that are in the active listings above
+- If no jobs match the user's skills, be honest but encouraging — tell them to check back soon or suggest improving certain skills
+- Help users understand how to apply, what to expect, and how to prepare
+- Keep responses concise and friendly — use emojis occasionally
+- If asked about password reset: tell them to click "Forgot Password?" on the login page
+- If asked about applying: guide them through the Jobs section
+- Always stay focused on career guidance and the Zero Effort platform
+- Never make up job listings that aren't in the list above
+- The platform is based in the Philippines so be culturally appropriate`
+
+      // Build conversation history for Claude
+      const conversationHistory = newMessages.map(m => ({
+        role: m.role,
+        content: m.content
+      }))
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: conversationHistory
+        })
+      })
+
+      const data = await response.json()
+      const botReply = data.content?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
+
+      setMessages(prev => [...prev, { role: 'assistant', content: botReply }])
+    } catch (err) {
+      console.error('Chatbot error:', err)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏"
+      }])
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const cardBg = theme === 'dark' ? '#1a1d2e' : '#ffffff'
+  const msgBg = theme === 'dark' ? '#13151f' : '#f5f5f5'
+  const borderColor = theme === 'dark' ? '#2a2d3e' : '#e0e0e0'
+  const textColor = theme === 'dark' ? '#ffffff' : '#000000'
+  const text2Color = theme === 'dark' ? '#8b8fa8' : '#666666'
 
   return (
     <>
@@ -79,7 +129,8 @@ export default function ZeloChatbot() {
           background: 'var(--accent)', border: 'none',
           cursor: 'pointer', fontSize: '24px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white'
         }}
       >
         {open ? '✕' : '💬'}
@@ -89,48 +140,55 @@ export default function ZeloChatbot() {
       {open && (
         <div style={{
           position: 'fixed', bottom: '90px', right: '24px',
-          width: '320px', maxWidth: 'calc(100vw - 48px)',
-          height: '420px', borderRadius: '16px',
-          background: 'var(--card)', border: '1px solid var(--border)',
-          backgroundColor: 'var(--card)',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          width: '340px', maxWidth: 'calc(100vw - 48px)',
+          height: '480px', borderRadius: '16px',
+          backgroundColor: cardBg,
+          border: `1px solid ${borderColor}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           zIndex: 1000, display: 'flex', flexDirection: 'column',
           overflow: 'hidden'
         }}>
           {/* Header */}
           <div style={{
-            padding: '16px', background: 'var(--accent)',
-            color: 'white', fontWeight: 700, fontSize: '15px'
+            padding: '14px 16px',
+            background: 'var(--accent)',
+            color: 'white', fontWeight: 700, fontSize: '14px',
+            display: 'flex', alignItems: 'center', gap: '8px'
           }}>
-            💬 Zelo — Zero Effort Assistant
+            <span style={{ fontSize: '20px' }}>🤖</span>
+            <div>
+              <div>Zelo — Career Assistant</div>
+              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Claude AI</div>
+            </div>
           </div>
 
           {/* Messages */}
           <div style={{
             flex: 1, overflowY: 'auto', padding: '12px',
             display: 'flex', flexDirection: 'column', gap: '8px',
-            background: 'var(--bg)'
+            backgroundColor: msgBg
           }}>
             {messages.map((msg, i) => (
               <div key={i} style={{
-                alignSelf: msg.from === 'user' ? 'flex-end' : 'flex-start',
-                background: msg.from === 'user' ? 'var(--accent)' : 'var(--bg2)',
-                color: msg.from === 'user' ? 'white' : 'var(--text)',
-                padding: '8px 12px', borderRadius: '12px',
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                background: msg.role === 'user' ? 'var(--accent)' : cardBg,
+                color: msg.role === 'user' ? 'white' : textColor,
+                padding: '10px 14px', borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                 maxWidth: '85%', fontSize: '13px',
-                whiteSpace: 'pre-wrap', lineHeight: '1.5'
+                whiteSpace: 'pre-wrap', lineHeight: '1.6',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
-                {msg.text}
+                {msg.content}
               </div>
             ))}
             {loading && (
               <div style={{
-                alignSelf: 'flex-start', background: 'var(--bg2)',
-                padding: '8px 12px', borderRadius: '12px',
-                fontSize: '13px', color: 'var(--text2)'
+                alignSelf: 'flex-start', backgroundColor: cardBg,
+                padding: '10px 14px', borderRadius: '16px 16px 16px 4px',
+                fontSize: '13px', color: text2Color,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
-                Zelo is typing...
+                Zelo is thinking... 🤔
               </div>
             )}
             <div ref={bottomRef} />
@@ -138,31 +196,35 @@ export default function ZeloChatbot() {
 
           {/* Input */}
           <div style={{
-            padding: '12px', borderTop: '1px solid var(--border)',
+            padding: '12px',
+            borderTop: `1px solid ${borderColor}`,
             display: 'flex', gap: '8px',
-            background: 'var(--card)'
+            backgroundColor: cardBg
           }}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder="Ask Zelo anything..."
               style={{
-                flex: 1, padding: '8px 12px', borderRadius: '8px',
-                border: '1px solid var(--border)', background: 'var(--bg2)',
-                color: 'var(--text)', fontSize: '13px', outline: 'none'
+                flex: 1, padding: '9px 12px', borderRadius: '10px',
+                border: `1px solid ${borderColor}`,
+                backgroundColor: msgBg,
+                color: textColor, fontSize: '13px', outline: 'none'
               }}
             />
             <button
               onClick={handleSend}
+              disabled={loading || !input.trim()}
               style={{
-                padding: '8px 14px', borderRadius: '8px',
-                background: 'var(--accent)', color: 'white',
-                border: 'none', cursor: 'pointer', fontWeight: 600,
-                fontSize: '13px'
+                padding: '9px 14px', borderRadius: '10px',
+                background: loading || !input.trim() ? '#666' : 'var(--accent)',
+                color: 'white', border: 'none',
+                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                fontWeight: 600, fontSize: '13px', transition: 'background 0.2s'
               }}
             >
-              Send
+              {loading ? '...' : '➤'}
             </button>
           </div>
         </div>
