@@ -158,47 +158,36 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system } = req.body
     console.log('=== CHAT API CALLED ===')
-    console.log('GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO')
+    console.log('GROQ_API_KEY loaded:', process.env.GROQ_API_KEY ? 'YES' : 'NO')
     console.log('Messages count:', messages?.length)
 
-    // Filter out assistant messages at the start - Gemini requires first message to be user
-    const filteredMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant')
-    
-    // Convert to Gemini format - ensure alternating user/model messages
-    const geminiMessages = filteredMessages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
+    const groqMessages = [
+      { role: 'system', content: system },
+      ...messages.map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content
+      }))
+    ]
 
-    // Make sure first message is from user
-    const userMessages = geminiMessages.filter((_, i) => {
-      if (i === 0) return geminiMessages[0].role === 'user'
-      return true
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}` 
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: groqMessages,
+        max_tokens: 1000,
+        temperature: 0.7
+      })
     })
 
-    console.log('Sending to Gemini:', userMessages.length, 'messages')
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: userMessages,
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature: 0.7
-          }
-        })
-      }
-    )
-
-    console.log('Gemini response status:', response.status)
+    console.log('Groq response status:', response.status)
     const data = await response.json()
-    console.log('Gemini data:', JSON.stringify(data).substring(0, 300))
+    console.log('Groq data:', JSON.stringify(data).substring(0, 300))
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
+    const text = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that. Please try again!"
     res.json({ content: [{ text }] })
   } catch (error) {
     console.error('Chat API error:', error.message)
