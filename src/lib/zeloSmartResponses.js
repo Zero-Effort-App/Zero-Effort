@@ -3,7 +3,6 @@
 import { zeloIntelligence } from './zeloIntelligence';
 import { salaryInsights } from './salaryInsights';
 import { zeloFAQ } from './zeloFAQ';
-import { getMyApplications } from './db';
 
 export class ZeloSmartResponses {
   constructor() {
