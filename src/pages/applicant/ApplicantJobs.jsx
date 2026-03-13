@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
 import { Calendar, Clock, Star } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';

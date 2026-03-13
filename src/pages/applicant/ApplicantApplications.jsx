@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getMyApplications, formatDate } from '../../lib/db';
 import { FileText, Clock, Eye, Check, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
