@@ -84,14 +84,12 @@ Your behavior:
         content: m.content
       }))
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('https://zero-effort-server.onrender.com/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
           system: systemPrompt,
           messages: conversationHistory
         })
