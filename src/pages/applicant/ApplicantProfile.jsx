@@ -33,6 +33,12 @@ export default function ApplicantProfile() {
     e.preventDefault();
     if (!profile?.id) return;
 
+    // Form validation
+    if (!formData.first_name.trim() || !formData.last_name.trim()) {
+      showToast('First name and last name are required', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase

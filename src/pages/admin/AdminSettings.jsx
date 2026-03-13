@@ -110,50 +110,22 @@ async function handleCreateAdmin(formData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: admin.email })
     });
-
-    const userResult = await userResponse.json();
-    if (!userResponse.ok) {
-      console.warn('Could not find auth user, proceeding with database deletion only');
-    } else {
-      // Delete auth account via API
-      const deleteResponse = await fetch('https://zero-effort-server.onrender.com/api/delete-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userResult.user.id })
-      });
-
-      if (!deleteResponse.ok) {
-        console.warn('Failed to delete auth account, proceeding with database deletion only');
-      }
-    }
-
     // Delete from admin_users table
-    const { error: deleteError } = await supabase
+    const { error: dbError } = await supabase
       .from('admin_users')
       .delete()
-      .eq('id', admin.id);
-
-    if (deleteError) {
-      console.error('Delete error:', deleteError);
-      throw deleteError;
-    }
-
-    // Log to activity_log
-    await supabase.from('activity_log').insert([{
-      type: 'warning',
-      icon: '🗑️',
-      message: `Admin account deleted: ${admin.email}`,
-      sub_text: 'Admin · System'
-    }]);
-
-    // Show success toast and refresh
-    showToast('Admin account deleted');
+      .eq('email', admin.email);
+    if (dbError) throw dbError;
+    
+    // Log activity
+    await addActivityLog('admin', '🗑️', `Admin account deleted: ${admin.full_name}`, 'Admin · System');
+    
     closeModal();
+    showToast('Admin account deleted successfully');
     loadAdmins();
-
-  } catch (err) {
-    console.error('Failed to delete admin account:', err);
-    showToast('Failed to delete admin account. Please try again.');
+  } catch (error) {
+    console.error('Delete admin error:', error);
+    showToast('Failed to delete admin account');
   } finally {
     setDeleting(false);
   }

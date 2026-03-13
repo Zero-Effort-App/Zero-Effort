@@ -129,7 +129,7 @@ export default function Home() {
         {/* Portal Cards */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '20px',
           width: '100%',
           maxWidth: '900px'

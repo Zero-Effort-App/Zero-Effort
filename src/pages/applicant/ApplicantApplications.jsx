@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { getMyApplications, getCompanies } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 
 export default function ApplicantApplications() {
   const { profile } = useOutletContext();
+  const navigate = useNavigate();
   const [apps, setApps] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,11 +118,25 @@ export default function ApplicantApplications() {
             </div>
           );
         }) : (
-          <div className="empty-state">
-            <div style={{ fontSize: '48px' }}>�</div>
-            <h3>No applications yet</h3>
-            <p>Start applying to jobs and track your progress here</p>
-            <button className="btn-primary" onClick={() => navigate('/applicant/jobs')}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            minHeight: '300px', 
+            textAlign: 'center',
+            gap: '1rem'
+          }}>
+            <div style={{ fontSize: '3rem' }}>📋</div>
+            <h3 style={{ color: 'var(--text2)', margin: 0 }}>No applications yet</h3>
+            <p style={{ color: 'var(--text3)', margin: 0 }}>
+              You haven't applied to any jobs yet. Start browsing open positions!
+            </p>
+            <button 
+              className="btn-primary"
+              onClick={() => navigate('/applicant/jobs')}
+              style={{ marginTop: '1rem' }}
+            >
               Browse Jobs →
             </button>
           </div>
