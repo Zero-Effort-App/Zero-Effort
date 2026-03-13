@@ -92,6 +92,8 @@ export default function ZeloChatbot() {
           width: '320px', maxWidth: 'calc(100vw - 48px)',
           height: '420px', borderRadius: '16px',
           background: 'var(--card)', border: '1px solid var(--border)',
+          backgroundColor: 'var(--card)',
+          backdropFilter: 'blur(20px)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           zIndex: 1000, display: 'flex', flexDirection: 'column',
           overflow: 'hidden'
@@ -107,7 +109,8 @@ export default function ZeloChatbot() {
           {/* Messages */}
           <div style={{
             flex: 1, overflowY: 'auto', padding: '12px',
-            display: 'flex', flexDirection: 'column', gap: '8px'
+            display: 'flex', flexDirection: 'column', gap: '8px',
+            background: 'var(--bg)'
           }}>
             {messages.map((msg, i) => (
               <div key={i} style={{
@@ -136,7 +139,8 @@ export default function ZeloChatbot() {
           {/* Input */}
           <div style={{
             padding: '12px', borderTop: '1px solid var(--border)',
-            display: 'flex', gap: '8px'
+            display: 'flex', gap: '8px',
+            background: 'var(--card)'
           }}>
             <input
               value={input}
