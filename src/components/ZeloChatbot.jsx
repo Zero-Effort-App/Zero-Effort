@@ -19,7 +19,19 @@ export default function ZeloChatbot() {
   const [showClearOption, setShowClearOption] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showFAQMenu, setShowFAQMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     initializeZelo();
@@ -205,27 +217,42 @@ export default function ZeloChatbot() {
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          width: '60px',
-          height: '60px',
+          bottom: isMobile ? '16px' : '20px',
+          right: isMobile ? '16px' : '20px',
+          width: isMobile ? '56px' : '60px',
+          height: isMobile ? '56px' : '60px',
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           border: 'none',
           color: 'white',
-          fontSize: '24px',
+          fontSize: isMobile ? '20px' : '24px',
           cursor: 'pointer',
           boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
           zIndex: 1000,
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          // Mobile touch optimizations
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none'
         }}
         onMouseEnter={(e) => {
-          e.target.style.transform = 'scale(1.1)';
-          e.target.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.6)';
+          if (!isMobile) {
+            e.target.style.transform = 'scale(1.1)';
+            e.target.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.6)';
+          }
         }}
         onMouseLeave={(e) => {
+          if (!isMobile) {
+            e.target.style.transform = 'scale(1)';
+            e.target.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)';
+          }
+        }}
+        // Mobile touch feedback
+        onTouchStart={(e) => {
+          e.target.style.transform = 'scale(0.95)';
+        }}
+        onTouchEnd={(e) => {
           e.target.style.transform = 'scale(1)';
-          e.target.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)';
         }}
       >
         💬
@@ -237,36 +264,41 @@ export default function ZeloChatbot() {
     <div
       style={{
         position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        width: '380px',
-        height: '600px',
+        bottom: isMobile ? '60px' : '20px', // Higher on mobile to leave more space
+        right: isMobile ? '10px' : '20px', // Smaller margins on mobile
+        width: isMobile ? 'calc(100vw - 20px)' : '380px', // Leave margins on mobile
+        height: isMobile ? '70vh' : '600px', // 70% of screen height on mobile
+        maxHeight: isMobile ? '500px' : '600px', // Max height limit on mobile
         background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
-        borderRadius: '16px',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+        borderRadius: isMobile ? '16px' : '16px', // Keep rounded corners on mobile
+        boxShadow: isMobile ? '0 4px 20px rgba(0, 0, 0, 0.15)' : '0 10px 40px rgba(0, 0, 0, 0.2)',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
-        border: `1px solid ${theme === 'dark' ? '#333' : '#e1e5e9'}`
+        border: isMobile ? `1px solid ${theme === 'dark' ? '#333' : '#e1e5e9'}` : `1px solid ${theme === 'dark' ? '#333' : '#e1e5e9'}`,
+        // Mobile optimizations
+        overflow: 'hidden',
+        // Center on mobile
+        left: isMobile ? '10px' : 'auto'
       }}
     >
       {/* Header */}
       <div
         style={{
-          padding: '16px',
+          padding: isMobile ? '10px 12px' : '12px 16px', // Smaller padding on mobile
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '16px 16px 0 0',
+          borderRadius: isMobile ? '16px 16px 0 0' : '16px 16px 0 0',
           color: 'white',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          minHeight: isMobile ? '48px' : '60px' // Smaller header on mobile
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '24px' }}>🤖</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '8px' }}>
+          <div style={{ fontSize: isMobile ? '18px' : '20px' }}>🤖</div>
           <div>
-            <div style={{ fontWeight: 'bold', fontSize: '16px' }}>Zelo</div>
-            <div style={{ fontSize: '12px', opacity: 0.9 }}>Job Search Assistant</div>
+            <div style={{ fontWeight: 'bold', fontSize: isMobile ? '13px' : '14px' }}>Zelo</div>
           </div>
         </div>
         <button
@@ -275,11 +307,12 @@ export default function ZeloChatbot() {
             background: 'none',
             border: 'none',
             color: 'white',
-            fontSize: '16px',
+            fontSize: isMobile ? '12px' : '16px',
             cursor: 'pointer',
             padding: '4px',
             borderRadius: '4px',
-            marginRight: '8px'
+            marginRight: '4px',
+            display: isMobile ? 'none' : 'block' // Hide on mobile to save space
           }}
           title="Browse FAQs"
         >
@@ -291,11 +324,11 @@ export default function ZeloChatbot() {
             background: 'none',
             border: 'none',
             color: 'white',
-            fontSize: '16px',
+            fontSize: isMobile ? '12px' : '16px',
             cursor: 'pointer',
             padding: '4px',
             borderRadius: '4px',
-            marginRight: '8px'
+            marginRight: '4px'
           }}
           title="Chat options"
         >
@@ -307,10 +340,12 @@ export default function ZeloChatbot() {
             background: 'none',
             border: 'none',
             color: 'white',
-            fontSize: '20px',
+            fontSize: isMobile ? '16px' : '20px',
             cursor: 'pointer',
             padding: '4px',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            minWidth: isMobile ? '28px' : '32px', // Smaller touch target on mobile
+            minHeight: isMobile ? '28px' : '32px'
           }}
         >
           ✕
@@ -456,11 +491,14 @@ export default function ZeloChatbot() {
       <div
         style={{
           flex: 1,
-          padding: '16px',
+          padding: isMobile ? '8px 10px' : '12px 16px', // More compact on mobile
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: isMobile ? '8px' : '12px', // Smaller gaps on mobile
+          // Mobile scroll optimizations
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
         }}
       >
         {messages.map((message) => (
@@ -468,20 +506,24 @@ export default function ZeloChatbot() {
             key={message.id}
             style={{
               display: 'flex',
-              justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start'
+              justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+              marginBottom: isMobile ? '6px' : '8px' // Smaller margins on mobile
             }}
           >
             <div
               style={{
-                maxWidth: '80%',
-                padding: '12px 16px',
-                borderRadius: '18px',
+                maxWidth: isMobile ? '90%' : '80%', // Slightly wider on mobile
+                padding: isMobile ? '8px 12px' : '10px 14px', // More compact padding
+                borderRadius: isMobile ? '16px' : '18px',
                 background: message.sender === 'user' 
                   ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                   : theme === 'dark' ? '#2a2a2a' : '#f1f3f4',
                 color: message.sender === 'user' ? 'white' : theme === 'dark' ? '#fff' : '#333',
-                fontSize: '14px',
-                lineHeight: '1.4'
+                fontSize: isMobile ? '13px' : '14px', // Smaller text on mobile
+                lineHeight: '1.3',
+                wordBreak: 'break-word', // Prevent long words from overflowing
+                // Mobile touch optimizations
+                WebkitTapHighlightColor: 'transparent'
               }}
               dangerouslySetInnerHTML={{ __html: formatMessage(message.text) }}
             />
@@ -509,29 +551,58 @@ export default function ZeloChatbot() {
 
       {/* Suggestions */}
       {messages[messages.length - 1]?.suggestions && (
-        <div style={{ padding: '0 16px 8px' }}>
-          <div style={{ fontSize: '12px', color: theme === 'dark' ? '#999' : '#666', marginBottom: '8px' }}>
+        <div style={{ 
+          padding: isMobile ? '0 10px 6px' : '0 12px 8px',
+          maxWidth: '100%'
+        }}>
+          <div style={{ 
+            fontSize: isMobile ? '10px' : '11px', 
+            color: theme === 'dark' ? '#999' : '#666', 
+            marginBottom: isMobile ? '4px' : '6px'
+          }}>
             Suggested questions:
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: isMobile ? '4px' : '6px'
+          }}>
             {messages[messages.length - 1].suggestions.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: '16px',
+                  padding: isMobile ? '4px 8px' : '6px 10px',
+                  borderRadius: '12px',
                   border: `1px solid ${theme === 'dark' ? '#444' : '#ddd'}`,
                   background: theme === 'dark' ? '#333' : '#f9f9f9',
                   color: theme === 'dark' ? '#fff' : '#333',
-                  fontSize: '12px',
+                  fontSize: isMobile ? '10px' : '11px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  maxWidth: isMobile ? '150px' : '200px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  // Mobile touch optimizations
+                  WebkitTapHighlightColor: 'transparent',
+                  minHeight: isMobile ? '28px' : '32px' // Smaller on mobile
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = theme === 'dark' ? '#444' : '#e9e9e9';
+                  if (!isMobile) {
+                    e.target.style.background = theme === 'dark' ? '#444' : '#e9e9e9';
+                  }
                 }}
                 onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.target.style.background = theme === 'dark' ? '#333' : '#f9f9f9';
+                  }
+                }}
+                // Mobile touch feedback
+                onTouchStart={(e) => {
+                  e.target.style.background = theme === 'dark' ? '#555' : '#ddd';
+                }}
+                onTouchEnd={(e) => {
                   e.target.style.background = theme === 'dark' ? '#333' : '#f9f9f9';
                 }}
               >
@@ -545,35 +616,76 @@ export default function ZeloChatbot() {
       {/* Input */}
       <div
         style={{
-          padding: '16px',
+          padding: isMobile ? '8px 10px' : '12px 16px', // More compact on mobile
           borderTop: `1px solid ${theme === 'dark' ? '#333' : '#e1e5e9'}`,
           display: 'flex',
-          gap: '8px'
+          gap: isMobile ? '6px' : '8px',
+          // Mobile keyboard handling - smaller padding
+          paddingBottom: isMobile ? '8px' : '12px'
         }}
       >
+        {/* Mobile FAQ Button */}
+        {isMobile && (
+          <button
+            onClick={() => setShowFAQMenu(!showFAQMenu)}
+            style={{
+              width: '36px', // Smaller on mobile
+              height: '36px',
+              borderRadius: '50%',
+              background: theme === 'dark' ? '#333' : '#f1f3f4',
+              border: `1px solid ${theme === 'dark' ? '#444' : '#ddd'}`,
+              color: theme === 'dark' ? '#fff' : '#333',
+              fontSize: '14px', // Smaller on mobile
+              cursor: 'pointer',
+              // Mobile touch optimizations
+              WebkitTapHighlightColor: 'transparent',
+              minWidth: '36px',
+              minHeight: '36px'
+            }}
+            title="Browse FAQs"
+            // Mobile touch feedback
+            onTouchStart={(e) => {
+              e.target.style.background = theme === 'dark' ? '#444' : '#e9e9e9';
+            }}
+            onTouchEnd={(e) => {
+              e.target.style.background = theme === 'dark' ? '#333' : '#f1f3f4';
+            }}
+          >
+            📚
+          </button>
+        )}
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Ask Zelo about jobs, companies, or applications..."
+          placeholder={isMobile ? "Ask..." : "Ask Zelo about jobs, companies, or applications..."} // Shorter on mobile
           style={{
             flex: 1,
-            padding: '12px 16px',
-            borderRadius: '24px',
+            padding: isMobile ? '8px 12px' : '12px 16px', // More compact on mobile
+            borderRadius: isMobile ? '16px' : '20px', // Smaller on mobile
             border: `1px solid ${theme === 'dark' ? '#444' : '#ddd'}`,
             background: theme === 'dark' ? '#2a2a2a' : '#f9f9f9',
             color: theme === 'dark' ? '#fff' : '#333',
-            fontSize: '14px',
-            outline: 'none'
+            fontSize: isMobile ? '14px' : '14px', // Keep readable size
+            outline: 'none',
+            // Mobile optimizations
+            WebkitAppearance: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            minHeight: isMobile ? '36px' : '44px' // Smaller on mobile
           }}
+          // Mobile keyboard optimizations
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
         />
         <button
           onClick={handleSendMessage}
           disabled={!inputValue.trim() || isTyping}
           style={{
-            width: '44px',
-            height: '44px',
+            width: isMobile ? '36px' : '44px', // Smaller on mobile
+            height: isMobile ? '36px' : '44px',
             borderRadius: '50%',
             background: inputValue.trim() && !isTyping
               ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
@@ -581,8 +693,21 @@ export default function ZeloChatbot() {
             border: 'none',
             color: inputValue.trim() && !isTyping ? 'white' : theme === 'dark' ? '#999' : '#999',
             cursor: inputValue.trim() && !isTyping ? 'pointer' : 'not-allowed',
-            fontSize: '18px',
-            transition: 'all 0.2s ease'
+            fontSize: isMobile ? '14px' : '18px', // Smaller on mobile
+            transition: 'all 0.2s ease',
+            // Mobile touch optimizations
+            WebkitTapHighlightColor: 'transparent',
+            minWidth: isMobile ? '36px' : '44px',
+            minHeight: isMobile ? '36px' : '44px'
+          }}
+          // Mobile touch feedback
+          onTouchStart={(e) => {
+            if (inputValue.trim() && !isTyping) {
+              e.target.style.transform = 'scale(0.95)';
+            }
+          }}
+          onTouchEnd={(e) => {
+            e.target.style.transform = 'scale(1)';
           }}
         >
           ➤
