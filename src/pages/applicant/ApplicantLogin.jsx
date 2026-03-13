@@ -363,7 +363,9 @@ export default function ApplicantLogin() {
             {step === 'login' && (
               <div className="step active">
                 <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
-                <div className="step-h"><Hand size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />Welcome back</div>
+                <h1 style={{ fontWeight: 800, fontSize: '28px', marginBottom: '4px' }}>
+                  Welcome back
+                </h1>
                 <div className="step-s">Sign in to your Zero Effort account</div>
                 {error && (
                   <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>

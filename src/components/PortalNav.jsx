@@ -105,8 +105,19 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       )}
       
       <div className="nav-right" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <button className="nav-theme-btn" onClick={toggleTheme}>
-          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: '36px', height: '36px',
+            borderRadius: '8px',
+            border: '1px solid var(--border)',
+            background: 'transparent',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text2)'
+          }}
+        >
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         {!isMobile && (
           <>

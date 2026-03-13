@@ -166,7 +166,7 @@ JOB MATCHING RULES:
             <Bot size={20} />
             <div>
               <div>Zelo — Career Assistant</div>
-              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Claude AI</div>
+              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Groq AI</div>
             </div>
           </div>
 

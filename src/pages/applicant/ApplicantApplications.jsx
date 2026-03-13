@@ -73,9 +73,26 @@ export default function ApplicantApplications() {
   if (isLoading) return (
     <div className="pw">
       <div className="ph"><h2>My Applications</h2><p>Track the status of every application you've submitted.</p></div>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ fontSize: '2rem' }}><Clock size={32} /></div>
-        <p style={{ color: 'var(--text2)' }}>Loading applications...</p>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+        {[1,2,3].map(i => (
+          <div key={i} className="card" style={{
+            padding: '20px', borderRadius: '12px',
+            background: 'var(--card)', marginBottom: '12px'
+          }}>
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '8px',
+              background: 'var(--bg2)', marginBottom: '12px'
+            }} />
+            <div style={{
+              width: '60%', height: '16px', borderRadius: '4px',
+              background: 'var(--bg2)', marginBottom: '8px'
+            }} />
+            <div style={{
+              width: '40%', height: '12px', borderRadius: '4px',
+              background: 'var(--bg2)'
+            }} />
+          </div>
+        ))}
       </div>
     </div>
   );

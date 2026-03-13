@@ -154,7 +154,25 @@ export default function ApplicantJobs() {
     <div className="pw">
       <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside Zero Effort.</p></div>
       <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
-        {[1,2,3].map(i => <SkeletonCard key={i} />)}
+        {[1,2,3].map(i => (
+          <div key={i} className="card" style={{
+            padding: '20px', borderRadius: '12px',
+            background: 'var(--card)', marginBottom: '12px'
+          }}>
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '8px',
+              background: 'var(--bg2)', marginBottom: '12px'
+            }} />
+            <div style={{
+              width: '60%', height: '16px', borderRadius: '4px',
+              background: 'var(--bg2)', marginBottom: '8px'
+            }} />
+            <div style={{
+              width: '40%', height: '12px', borderRadius: '4px',
+              background: 'var(--bg2)'
+            }} />
+          </div>
+        ))}
       </div>
     </div>
   );

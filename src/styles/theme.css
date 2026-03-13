@@ -1148,6 +1148,13 @@ nav {
 .uz-hint { font-size: .65rem; color: var(--text3); margin-top: 2px; }
 .uz-ok { font-size: .68rem; color: var(--success); font-weight: 600; margin-top: 5px; font-family: var(--mono); }
 
+/* ── LIGHT MODE CARD SHADOWS ── */
+[data-theme='light'] .card,
+[data-theme='light'] .co-card,
+[data-theme='light'] .job-card {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
+}
+
 /* ── CHANGE PHOTO BUTTON ── */
 .change-photo-btn {
   display: inline-flex; align-items: center; gap: 6px;
