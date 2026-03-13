@@ -44,7 +44,6 @@ export default function ApplicantProfile() {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       showToast('Photo must be less than 2MB', 'error')
       return
@@ -52,39 +51,38 @@ export default function ApplicantProfile() {
 
     try {
       setUploadingPhoto(true)
+      console.log('Uploading photo for user:', user.id)
+
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}-${Date.now()}.${fileExt}` 
+      console.log('File name:', fileName)
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true })
 
+      console.log('Upload error:', uploadError)
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName)
 
-      // Update photo_url in applicants table
-      const { error: updateError } = await supabase
+      console.log('Public URL:', publicUrl)
+
+      const { data: updateData, error: updateError } = await supabase
         .from('applicants')
         .update({ photo_url: publicUrl })
         .eq('id', user.id)
+        .select()
+
+      console.log('Update data:', updateData)
+      console.log('Update error:', updateError)
 
       if (updateError) throw updateError
 
-      // Force refresh the page data
       setPhotoUrl(publicUrl)
-
-      // Also update the applicant record to make sure it's saved
-      const { error: verifyError } = await supabase
-        .from('applicants')
-        .update({ photo_url: publicUrl })
-        .eq('id', user.id)
-
-      if (!verifyError) {
-        showToast('Profile photo updated! 🎉', 'success')
-      }
+      showToast('Profile photo updated! 🎉', 'success')
     } catch (err) {
       console.error('Photo upload error:', err)
       showToast('Failed to upload photo. Please try again.', 'error')
@@ -99,7 +97,7 @@ export default function ApplicantProfile() {
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!profile?.id) return;
+    if (!user?.id) return;
 
     // Form validation
     if (!formData.first_name.trim() || !formData.last_name.trim()) {
@@ -117,7 +115,7 @@ export default function ApplicantProfile() {
           phone: formData.phone,
           photo_url: formData.photo_url
         })
-        .eq('id', profile.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 
