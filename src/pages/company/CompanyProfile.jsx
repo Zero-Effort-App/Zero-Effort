@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { updateCompany, getCompanyJobs, getCompanyApplications, getCompanies, uploadCompanyLogo } from '../../lib/db';
 import { useToast } from '../../contexts/ToastContext';
+import { CheckCircle } from 'lucide-react';
 
 export default function CompanyProfile() {
   const { company, setCompany } = useOutletContext();
@@ -201,7 +202,7 @@ export default function CompanyProfile() {
               accept="image/*"
               onChange={e => setLogoFile(e.target.files[0])}
             />
-            {logoFile && <span style={{ fontSize: '12px', color: 'var(--text2)' }}>✅ {logoFile.name} — will upload on save</span>}
+            {logoFile && <span style={{ fontSize: '12px', color: 'var(--text2)' }}><CheckCircle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{logoFile.name} — will upload on save</span>}
           </div>
           <div className="frow">
             <div className="fgroup"><label className="flabel">Contact Email</label><input className="finput" value={form.email} onChange={e => handleChange('email', e.target.value)} /></div>

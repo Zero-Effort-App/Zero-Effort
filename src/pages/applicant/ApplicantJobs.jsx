@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
+import { Calendar, Clock, Star } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
 import CompanyLogo from '../../components/CompanyLogo';
@@ -184,7 +185,7 @@ export default function ApplicantJobs() {
               </div>
               <div className="jlcard-co">{j.co}</div>
               <div style={{ display: 'flex', gap: 4, marginBottom: '.4rem' }}>
-                <span className="pill" style={{ fontSize: '.62rem' }}>⏱ {j.type}</span>
+                <span className="pill" style={{ fontSize: '.62rem' }}><Clock size={11} style={{ marginRight: '4px' }} />{j.type}</span>
                 <span className="pill" style={{ fontSize: '.62rem' }}>{j.department}</span>
               </div>
               <div className="jlcard-meta">
@@ -215,10 +216,10 @@ export default function ApplicantJobs() {
                 </div>
               </div>
               <div className="dp-chips">
-                <span className="dp-chip">⏱ {selectedJob.type}</span>
+                <span className="dp-chip"><Clock size={11} style={{ marginRight: '4px' }} /> {selectedJob.type}</span>
                 <span className="dp-chip">{selectedJob.department}</span>
-                <span className="dp-chip">📅 {selectedJob.ago}</span>
-                {selectedJob.isNew && <span className="dp-chip" style={{ color: 'var(--amber)', borderColor: 'rgba(245,158,11,.2)' }}>✦ New</span>}
+                <span className="dp-chip"><Calendar size={11} style={{ marginRight: '4px' }} /> {selectedJob.ago}</span>
+                {selectedJob.isNew && <span className="dp-chip" style={{ color: 'var(--amber)', borderColor: 'rgba(245,158,11,.2)' }}><Star size={11} style={{ marginRight: '4px' }} /> New</span>}
               </div>
               <hr className="dp-div" />
               <div className="sal-box">

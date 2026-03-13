@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { getCompanyApplications, getCompanyJobs, updateApplicationStatus, formatDate } from '../../lib/db';
-import { useToast } from '../../contexts/ToastContext';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime } from '../../lib/db';
+import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone } from 'lucide-react';
+import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 
 // Skeleton card component
@@ -195,8 +196,8 @@ export default function CompanyApplicants() {
                 {selectedApp.status?.charAt(0).toUpperCase() + selectedApp.status?.slice(1)}
               </span>
               <div className="dp-chips">
-                <span className="dp-chip">📅 Applied {selectedApp.date}</span>
-                {selectedApp.jobDept && <span className="dp-chip">💼 {selectedApp.jobDept}</span>}
+                <span className="dp-chip"><Calendar size={12} style={{ marginRight: '4px' }} /> Applied {selectedApp.date}</span>
+                {selectedApp.jobDept && <span className="dp-chip"><Briefcase size={12} style={{ marginRight: '4px' }} /> {selectedApp.jobDept}</span>}
               </div>
               <hr className="dp-div" />
 
@@ -216,7 +217,7 @@ export default function CompanyApplicants() {
                     rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', marginBottom: '.5rem', textDecoration: 'none', cursor: 'pointer' }}
                   >
-                    <span>📄</span><span>Resume / CV</span>
+                    <FileText size={14} style={{ marginRight: '4px' }} /><span>Resume / CV</span>
                     <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View →</span>
                   </a>
                 )}
@@ -227,7 +228,7 @@ export default function CompanyApplicants() {
                     rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', textDecoration: 'none', cursor: 'pointer' }}
                   >
-                    <span>📁</span><span>Portfolio</span>
+                    <FolderOpen size={14} style={{ marginRight: '4px' }} /><span>Portfolio</span>
                     <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View Portfolio →</span>
                   </a>
                 )}
@@ -241,19 +242,19 @@ export default function CompanyApplicants() {
                   onClick={() => handleSetStatus(selectedApp.id, 'accepted')}
                   disabled={selectedApp.status === 'accepted'}
                   style={selectedApp.status === 'accepted' ? { opacity: .5, cursor: 'default' } : {}}
-                >✓ Accept</button>
+                ><CheckCircle size={14} style={{ marginRight: '4px' }} /> Accept</button>
                 <button
                   className="btn-decline"
                   onClick={() => handleSetStatus(selectedApp.id, 'declined')}
                   disabled={selectedApp.status === 'declined'}
                   style={selectedApp.status === 'declined' ? { opacity: .5, cursor: 'default' } : {}}
-                >✗ Decline</button>
+                ><X size={14} style={{ marginRight: '4px' }} /> Decline</button>
               </div>
-              <button className="btn-contact" onClick={() => openContact(selectedApp)}>✉ Contact Applicant</button>
+              <button className="btn-contact" onClick={() => openContact(selectedApp)}><Mail size={14} style={{ marginRight: '4px' }} /> Contact Applicant</button>
             </>
           ) : (
             <div className="empty-dp">
-              <div className="eico">👤</div>
+              <div className="eico"><User size={24} /></div>
               <p>Select an applicant to view their profile</p>
             </div>
           )}
@@ -266,16 +267,16 @@ export default function CompanyApplicants() {
           <div>
             <div className="m-head">
               <div><div className="m-title">Contact {modal.data.name}</div><div className="m-sub">Send a message or reach out directly</div></div>
-              <button className="m-close" onClick={() => setModal({ type: null, data: null })}>✕</button>
+              <button className="m-close" onClick={() => setModal({ type: null, data: null })}><X size={18} /></button>
             </div>
             <div className="msep">Contact Info</div>
             <div className="contact-info-row">
-              <span className="contact-info-icon">✉️</span>
+              <span className="contact-info-icon"><Mail size={16} /></span>
               <div><div className="contact-info-label">Email</div><div className="contact-info-val">{modal.data.email}</div></div>
               <button className="contact-copy" onClick={() => copyText(modal.data.email)}>Copy</button>
             </div>
             <div className="contact-info-row">
-              <span className="contact-info-icon">📱</span>
+              <span className="contact-info-icon"><Phone size={16} /></span>
               <div><div className="contact-info-label">Phone</div><div className="contact-info-val">{modal.data.phone}</div></div>
               <button className="contact-copy" onClick={() => copyText(modal.data.phone)}>Copy</button>
             </div>

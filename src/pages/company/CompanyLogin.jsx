@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { CheckCircle } from 'lucide-react';
 
 export default function CompanyLogin() {
   const [email, setEmail] = useState('');
@@ -123,7 +124,7 @@ export default function CompanyLogin() {
 
           {forgotSuccess ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}><CheckCircle size={48} /></div>
               <h3>Reset Request Sent!</h3>
               <p>The admin will contact you shortly to help reset your password.</p>
             </div>

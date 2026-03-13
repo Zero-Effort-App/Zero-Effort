@@ -2,6 +2,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Moon, Sun, Menu, X, Home, Briefcase, Building2, FileText, User } from 'lucide-react';
 
 export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto }) {
   const { theme, toggleTheme } = useTheme();
@@ -27,6 +28,18 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   }
 
   const basePath = '/' + location.pathname.split('/')[1];
+
+  // Icon mapping for navigation links
+  const getNavIcon = (label) => {
+    switch(label) {
+      case 'Home': return <Home size={14} />;
+      case 'Browse Jobs': return <Briefcase size={14} />;
+      case 'Companies': return <Building2 size={14} />;
+      case 'My Applications': return <FileText size={14} />;
+      case 'My Profile': return <User size={14} />;
+      default: return null;
+    }
+  };
 
   return (
     <nav style={{
@@ -70,7 +83,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             marginLeft: 'auto'
           }}
         >
-          {isMobileMenuOpen ? '✕' : '☰'}
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       )}
       
@@ -83,6 +96,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
               onClick={() => navigate(link.path)}
             >
+              {getNavIcon(link.label)}
               {link.label}
               {link.badge > 0 && <span className="nbadge" />}
             </button>
@@ -92,7 +106,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       
       <div className="nav-right" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
         <button className="nav-theme-btn" onClick={toggleTheme}>
-          {theme === 'dark' ? '🌙' : '☀️'}
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
         {!isMobile && (
           <>
@@ -143,6 +157,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 setIsMobileMenuOpen(false);
               }}
             >
+              {getNavIcon(link.label)}
               {link.label}
               {link.badge > 0 && <span className="nbadge" />}
             </button>

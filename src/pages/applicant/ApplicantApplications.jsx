@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { getMyApplications, getCompanies } from '../../lib/db';
+import { useNavigate } from 'react-router-dom';
+import { getMyApplications, formatDate } from '../../lib/db';
+import { FileText, Clock, Eye, Check, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -46,10 +47,10 @@ export default function ApplicantApplications() {
   }, [profile]);
 
   const statusMap = {
-    pending: ['s-pending', '⏳ Under Review'],
-    reviewed: ['s-reviewed', '👁 Reviewed'],
-    accepted: ['s-accepted', '✓ Accepted'],
-    declined: ['s-declined', '✗ Declined'],
+    pending: ['s-pending', 'Under Review'],
+    reviewed: ['s-reviewed', 'Reviewed'],
+    accepted: ['s-accepted', 'Accepted'],
+    declined: ['s-declined', 'Declined'],
   };
 
   async function handleWithdraw(applicationId) {
@@ -73,7 +74,7 @@ export default function ApplicantApplications() {
     <div className="pw">
       <div className="ph"><h2>My Applications</h2><p>Track the status of every application you've submitted.</p></div>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ fontSize: '2rem' }}>⏳</div>
+        <div style={{ fontSize: '2rem' }}><Clock size={32} /></div>
         <p style={{ color: 'var(--text2)' }}>Loading applications...</p>
       </div>
     </div>
@@ -85,7 +86,7 @@ export default function ApplicantApplications() {
 
       <div className="apl-list stagger">
         {apps.length > 0 ? apps.map(a => {
-          const [cls, lbl] = statusMap[a.status] || ['s-pending', '⏳ Under Review'];
+          const [cls, lbl] = statusMap[a.status] || ['s-pending', 'Under Review'];
           return (
             <div key={a.id} className="apl-row">
               <div className="apl-logo" style={{ background: a.coColor + '20', color: a.coColor }}>
@@ -127,7 +128,7 @@ export default function ApplicantApplications() {
             textAlign: 'center',
             gap: '1rem'
           }}>
-            <div style={{ fontSize: '3rem' }}>📋</div>
+            <div style={{ fontSize: '3rem' }}><FileText size={48} /></div>
             <h3 style={{ color: 'var(--text2)', margin: 0 }}>No applications yet</h3>
             <p style={{ color: 'var(--text3)', margin: 0 }}>
               You haven't applied to any jobs yet. Start browsing open positions!

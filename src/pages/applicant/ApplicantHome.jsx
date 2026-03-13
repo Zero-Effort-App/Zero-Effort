@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanies, getJobs, getEvents, getMyApplications, getRecentHires, formatDate } from '../../lib/db';
+import { Briefcase, Building2, FileText, CalendarDays, CheckCircle, Clock, MapPin } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 
 function displaySalary(salary) {
@@ -90,16 +91,16 @@ export default function ApplicantHome() {
       </div>
 
       <div className="stat-row stagger">
-        <div className="scard"><div className="scard-label">Open Positions</div><div className="scard-val">{stats.openPositions}</div></div>
-        <div className="scard"><div className="scard-label">Companies Hiring</div><div className="scard-val">{stats.companiesHiring}</div></div>
-        <div className="scard"><div className="scard-label">My Applications</div><div className="scard-val">{stats.myApps}</div></div>
-        <div className="scard"><div className="scard-label">Upcoming Events</div><div className="scard-val">{stats.upcomingEvents}</div></div>
+        <div className="scard"><Briefcase size={18} style={{ color: 'var(--accent2)', marginBottom: '6px' }} /><div className="scard-label">Open Positions</div><div className="scard-val">{stats.openPositions}</div></div>
+        <div className="scard"><Building2 size={18} style={{ color: 'var(--teal)', marginBottom: '6px' }} /><div className="scard-label">Companies Hiring</div><div className="scard-val">{stats.companiesHiring}</div></div>
+        <div className="scard"><FileText size={18} style={{ color: 'var(--success)', marginBottom: '6px' }} /><div className="scard-label">My Applications</div><div className="scard-val">{stats.myApps}</div></div>
+        <div className="scard"><CalendarDays size={18} style={{ color: 'var(--amber)', marginBottom: '6px' }} /><div className="scard-label">Upcoming Events</div><div className="scard-val">{stats.upcomingEvents}</div></div>
       </div>
 
       {recentHires.length > 0 && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '18px', fontWeight: 800 }}>🎉 Recent Hires</span>
+            <span style={{ fontSize: '18px', fontWeight: 800 }}><CheckCircle size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Recent Hires</span>
             <span style={{ 
               fontSize: '11px', 
               background: 'rgba(34,197,94,0.15)', 
@@ -140,7 +141,7 @@ export default function ApplicantHome() {
                     fontSize: '18px',
                     flexShrink: 0
                   }}>
-                    🎉
+                    <CheckCircle size={20} style={{ color: '#22c55e' }} />
                   </div>
                   {/* Info */}
                   <div style={{ flex: 1 }}>
@@ -197,8 +198,8 @@ export default function ApplicantHome() {
                   <div className="jcard-title">{j.title}</div>
                   <div className="jcard-co">{co?.name || '—'}</div>
                   <div className="jcard-pills">
-                    <span className="pill">📍 Zero Effort</span>
-                    <span className="pill">⏱ {j.type}</span>
+                    <span className="pill"><MapPin size={11} style={{ marginRight: '4px' }} /> Zero Effort</span>
+                    <span className="pill"><Clock size={11} style={{ marginRight: '4px' }} /> {j.type}</span>
                     <span className="pill">{j.department}</span>
                   </div>
                   <div className="jcard-foot">

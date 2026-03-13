@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { Camera } from 'lucide-react';
 
 export default function ApplicantProfile() {
   const { profile } = useOutletContext();
@@ -79,7 +80,7 @@ export default function ApplicantProfile() {
       if (updateError) throw updateError
 
       setPhotoUrl(publicUrl)
-      showToast('Profile photo updated! 🎉', 'success')
+      showToast('Profile photo updated! ', 'success')
     } catch (err) {
       console.error('Photo upload error:', err)
       showToast('Failed to upload photo. Please try again.', 'error')
@@ -153,20 +154,25 @@ export default function ApplicantProfile() {
           </div>
 
           {/* Upload button */}
-          <label style={{
-            padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border)',
-            cursor: 'pointer', fontSize: '13px', color: 'var(--text2)',
-            background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: '6px'
-          }}>
-            📷 {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handlePhotoUpload}
-              disabled={uploadingPhoto}
-            />
-          </label>
+          <button 
+            className="change-photo-btn"
+            onClick={() => document.getElementById('fileInput').click()}
+            disabled={uploadingPhoto}
+            style={{
+              cursor: 'pointer', fontSize: '13px', color: 'var(--text2)',
+              background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: '6px'
+            }}>
+            <Camera size={14} />
+            {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
+          </button>
+          <input
+            type="file"
+            accept="image/*"
+            id="fileInput"
+            style={{ display: 'none' }}
+            onChange={handlePhotoUpload}
+            disabled={uploadingPhoto}
+          />
           <p style={{ fontSize: '11px', color: 'var(--text2)', margin: 0 }}>
             Optional • JPG, PNG, max 2MB
           </p>

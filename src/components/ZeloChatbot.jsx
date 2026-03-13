@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { Bot, MessageCircle, X, Send } from 'lucide-react'
 
 export default function ZeloChatbot() {
   const { theme } = useTheme()
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: `👋 Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
+    { role: 'assistant', content: `Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -132,19 +133,15 @@ JOB MATCHING RULES:
   return (
     <>
       {/* Chat Button */}
-      <button
+      <button 
+        className="zelo-fab"
         onClick={() => setOpen(!open)}
         style={{
           position: 'fixed', bottom: '24px', right: '24px',
-          width: '56px', height: '56px', borderRadius: '50%',
-          background: 'var(--accent)', border: 'none',
-          cursor: 'pointer', fontSize: '24px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white'
+          zIndex: 1000
         }}
       >
-        {open ? '✕' : '💬'}
+        {open ? <X size={22} /> : <MessageCircle size={22} />}
       </button>
 
       {/* Chat Window */}
@@ -166,7 +163,7 @@ JOB MATCHING RULES:
             color: 'white', fontWeight: 700, fontSize: '14px',
             display: 'flex', alignItems: 'center', gap: '8px'
           }}>
-            <span style={{ fontSize: '20px' }}>🤖</span>
+            <Bot size={20} />
             <div>
               <div>Zelo — Career Assistant</div>
               <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Claude AI</div>
@@ -235,7 +232,7 @@ JOB MATCHING RULES:
                 fontWeight: 600, fontSize: '13px', transition: 'background 0.2s'
               }}
             >
-              {loading ? '...' : '➤'}
+              {loading ? '...' : <Send size={14} />}
             </button>
           </div>
         </div>

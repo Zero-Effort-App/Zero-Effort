@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Hand, KeyRound, Sparkles, AlertTriangle, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
@@ -278,7 +279,7 @@ export default function ApplicantLogin() {
 
         {showOTP ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📧</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}><Mail size={48} /></div>
             <h2 style={{ fontWeight: 800, marginBottom: '8px' }}>Verify your email</h2>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px' }}>
               We sent an 8-digit code to <strong>{registeredEmail}</strong>. Enter it below to activate your account.
@@ -300,7 +301,7 @@ export default function ApplicantLogin() {
 
             {otpError && (
               <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
-                ⚠️ {otpError}
+                <AlertTriangle size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> {otpError}
               </p>
             )}
 
@@ -336,7 +337,7 @@ export default function ApplicantLogin() {
                 <div className="step-s">Choose an option to continue</div>
                 <div className="choice-cards">
                   <div className="cc" onClick={() => { setStep('login'); setError(''); }}>
-                    <div className="cc-ico a">🔑</div>
+                    <div className="cc-ico a"><KeyRound size={20} /></div>
                     <div className="cc-body">
                       <div className="cc-label">Yes, I have an account</div>
                       <div className="cc-hint">Sign in to continue your job search</div>
@@ -344,7 +345,7 @@ export default function ApplicantLogin() {
                     <span className="cc-arr">›</span>
                   </div>
                   <div className="cc" onClick={() => { setStep('register'); setError(''); }}>
-                    <div className="cc-ico b">✨</div>
+                    <div className="cc-ico b"><Sparkles size={20} /></div>
                     <div className="cc-body">
                       <div className="cc-label">No, I'm new here</div>
                       <div className="cc-hint">Create a free account in seconds</div>
@@ -362,7 +363,7 @@ export default function ApplicantLogin() {
             {step === 'login' && (
               <div className="step active">
                 <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
-                <div className="step-h">Welcome back 👋</div>
+                <div className="step-h"><Hand size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />Welcome back</div>
                 <div className="step-s">Sign in to your Zero Effort account</div>
                 {error && (
                   <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>

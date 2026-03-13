@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, addJob, updateJob, removeJob as removeJobDb, addActivityLog, formatDate } from '../../lib/db';
+import { FileText, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
 import SalaryInput from '../../components/SalaryInput';
@@ -151,7 +152,7 @@ export default function CompanyListings() {
         <button className="btn-acc" onClick={() => setModal({ type: 'post', data: null })}>+ New listing</button>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ fontSize: '2rem' }}>⏳</div>
+        <div style={{ fontSize: '2rem' }}><Clock size={32} /></div>
         <p style={{ color: 'var(--text2)' }}>Loading job listings...</p>
       </div>
     </div>
@@ -234,7 +235,7 @@ export default function CompanyListings() {
       {/* Success */}
       <Modal isOpen={modal.type === 'success'} onClose={closeModal}>
         <div className="success-wrap">
-          <div className="sw-icon">🎉</div>
+          <div className="sw-icon"><CheckCircle size={32} /></div>
           <h3>Job listing posted!</h3>
           <p><strong>{modal.data?.title}</strong> is now live on Zero Effort.<br /><br />Applicants can start applying right away.</p>
           <button className="btn-primary" style={{ maxWidth: 160, margin: '1.25rem auto 0', display: 'block' }} onClick={closeModal}>View listings</button>

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Briefcase, Target, Moon, Sun, Download, Shield } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Particles from '../components/Particles';
 
@@ -26,7 +27,7 @@ export default function Home() {
 
   const portals = [
     {
-      emoji: '🛡️',
+      emoji: <Shield size={24} />,
       title: 'Admin Portal',
       desc: 'Manage companies, oversee job postings, coordinate events, and monitor all activity across the park.',
       path: '/admin',
@@ -34,7 +35,7 @@ export default function Home() {
       bg: 'rgba(99,102,241,.12)',
     },
     {
-      emoji: '💼',
+      emoji: <Briefcase size={24} />,
       title: 'Company Portal',
       desc: 'Post jobs, review applicants, manage your hiring pipeline, and update your company profile.',
       path: '/company',
@@ -42,7 +43,7 @@ export default function Home() {
       bg: 'rgba(45,212,191,.12)',
     },
     {
-      emoji: '🎯',
+      emoji: <Target size={24} />,
       title: 'Applicant Portal',
       desc: 'Browse open positions, explore companies in the park, apply for roles, and track your applications.',
       path: '/applicant',
@@ -60,7 +61,7 @@ export default function Home() {
 
       {/* Theme toggle */}
       <button onClick={toggleTheme} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10 }}>
-        {theme === 'dark' ? '🌙' : '☀️'}
+        {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
       </button>
 
       {/* Main content — centered */}
@@ -122,7 +123,7 @@ export default function Home() {
               gap: '6px'
             }}
           >
-            📲 Install App
+            <Download size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Install App
           </button>
         )}
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
+import { Clock } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ApplicantResetPassword() {
@@ -85,7 +86,7 @@ export default function ApplicantResetPassword() {
         <div className="auth-blob b" />
         <div className="auth-card">
           <div className="step active" style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}><Clock size={32} /></div>
             <p style={{ color: 'var(--text2)' }}>Verifying reset link...</p>
           </div>
         </div>
