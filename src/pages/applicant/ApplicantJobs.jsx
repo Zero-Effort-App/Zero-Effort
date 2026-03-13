@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
-import { Calendar, Clock, Star } from 'lucide-react';
+import { Calendar, Clock, Star, Briefcase } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
 import CompanyLogo from '../../components/CompanyLogo';
@@ -67,8 +67,6 @@ export default function ApplicantJobs() {
 
         if (location.state?.selectedJobId) {
           setSelected(location.state.selectedJobId);
-        } else if (mapped.length > 0) {
-          setSelected(mapped[0].id);
         }
       } catch (err) {
         console.error('Error loading jobs:', err);
@@ -264,7 +262,17 @@ export default function ApplicantJobs() {
               </button>
             </>
           ) : (
-            <div className="empty-dp"><div className="eico">←</div><p>Select a role to see details</p></div>
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              height: '100%', gap: '12px',
+              color: 'var(--text2)', textAlign: 'center',
+              padding: '40px'
+            }}>
+              <Briefcase size={48} strokeWidth={1.5} style={{ opacity: 0.3 }} />
+              <p style={{ fontSize: '16px', fontWeight: 600 }}>Select a job to view details</p>
+              <p style={{ fontSize: '13px', opacity: 0.6 }}>Click on any job from the list to see more information</p>
+            </div>
           )}
         </div>
       </div>
