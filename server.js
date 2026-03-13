@@ -161,11 +161,22 @@ app.post('/api/chat', async (req, res) => {
     console.log('GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO')
     console.log('Messages count:', messages?.length)
 
-    // Convert messages format for Gemini
-    const geminiMessages = messages.map(m => ({
+    // Filter out assistant messages at the start - Gemini requires first message to be user
+    const filteredMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant')
+    
+    // Convert to Gemini format - ensure alternating user/model messages
+    const geminiMessages = filteredMessages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     }))
+
+    // Make sure first message is from user
+    const userMessages = geminiMessages.filter((_, i) => {
+      if (i === 0) return geminiMessages[0].role === 'user'
+      return true
+    })
+
+    console.log('Sending to Gemini:', userMessages.length, 'messages')
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -174,7 +185,7 @@ app.post('/api/chat', async (req, res) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: system }] },
-          contents: geminiMessages,
+          contents: userMessages,
           generationConfig: {
             maxOutputTokens: 1000,
             temperature: 0.7
