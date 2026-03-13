@@ -157,6 +157,9 @@ app.post('/api/verify-captcha', async (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system } = req.body
+    console.log('=== CHAT API CALLED ===')
+    console.log('GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO')
+    console.log('Messages count:', messages?.length)
 
     // Convert messages format for Gemini
     const geminiMessages = messages.map(m => ({
@@ -180,11 +183,14 @@ app.post('/api/chat', async (req, res) => {
       }
     )
 
+    console.log('Gemini response status:', response.status)
     const data = await response.json()
+    console.log('Gemini data:', JSON.stringify(data).substring(0, 300))
+
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
     res.json({ content: [{ text }] })
   } catch (error) {
-    console.error('Chat API error:', error)
+    console.error('Chat API error:', error.message)
     res.status(500).json({ error: 'Chat API error' })
   }
 })
