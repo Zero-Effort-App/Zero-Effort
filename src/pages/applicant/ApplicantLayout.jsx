@@ -8,6 +8,7 @@ import ZeloChatbot from '../../components/ZeloChatbot';
 export default function ApplicantLayout() {
   const { profile, checkSession } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [userPhoto, setUserPhoto] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,10 +17,13 @@ export default function ApplicantLayout() {
         const session = await checkSession('applicant');
         if (!session) { navigate('/applicant/login'); return; }
       }
+      if (profile) {
+        setUserPhoto(profile.photo_url || '');
+      }
       setLoading(false);
     }
     init();
-  }, []);
+  }, [profile]);
 
   if (loading) return <LoadingOverlay show />;
 
@@ -44,6 +48,7 @@ export default function ApplicantLayout() {
         userInitials={initials}
         userName={displayName}
         companyLogo={null}
+        userPhoto={userPhoto}
       />
       <Outlet context={{ profile }} />
       <ZeloChatbot />

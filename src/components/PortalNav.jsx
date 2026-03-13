@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo }) {
+export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto }) {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -110,7 +110,19 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   }}
                 />
               ) : (
-                <div className="user-av">{userInitials || '??'}</div>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '50%',
+                  background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontWeight: 700, fontSize: '13px',
+                  color: 'white', overflow: 'hidden', flexShrink: 0,
+                  border: '2px solid var(--border)'
+                }}>
+                  {userPhoto ? (
+                    <img src={userPhoto} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{userInitials}</span>
+                  )}
+                </div>
               )}
               <span className="user-name">{userName || 'User'}</span>
             </div>
@@ -150,7 +162,19 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   }}
                 />
               ) : (
-                <div className="user-av">{userInitials || '??'}</div>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '50%',
+                  background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontWeight: 700, fontSize: '13px',
+                  color: 'white', overflow: 'hidden', flexShrink: 0,
+                  border: '2px solid var(--border)'
+                }}>
+                  {userPhoto ? (
+                    <img src={userPhoto} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{userInitials}</span>
+                  )}
+                </div>
               )}
               <span className="user-name">{userName || 'User'}</span>
             </div>
