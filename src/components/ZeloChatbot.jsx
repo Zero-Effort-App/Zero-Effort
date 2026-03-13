@@ -111,7 +111,81 @@ export default function ZeloChatbot() {
 
   const processUserMessage = async (userInput) => {
     try {
-      // Use the smart response system
+      const lowerQuery = userInput.toLowerCase();
+      
+      // Handle password reset queries
+      if (lowerQuery.includes('reset password') || lowerQuery.includes('forgot password') || lowerQuery.includes('change password')) {
+        return {
+          text: `🔐 **Password Reset:**
+
+1. Go to the login page
+2. Click "Forgot Password?"
+3. Enter your email address
+4. Check your inbox for reset instructions
+5. Follow the link to create a new password
+
+💡 If you don't receive the email, check your spam folder!`,
+          suggestions: ['Show login page', 'Help with login issues', 'Contact support']
+        };
+      }
+      
+      // Handle companies queries
+      if (lowerQuery.includes('companies') || lowerQuery.includes('who is hiring') || lowerQuery.includes('company list')) {
+        try {
+          const companies = await getCompanies(true); // true = active only
+          if (companies.length === 0) {
+            return {
+              text: 'No companies are currently hiring. Check back soon!',
+              suggestions: ['Show available jobs', 'Help with applications', 'Career advice']
+            };
+          }
+          const list = companies.map(c => `• ${c.name} — ${c.industry || 'Technology'}`).join('\n');
+          return {
+            text: `🏢 **Companies Currently Hiring:**
+
+${list}
+
+💡 Click "Companies" in the menu to see their open positions!`,
+            suggestions: ['Show available jobs', 'Browse companies', 'Career advice']
+          };
+        } catch (error) {
+          console.error('Error fetching companies:', error);
+          return {
+            text: 'I had trouble loading company information. Please try again.',
+            suggestions: ['Show available jobs', 'Help with applications', 'Contact support']
+          };
+        }
+      }
+      
+      // Handle jobs queries
+      if (lowerQuery.includes('jobs') || lowerQuery.includes('open positions') || lowerQuery.includes('available jobs')) {
+        try {
+          const jobs = await getJobs(true); // true = active only
+          if (jobs.length === 0) {
+            return {
+              text: 'No open positions right now. Check back soon!',
+              suggestions: ['Show companies', 'Help with applications', 'Career advice']
+            };
+          }
+          const list = jobs.slice(0, 5).map(j => `• ${j.title} at ${j.companies?.name || 'Company'} — ${j.type}`).join('\n');
+          return {
+            text: `💼 **Open Positions:**
+
+${list}
+
+💡 Go to "Browse Jobs" to see all ${jobs.length} positions and apply!`,
+            suggestions: ['Browse all jobs', 'Show companies', 'Help with applications']
+          };
+        } catch (error) {
+          console.error('Error fetching jobs:', error);
+          return {
+            text: 'I had trouble loading job information. Please try again.',
+            suggestions: ['Show companies', 'Help with applications', 'Contact support']
+          };
+        }
+      }
+      
+      // Use the smart response system for other queries
       const zeloResponse = await zeloResponses.processSmartQuery(userInput);
       return zeloResponse;
     } catch (error) {
