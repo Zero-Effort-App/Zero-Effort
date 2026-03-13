@@ -5,6 +5,7 @@ import { getCompanyProfile } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import ZeloChatbot from '../../components/ZeloChatbot';
 import { useToast } from '../../contexts/ToastContext';
 
 export default function CompanyLayout() {
@@ -61,6 +62,7 @@ export default function CompanyLayout() {
         companyLogo={company?.logo_url || null}
       />
       <Outlet context={{ company, setCompany }} />
+      <ZeloChatbot />
     </>
   );
 }

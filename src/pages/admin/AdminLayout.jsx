@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import ZeloChatbot from '../../components/ZeloChatbot';
 
 export default function AdminLayout() {
   const { profile, checkSession } = useAuth();
@@ -48,6 +49,7 @@ export default function AdminLayout() {
         companyLogo={null}
       />
       <Outlet />
+      <ZeloChatbot />
     </>
   );
 }

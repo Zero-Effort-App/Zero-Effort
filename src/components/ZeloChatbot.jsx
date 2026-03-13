@@ -6,6 +6,9 @@ import { saveChatHistory, loadChatHistory, clearChatHistory } from '../lib/chatP
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
+// Create a singleton instance
+const zeloResponses = new zeloSmartResponses();
+
 export default function ZeloChatbot() {
   const { theme } = useTheme();
   const { profile } = useAuth();
@@ -58,7 +61,7 @@ export default function ZeloChatbot() {
       if (profile) {
         const applications = await getMyApplications(profile.id);
         setUserApplications(applications);
-        zeloSmartResponses.setUserContext(profile, applications);
+        zeloResponses.setUserContext(profile, applications);
       }
       
       setIsInitialized(true);
@@ -109,7 +112,7 @@ export default function ZeloChatbot() {
   const processUserMessage = async (userInput) => {
     try {
       // Use the smart response system
-      const zeloResponse = await zeloSmartResponses.processSmartQuery(userInput);
+      const zeloResponse = await zeloResponses.processSmartQuery(userInput);
       return zeloResponse;
     } catch (error) {
       console.error('Error processing message:', error);
@@ -266,9 +269,9 @@ export default function ZeloChatbot() {
         position: 'fixed',
         bottom: isMobile ? '60px' : '20px', // Higher on mobile to leave more space
         right: isMobile ? '10px' : '20px', // Smaller margins on mobile
-        width: isMobile ? 'calc(100vw - 20px)' : '380px', // Leave margins on mobile
-        height: isMobile ? '70vh' : '600px', // 70% of screen height on mobile
-        maxHeight: isMobile ? '500px' : '600px', // Max height limit on mobile
+        width: isMobile ? 'calc(100vw - 40px)' : '380px', // Leave more margins on mobile
+        height: isMobile ? '60vh' : '600px', // 60% of screen height on mobile
+        maxHeight: isMobile ? '400px' : '600px', // Smaller max height on mobile
         background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
         borderRadius: isMobile ? '16px' : '16px', // Keep rounded corners on mobile
         boxShadow: isMobile ? '0 4px 20px rgba(0, 0, 0, 0.15)' : '0 10px 40px rgba(0, 0, 0, 0.2)',
@@ -279,7 +282,7 @@ export default function ZeloChatbot() {
         // Mobile optimizations
         overflow: 'hidden',
         // Center on mobile
-        left: isMobile ? '10px' : 'auto'
+        left: isMobile ? '20px' : 'auto'
       }}
     >
       {/* Header */}
