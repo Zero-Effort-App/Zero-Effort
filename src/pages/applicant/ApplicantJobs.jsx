@@ -152,7 +152,7 @@ export default function ApplicantJobs() {
   if (isLoading) return (
     <div className="pw">
       <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside Zero Effort.</p></div>
-      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
         {[1,2,3].map(i => <SkeletonCard key={i} />)}
       </div>
     </div>

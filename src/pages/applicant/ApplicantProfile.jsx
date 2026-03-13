@@ -27,9 +27,6 @@ export default function ApplicantProfile() {
         .eq('id', user.id)
         .single()
 
-      console.log('Profile data loaded:', data)
-      console.log('photo_url from DB:', data?.photo_url)
-
       if (data) {
         setFormData({
           first_name: data.first_name || '',
@@ -54,24 +51,19 @@ export default function ApplicantProfile() {
 
     try {
       setUploadingPhoto(true)
-      console.log('Uploading photo for user:', user.id)
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}` 
-      console.log('File name:', fileName)
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true })
 
-      console.log('Upload error:', uploadError)
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName)
-
-      console.log('Public URL:', publicUrl)
 
       const { data: updateData, error: updateError } = await supabase
         .from('applicants')
@@ -83,9 +75,6 @@ export default function ApplicantProfile() {
           ignoreDuplicates: false 
         })
         .select()
-
-      console.log('Upsert data:', updateData)
-      console.log('Upsert error:', updateError)
 
       if (updateError) throw updateError
 

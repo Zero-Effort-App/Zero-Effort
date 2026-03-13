@@ -92,11 +92,7 @@ export default function CompanyListings() {
         posted_at: new Date().toISOString()
       };
 
-      console.log('Submitting job with data:', jobData);
-      console.log('Company ID:', company?.id);
-
       const result = await addJob(jobData);
-      console.log('Job created successfully:', result);
       
       await addActivityLog('job', '📝', `New job '${formData.title}' posted by ${company.name}`, `${company.name} · Company`, company.id);
       setModal({ type: 'success', data: { title: formData.title } });
@@ -115,15 +111,6 @@ export default function CompanyListings() {
         department: formData.department
       };
       
-      console.log('Job update payload:', {
-        title: updateData.title,
-        department: updateData.department,
-        type: updateData.type,
-        salary: updateData.salary,
-        description: updateData.description,
-        requirements: updateData.requirements,
-        status: updateData.status
-      });
       
       await updateJob(jobId, updateData);
       closeModal();
@@ -302,7 +289,6 @@ function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
       requirements: form.requirements.split('\n').filter(Boolean),
     };
     
-    console.log('JobForm submitting data:', jobData);
     onSubmit(jobData);
   }
 

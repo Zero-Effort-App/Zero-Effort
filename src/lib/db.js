@@ -213,7 +213,7 @@ export async function getCompanyApplications(companyId) {
       .from('applications')
       .select(`
         *,
-        applicants(first_name, last_name, email, phone),
+        applicants(first_name, last_name, email, phone, photo_url),
         jobs(title, company_id, department, type)
       `)
       .in('job_id', jobIds)

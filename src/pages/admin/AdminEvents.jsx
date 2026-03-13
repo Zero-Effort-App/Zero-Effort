@@ -67,7 +67,7 @@ export default function AdminEvents() {
         <button className="btn-acc" onClick={() => setModal({ type: 'add', data: null })}>+ Add Event</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '.875rem' }} className="stagger">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '.875rem' }} className="stagger">
         {events.map(e => (
           <div key={e.id} className="ev-card" style={{ width: '100%', flexShrink: 'unset' }}>
             <div className="ev-top">

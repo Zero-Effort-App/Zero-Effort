@@ -47,6 +47,7 @@ export default function CompanyApplicants() {
         ini: `${(a.applicants?.first_name || '?')[0]}${(a.applicants?.last_name || '?')[0]}`.toUpperCase(),
         email: a.applicants?.email || '',
         phone: a.applicants?.phone || '',
+        photo_url: a.applicants?.photo_url || '',
         date: formatDate(a.applied_at),
         jobTitle: a.jobs?.title || '—',
         jobType: a.jobs?.type || '',
@@ -99,7 +100,7 @@ export default function CompanyApplicants() {
   if (isLoading) return (
     <div className="pw">
       <div className="ph"><h2>Applicants</h2><p>Review, accept, decline, or contact applicants for your listings.</p></div>
-      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
         {[1,2,3].map(i => <SkeletonCard key={i} />)}
       </div>
     </div>
@@ -130,7 +131,19 @@ export default function CompanyApplicants() {
               onClick={() => setSelected(a.id)}
             >
               <div className="acard-top">
-                <div className="acard-av">{a.ini}</div>
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '50%',
+                  background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontWeight: 700, fontSize: '14px',
+                  color: 'white', overflow: 'hidden', flexShrink: 0,
+                  border: '2px solid var(--border)'
+                }}>
+                  {a.photo_url ? (
+                    <img src={a.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{a.applicants?.first_name?.[0] || '?'}{a.applicants?.last_name?.[0] || '?'}</span>
+                  )}
+                </div>
                 <div>
                   <div className="acard-name">{a.name}</div>
                   <div className="acard-role">{a.jobTitle}</div>
@@ -160,7 +173,19 @@ export default function CompanyApplicants() {
           {selectedApp ? (
             <>
               <div className="dp-head">
-                <div className="dp-av-lg">{selectedApp.ini}</div>
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '50%',
+                  background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontWeight: 700, fontSize: '16px',
+                  color: 'white', overflow: 'hidden', flexShrink: 0,
+                  border: '2px solid var(--border)'
+                }}>
+                  {selectedApp.photo_url ? (
+                    <img src={selectedApp.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{selectedApp.ini}</span>
+                  )}
+                </div>
                 <div>
                   <div className="dp-name">{selectedApp.name}</div>
                   <div className="dp-sub">{selectedApp.jobTitle} · {selectedApp.jobType}</div>

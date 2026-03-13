@@ -132,7 +132,7 @@ export default function AdminOverview() {
         <span className="sh-title"><span className="sh-dot" />Top Companies</span>
         <button className="sh-more" onClick={() => navigate('/admin/companies')}>View all →</button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '.875rem', marginBottom: '2rem' }} className="stagger">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '.875rem', marginBottom: '2rem' }} className="stagger">
         {companies.map(c => (
           <div key={c.id} className="scard" style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '.5rem' }}>
