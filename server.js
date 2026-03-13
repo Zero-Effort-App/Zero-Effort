@@ -6,7 +6,6 @@ dotenv.config()
 
 console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
 console.log('Service role key loaded:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'YES' : 'NO - CHECK .env FILE')
-console.log('Service role key preview:', process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...')
 
 const app = express()
 app.use(cors())
