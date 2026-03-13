@@ -19,16 +19,26 @@ export default function ApplicantProfile() {
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        phone: profile.phone || '',
-        photo_url: profile.photo_url || ''
-      });
-      setPhotoUrl(profile.photo_url || '');
+    async function loadProfile() {
+      if (!user) return
+      const { data, error } = await supabase
+        .from('applicants')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (data) {
+        setFormData({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          phone: data.phone || '',
+          photo_url: data.photo_url || ''
+        });
+        setPhotoUrl(data.photo_url || '')
+      }
     }
-  }, [profile]);
+    loadProfile()
+  }, [user]);
 
   async function handlePhotoUpload(e) {
     const file = e.target.files[0]
@@ -63,8 +73,18 @@ export default function ApplicantProfile() {
 
       if (updateError) throw updateError
 
+      // Force refresh the page data
       setPhotoUrl(publicUrl)
-      showToast('Profile photo updated! 🎉', 'success')
+
+      // Also update the applicant record to make sure it's saved
+      const { error: verifyError } = await supabase
+        .from('applicants')
+        .update({ photo_url: publicUrl })
+        .eq('id', user.id)
+
+      if (!verifyError) {
+        showToast('Profile photo updated! 🎉', 'success')
+      }
     } catch (err) {
       console.error('Photo upload error:', err)
       showToast('Failed to upload photo. Please try again.', 'error')

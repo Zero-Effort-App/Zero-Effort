@@ -1,29 +1,43 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
 
 export default function ApplicantLayout() {
-  const { profile, checkSession } = useAuth();
+  const { profile, checkSession, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userPhoto, setUserPhoto] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    async function loadApplicantData() {
+      if (!user) return
+      const { data } = await supabase
+        .from('applicants')
+        .select('first_name, last_name, photo_url')
+        .eq('id', user.id)
+        .single()
+
+      if (data) {
+        setUserPhoto(data.photo_url || '')
+      }
+    }
+    
     async function init() {
       if (!profile || profile.role !== 'applicant') {
         const session = await checkSession('applicant');
         if (!session) { navigate('/applicant/login'); return; }
       }
-      if (profile) {
-        setUserPhoto(profile.photo_url || '');
+      if (user) {
+        loadApplicantData()
       }
       setLoading(false);
     }
     init();
-  }, [profile]);
+  }, [user, profile]);
 
   if (loading) return <LoadingOverlay show />;
 
