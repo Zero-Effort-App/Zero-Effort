@@ -46,8 +46,9 @@ export default function ZeloChatbot() {
     setLoading(true)
 
     try {
-      // Fetch real data from Supabase
+      console.log('Sending to server...')
       const { jobs, companies } = await fetchJobsAndCompanies()
+      console.log('Jobs fetched:', jobs.length, 'Companies:', companies.length)
 
       const jobsList = jobs.length > 0
         ? jobs.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary} — Requirements: ${j.requirements?.join(', ')}`).join('\n')
@@ -57,7 +58,7 @@ export default function ZeloChatbot() {
         ? companies.map(c => `- ${c.name} (${c.industry}): ${c.description}`).join('\n')
         : 'No active companies currently.'
 
-      const systemPrompt = `You are Zelo, a friendly and helpful career assistant for Zero Effort — a job portal in the Philippines. You help applicants find the right job based on their skills and interests.
+      const systemPrompt = `You are Zelo, a friendly and helpful career assistant for Zero Effort — a job portal in the Philippines. You help applicants find the right job based on your skills and interests.
 
 Here are the CURRENT ACTIVE JOB LISTINGS:
 ${jobsList}
@@ -86,16 +87,13 @@ Your behavior:
 
       const response = await fetch('https://zero-effort-server.onrender.com/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          system: systemPrompt,
-          messages: conversationHistory
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: systemPrompt, messages: conversationHistory })
       })
-
+      console.log('Server response status:', response.status)
       const data = await response.json()
+      console.log('Server response data:', JSON.stringify(data).substring(0, 200))
+
       const botReply = data.content?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
 
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }])
