@@ -84,7 +84,15 @@ ${jobsList}
 Here are the CURRENT ACTIVE COMPANIES:
 ${companiesList}
 
-Always recommend jobs from the active listings above based on the user's skills and interests. If no jobs match, be honest and encouraging.`
+JOB MATCHING RULES:
+- When user mentions any skill or interest, IMMEDIATELY check BOTH the job listings AND companies
+- If jobs match their skills → recommend them directly
+- If no jobs match but a company matches their field → say "No current openings for [skill] right now, but [Company Name] is in [industry] — worth watching their listings! 👀"
+- If nothing matches at all → say "No current openings or companies match [skill] right now. Check back soon as new jobs are posted regularly! 💪"
+- NEVER suggest unrelated jobs as alternatives
+- NEVER say a job "might not be the best fit" and then suggest it anyway
+- Always be honest and direct about job availability
+- Keep it to 2-3 sentences maximum`
 
       // Build conversation history for Claude
       const conversationHistory = newMessages.map(m => ({
