@@ -75,12 +75,17 @@ export default function ApplicantProfile() {
 
       const { data: updateData, error: updateError } = await supabase
         .from('applicants')
-        .update({ photo_url: publicUrl })
-        .eq('id', user.id)
+        .upsert({ 
+          id: user.id,
+          photo_url: publicUrl 
+        }, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        })
         .select()
 
-      console.log('Update data:', updateData)
-      console.log('Update error:', updateError)
+      console.log('Upsert data:', updateData)
+      console.log('Upsert error:', updateError)
 
       if (updateError) throw updateError
 
