@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
 import { Calendar, Clock, Star, Briefcase } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 import Modal from '../../components/Modal';
 import CompanyLogo from '../../components/CompanyLogo';
 
@@ -42,6 +43,7 @@ export default function ApplicantJobs() {
   const [resumeFile, setResumeFile] = useState(null);
   const [portfolioFile, setPortfolioFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
+  const [applicationGender, setApplicationGender] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
@@ -76,6 +78,25 @@ export default function ApplicantJobs() {
     }
     load();
   }, []);
+
+  // Pre-fill gender when apply modal opens
+  useEffect(() => {
+    async function loadApplicantGender() {
+      if (modal.type === 'apply' && profile?.id) {
+        try {
+          const { data: applicantData } = await supabase
+            .from('applicants')
+            .select('gender')
+            .eq('id', profile.id)
+            .single();
+          setApplicationGender(applicantData?.gender || '');
+        } catch (err) {
+          console.error('Error loading applicant gender:', err);
+        }
+      }
+    }
+    loadApplicantGender();
+  }, [modal.type, profile?.id]);
 
   function co(cid) { return companies.find(c => c.id === cid) || {}; }
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
@@ -130,12 +151,21 @@ export default function ApplicantJobs() {
         status: 'pending'
       });
 
+      // After successful application, update gender in applicants table if provided
+      if (applicationGender) {
+        await supabase
+          .from('applicants')
+          .update({ gender: applicationGender })
+          .eq('id', profile.id);
+      }
+
       setModal({ type: 'success', data: { title: selectedJob?.title, co: selectedJob?.co } });
       
       // Reset form
       setResumeFile(null);
       setPortfolioFile(null);
       setCoverLetter('');
+      setApplicationGender('');
       
     } catch (err) {
       if (err.message?.includes('duplicate')) {
@@ -335,6 +365,23 @@ export default function ApplicantJobs() {
                 onChange={e => setCoverLetter(e.target.value)}
                 style={{ minHeight: 95 }}
               />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: '6px' }}>
+                Gender <span style={{ color: 'var(--text2)', fontWeight: 400 }}>(optional)</span>
+              </label>
+              <select
+                value={applicationGender}
+                onChange={e => setApplicationGender(e.target.value)}
+                className="finput"
+                style={{ width: '100%' }}
+              >
+                <option value="">Prefer not to say</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             {isSubmitting && <p style={{ textAlign: 'center', color: 'var(--text2)', fontSize: '.78rem' }}>Uploading files and submitting application...</p>}

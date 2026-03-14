@@ -48,6 +48,7 @@ export default function CompanyApplicants() {
         ini: `${(a.applicants?.first_name || '?')[0]}${(a.applicants?.last_name || '?')[0]}`.toUpperCase(),
         email: a.applicants?.email || '',
         phone: a.applicants?.phone || '',
+        gender: a.applicants?.gender || '',
         photo_url: a.applicants?.photo_url || '',
         date: formatDate(a.applied_at),
         jobTitle: a.jobs?.title || '—',
@@ -280,6 +281,12 @@ export default function CompanyApplicants() {
               <div><div className="contact-info-label">Phone</div><div className="contact-info-val">{modal.data.phone}</div></div>
               <button className="contact-copy" onClick={() => copyText(modal.data.phone)}>Copy</button>
             </div>
+            {modal.data.gender && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text2)' }}>
+                <User size={14} />
+                <span>{modal.data.gender}</span>
+              </div>
+            )}
             <div className="msep">Send a Message</div>
             <div className="fgroup"><label className="flabel">Subject</label><input className="finput" defaultValue={`Re: Your application for ${modal.data.jobTitle}`} /></div>
             <div className="fgroup"><label className="flabel">Message</label>

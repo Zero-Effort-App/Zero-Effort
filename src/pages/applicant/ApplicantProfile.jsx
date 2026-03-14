@@ -12,6 +12,7 @@ export default function ApplicantProfile() {
     first_name: '',
     last_name: '',
     phone: '',
+    gender: '',
     photo_url: ''
   });
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,7 @@ export default function ApplicantProfile() {
           first_name: data.first_name || '',
           last_name: data.last_name || '',
           phone: data.phone || '',
+          gender: data.gender || '',
           photo_url: data.photo_url || ''
         });
         setPhotoUrl(data.photo_url || '')
@@ -111,6 +113,7 @@ export default function ApplicantProfile() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           phone: formData.phone,
+          gender: formData.gender,
           photo_url: formData.photo_url
         })
         .eq('id', user.id);
@@ -208,6 +211,23 @@ export default function ApplicantProfile() {
             value={formData.phone}
             onChange={e => handleChange('phone', e.target.value)}
           />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: '6px' }}>
+            Gender
+          </label>
+          <select
+            value={formData.gender}
+            onChange={e => handleChange('gender', e.target.value)}
+            className="finput"
+            style={{ width: '100%' }}
+          >
+            <option value="">Prefer not to say</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
 
 
