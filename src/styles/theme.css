@@ -818,7 +818,10 @@ nav {
 .tbl-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
 .tbl-btn.success:hover { border-color: var(--success); color: var(--success); }
 
-/* ── APPLICANT COUNT ── */
+/* ── HORIZONTAL SCROLLABLE CAROUSELS ── */
+.events-scroll::-webkit-scrollbar {
+  display: none;
+}
 .acount {
   display: inline-flex; align-items: center; gap: 4px;
   background: var(--accent-d); border: 1px solid rgba(99,102,241,.2);

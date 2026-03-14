@@ -163,15 +163,68 @@ export default function ApplicantHome() {
 
       {events.length > 0 && (
         <>
-          <div className="sh"><span className="sh-title"><span className="sh-dot" />Upcoming Hiring Events</span></div>
-          <div className="ev-row">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+              Upcoming Hiring Events
+            </h2>
+            <a href="/applicant/events" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+              View all →
+            </a>
+          </div>
+
+          <div style={{
+            display: 'flex', gap: '14px',
+            overflowX: 'auto', paddingBottom: '8px',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}>
             {events.map(e => (
-              <div key={e.id} className="ev-card">
-                <div className="ev-top"><span className="ev-date">{formatDate(e.date)}</span><span className="ev-type">{e.type}</span></div>
-                <div className="ev-title">{e.title}</div>
-                <div className="ev-co">{e.organizer || '—'}</div>
+              <div key={e.id} style={{
+                minWidth: '240px', maxWidth: '240px',
+                background: 'var(--surface)', borderRadius: '16px',
+                border: '1px solid var(--border)', padding: '18px',
+                scrollSnapAlign: 'start', flexShrink: 0,
+                display: 'flex', flexDirection: 'column', gap: '10px'
+              }}>
+                {/* Date and Type badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 600 }}>
+                    {formatDate(e.date)}
+                  </span>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 700, padding: '3px 10px',
+                    borderRadius: '20px', background: 'rgba(245,158,11,0.15)',
+                    color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)'
+                  }}>
+                    {e.type}
+                  </span>
+                </div>
+
+                {/* Title and Organizer */}
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{e.title}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text2)' }}>{e.organizer || '—'}</p>
+                </div>
+
+                {/* Details */}
                 {e.details && e.details.length > 0 && (
-                  <div className="ev-chips">{e.details.map((d, i) => <span key={i} className="ev-chip">{d}</span>)}</div>
+                  <div style={{
+                    background: 'var(--bg2)', borderRadius: '8px',
+                    padding: '8px 10px', fontSize: '12px', color: 'var(--text2)',
+                    lineHeight: '1.5'
+                  }}>
+                    {Array.isArray(e.details) ? e.details[0] : e.details}
+                  </div>
+                )}
+
+                {/* Location */}
+                {e.location && (
+                  <p style={{ fontSize: '12px', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📍 {e.location}
+                  </p>
                 )}
               </div>
             ))}

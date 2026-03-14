@@ -209,39 +209,70 @@ export default function AdminOverview() {
         </div>
 
         {events.length === 0 ? (
-          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text2)', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <div style={{
+            padding: '32px', textAlign: 'center', color: 'var(--text2)',
+            background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)'
+          }}>
             <Calendar size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
             <p style={{ fontSize: '14px' }}>No upcoming events</p>
           </div>
         ) : (
-          events.slice(0, 3).map(event => (
-            <div key={event.id} style={{
-              background: 'var(--surface)', borderRadius: '12px',
-              border: '1px solid var(--border)', padding: '16px',
-              marginBottom: '10px', display: 'flex', gap: '14px', alignItems: 'center'
-            }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '10px',
-                background: 'var(--accent)', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', color: 'white', flexShrink: 0
+          <div style={{
+            display: 'flex', gap: '14px',
+            overflowX: 'auto', paddingBottom: '8px',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}>
+            {events.map(event => (
+              <div key={event.id} style={{
+                minWidth: '240px', maxWidth: '240px',
+                background: 'var(--surface)', borderRadius: '16px',
+                border: '1px solid var(--border)', padding: '18px',
+                scrollSnapAlign: 'start', flexShrink: 0,
+                display: 'flex', flexDirection: 'column', gap: '10px'
               }}>
-                <Calendar size={20} />
+                {/* Date and Type badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 600 }}>
+                    {new Date(event.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 700, padding: '3px 10px',
+                    borderRadius: '20px', background: 'rgba(245,158,11,0.15)',
+                    color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)'
+                  }}>
+                    {event.type}
+                  </span>
+                </div>
+
+                {/* Title and Organizer */}
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{event.title}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text2)' }}>{event.organizer}</p>
+                </div>
+
+                {/* Details */}
+                {event.details && event.details.length > 0 && (
+                  <div style={{
+                    background: 'var(--bg2)', borderRadius: '8px',
+                    padding: '8px 10px', fontSize: '12px', color: 'var(--text2)',
+                    lineHeight: '1.5'
+                  }}>
+                    {Array.isArray(event.details) ? event.details[0] : event.details}
+                  </div>
+                )}
+
+                {/* Location */}
+                {event.location && (
+                  <p style={{ fontSize: '12px', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📍 {event.location}
+                  </p>
+                )}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{event.title}</p>
-                <p style={{ fontSize: '12px', color: 'var(--text2)' }}>
-                  {event.type} · {new Date(event.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })} · {event.location}
-                </p>
-              </div>
-              <span style={{
-                fontSize: '11px', fontWeight: 600, padding: '4px 10px',
-                borderRadius: '20px', background: 'rgba(99,102,241,0.1)',
-                color: 'var(--accent)', flexShrink: 0
-              }}>
-                {event.is_upcoming ? 'Upcoming' : 'Past'}
-              </span>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
