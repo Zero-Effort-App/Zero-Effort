@@ -49,6 +49,7 @@ export default function ApplicantJobs() {
   const [photoError, setPhotoError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasApplied, setHasApplied] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -101,6 +102,21 @@ export default function ApplicantJobs() {
     loadApplicantGender();
   }, [modal.type, profile?.id]);
 
+  // Check if already applied when job is selected
+  useEffect(() => {
+    async function checkApplied() {
+      if (!selectedJob || !profile) return
+      const { data } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', selectedJob.id)
+        .eq('applicant_id', profile.id)
+        .maybeSingle()
+      setHasApplied(!!data)
+    }
+    checkApplied()
+  }, [selectedJob, profile]);
+
   function co(cid) { return companies.find(c => c.id === cid) || {}; }
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
 
@@ -150,6 +166,20 @@ export default function ApplicantJobs() {
 
   async function handleApply(jobId) {
     if (!profile) { showToast('Please login to apply'); return; }
+    
+    // Check if already applied
+    const { data: existing } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('job_id', selectedJob.id)
+      .eq('applicant_id', profile.id)
+      .maybeSingle()
+
+    if (existing) {
+      showToast('You have already applied for this position!', 'error')
+      setModal({ type: null, data: null })
+      return
+    }
     
     // Validate file size
     if (resumeFile && resumeFile.size > 5 * 1024 * 1024) {
@@ -339,8 +369,19 @@ export default function ApplicantJobs() {
               {selectedCo.description && (
                 <div className="dp-sec"><div className="dp-sec-h">About {selectedJob.co}</div><p>{selectedCo.description}</p></div>
               )}
-              <button className="apply-main" onClick={() => setModal({ type: 'apply', data: selectedJob })}>
-                Apply for this position →
+              <button
+                onClick={() => !hasApplied && setModal({ type: 'apply', data: selectedJob })}
+                disabled={hasApplied}
+                style={{
+                  width: '100%', padding: '14px',
+                  borderRadius: '12px', border: 'none',
+                  background: hasApplied ? 'var(--bg2)' : 'var(--accent)',
+                  color: hasApplied ? 'var(--text2)' : 'white',
+                  fontWeight: 700, fontSize: '15px',
+                  cursor: hasApplied ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {hasApplied ? '✓ Already Applied' : 'Apply for this position →'}
               </button>
             </>
           ) : (
