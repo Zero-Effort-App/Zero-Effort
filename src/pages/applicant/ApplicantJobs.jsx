@@ -161,11 +161,18 @@ export default function ApplicantJobs() {
       return;
     }
     
+    // Validate photo is uploaded and validated
+    if (!photoFile) {
+      showToast('Please upload a 1x1 ID photo', 'error');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
       let resumeUrl = null;
       let portfolioUrl = null;
+      let photoUrl = null;
 
       // Upload resume if file selected
       if (resumeFile) {
@@ -177,6 +184,11 @@ export default function ApplicantJobs() {
         portfolioUrl = await uploadFile(portfolioFile, 'Portfolios', profile.id);
       }
 
+      // Upload photo to Supabase storage
+      if (photoFile) {
+        photoUrl = await uploadFile(photoFile, 'photos', profile.id);
+      }
+
       // Submit application with file URLs
       await submitApplication({
         job_id: jobId,
@@ -184,10 +196,11 @@ export default function ApplicantJobs() {
         cover_letter: coverLetter,
         resume_url: resumeUrl,
         portfolio_url: portfolioUrl,
+        photo_url: photoUrl,
         status: 'pending'
       });
 
-      // After successful application, update gender in applicants table if provided
+      // Update gender in applicants table if provided
       if (applicationGender) {
         await supabase
           .from('applicants')
@@ -200,9 +213,12 @@ export default function ApplicantJobs() {
       // Reset form
       setResumeFile(null);
       setPortfolioFile(null);
+      setPhotoFile(null);
+      setPhotoError('');
+      setPhotoValidating(false);
       setCoverLetter('');
       setApplicationGender('');
-      
+
     } catch (err) {
       if (err.message?.includes('duplicate')) {
         setModal({ type: 'success', data: { title: selectedJob?.title, co: selectedJob?.co } });
@@ -221,7 +237,7 @@ export default function ApplicantJobs() {
         {[1,2,3].map(i => (
           <div key={i} className="card" style={{
             padding: '20px', borderRadius: '12px',
-            background: 'var(--card)', marginBottom: '12px'
+            background: 'var(--surface)', marginBottom: '12px'
           }}>
             <div style={{
               width: '60px', height: '60px', borderRadius: '8px',

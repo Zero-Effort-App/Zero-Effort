@@ -122,8 +122,8 @@ export default function CompanyApplicants() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          applicantEmail: selectedApp.applicants.email,
-          applicantName: `${selectedApp.applicants.first_name} ${selectedApp.applicants.last_name}`,
+          applicantEmail: selectedApp?.applicants?.email,
+          applicantName: `${selectedApp?.applicants?.first_name} ${selectedApp?.applicants?.last_name}`,
           companyName: company.name,
           message: messageContent.trim()
         })

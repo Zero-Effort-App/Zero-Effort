@@ -77,7 +77,7 @@ export default function ApplicantApplications() {
         {[1,2,3].map(i => (
           <div key={i} className="card" style={{
             padding: '20px', borderRadius: '12px',
-            background: 'var(--card)', marginBottom: '12px'
+            background: 'var(--surface)', marginBottom: '12px'
           }}>
             <div style={{
               width: '60px', height: '60px', borderRadius: '8px',
