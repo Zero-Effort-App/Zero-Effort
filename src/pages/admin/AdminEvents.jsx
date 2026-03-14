@@ -3,6 +3,8 @@ import { getEvents, addEvent as addEventDb, updateEvent as updateEventDb, remove
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
 
+const EVENT_TYPES = ['Career Fair', 'Job Fair', 'Seminar', 'Workshop', 'Orientation', 'Other'];
+
 export default function AdminEvents() {
   const [events, setEvents] = useState([]);
   const [modal, setModal] = useState({ type: null, data: null });
@@ -138,7 +140,7 @@ function EventForm({ title, initialData, onSubmit, onClose }) {
     type: initialData?.type || 'Career Fair',
     date: initialData?.date?.slice(0, 10) || '',
     organizer: initialData?.organizer || initialData?.co || '',
-    location: initialData?.location || 'Zero Effort',
+    location: initialData?.location || '',
     description: initialData?.details?.join(', ') || '',
   });
 
@@ -162,16 +164,28 @@ function EventForm({ title, initialData, onSubmit, onClose }) {
       <div className="fgroup"><label className="flabel">Event Title *</label><input className="finput" required value={form.title} onChange={e => handleChange('title', e.target.value)} placeholder="e.g. IT Park Career Day" /></div>
       <div className="frow">
         <div className="fgroup"><label className="flabel">Type</label>
-          <select className="fselect" value={form.type} onChange={e => handleChange('type', e.target.value)}>
-            <option>Career Fair</option><option>Workshop</option>
-            <option>Seminar</option><option>Networking</option><option>Other</option>
-          </select>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              list="event-types"
+              value={form.type}
+              onChange={e => handleChange('type', e.target.value)}
+              placeholder="Select or type event type..."
+              className="finput"
+              style={{ width: '100%' }}
+            />
+            <datalist id="event-types">
+              {EVENT_TYPES.map(t => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
+          </div>
         </div>
         <div className="fgroup"><label className="flabel">Date *</label><input className="finput" type="date" required value={form.date} onChange={e => handleChange('date', e.target.value)} /></div>
       </div>
       <div className="frow">
-        <div className="fgroup"><label className="flabel">Organizer</label><input className="finput" value={form.organizer} onChange={e => handleChange('organizer', e.target.value)} placeholder="Zero Effort" /></div>
-        <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Zero Effort" /></div>
+        <div className="fgroup"><label className="flabel">Organizer</label><input className="finput" value={form.organizer} onChange={e => handleChange('organizer', e.target.value)} placeholder="e.g. HR Department" style={{ width: '100%' }} /></div>
+        <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="e.g. Main Hall, Building A" style={{ width: '100%' }} /></div>
       </div>
       <div className="fgroup"><label className="flabel">Details</label><textarea className="ftextarea" value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="Event details (comma-separated)..." /></div>
       <button className="btn-primary" type="submit">{initialData ? 'Save changes →' : 'Add event →'}</button>
