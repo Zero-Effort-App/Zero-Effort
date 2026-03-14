@@ -4,20 +4,22 @@ import cv2
 import numpy as np
 import uuid
 import os
-import tempfile
-from rembg import remove
-from ultralytics import YOLO
 
 app = Flask(__name__)
 CORS(app)
 
-# Load YOLO model once on startup
-print("Loading YOLO model...")
-yolo_model = YOLO('yolov8n.pt')
-print("YOLO model loaded!")
+yolo_model = None
+
+def get_yolo():
+    global yolo_model
+    if yolo_model is None:
+        from ultralytics import YOLO
+        yolo_model = YOLO('yolov8n.pt')
+    return yolo_model
 
 def check_white_background(image, threshold=0.90):
     try:
+        from rembg import remove
         output_with_alpha = remove(image)
         background_mask = output_with_alpha[:, :, 3] < 10
         original_background = image[background_mask]
@@ -33,10 +35,11 @@ def check_white_background(image, threshold=0.90):
 
 def detect_forbidden_objects(image_path, conf_threshold=0.25):
     try:
-        results = yolo_model(image_path, verbose=False, conf=conf_threshold)
+        model = get_yolo()
+        results = model(image_path, verbose=False, conf=conf_threshold)
         forbidden_classes = ['cell phone', 'headphone']
-        detected = [yolo_model.names[int(box.cls)] for r in results for box in r.boxes
-                    if yolo_model.names[int(box.cls)] in forbidden_classes]
+        detected = [model.names[int(box.cls)] for r in results for box in r.boxes
+                    if model.names[int(box.cls)] in forbidden_classes]
         is_valid = len(detected) == 0
         message = f"Forbidden object(s) found: {', '.join(set(detected))}." if not is_valid else "No forbidden objects detected."
         return is_valid, message
@@ -50,47 +53,28 @@ def health():
 @app.route('/validate-photo', methods=['POST'])
 def validate_photo():
     if 'photo' not in request.files:
-        return jsonify({"valid": False, "error": "No photo uploaded"}), 400
-
+        return res.status(400).json({"valid": False, "error": "No photo uploaded"})
     file = request.files['photo']
     if file.filename == '':
         return jsonify({"valid": False, "error": "Empty filename"}), 400
-
-    # Save to temp file
     temp_path = f"/tmp/{uuid.uuid4()}_{file.filename}"
     file.save(temp_path)
-
     try:
-        # Read image
         image = cv2.imread(temp_path)
         if image is None:
             return jsonify({"valid": False, "error": "Could not read image file"}), 400
-
         errors = []
-
-        # Check 1: White background
         is_valid_bg, bg_msg = check_white_background(image)
         if not is_valid_bg:
             errors.append(bg_msg)
-
-        # Check 2: Forbidden objects
         is_valid_obj, obj_msg = detect_forbidden_objects(temp_path)
         if not is_valid_obj:
             errors.append(obj_msg)
-
         if errors:
-            return jsonify({
-                "valid": False,
-                "errors": errors
-            })
+            return jsonify({"valid": False, "errors": errors})
         else:
-            return jsonify({
-                "valid": True,
-                "message": "Photo passed all validation checks."
-            })
-
+            return jsonify({"valid": True, "message": "Photo passed all validation checks."})
     finally:
-        # Clean up temp file
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
