@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: zero-effort-validator
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    rootDir: validator
