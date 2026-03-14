@@ -203,10 +203,36 @@ export default function CompanyApplicants() {
               </div>
               <hr className="dp-div" />
 
+              {/* Contact Information */}
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>CONTACT INFORMATION</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                    <Mail size={14} style={{ color: 'var(--text2)' }} />
+                    <span>{selectedApp.email}</span>
+                  </div>
+                  {selectedApp.phone && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                      <Phone size={14} style={{ color: 'var(--text2)' }} />
+                      <span>{selectedApp.phone}</span>
+                    </div>
+                  )}
+                  {selectedApp.gender && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                      <User size={14} style={{ color: 'var(--text2)' }} />
+                      <span>{selectedApp.gender}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Cover Letter */}
               {selectedApp.cover && (
-                <div className="dp-sec">
-                  <div className="dp-sec-h">Cover Letter</div>
-                  <p>{selectedApp.cover}</p>
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>COVER LETTER</p>
+                  <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text)', background: 'var(--bg2)', padding: '12px', borderRadius: '8px' }}>
+                    {selectedApp.cover}
+                  </p>
                 </div>
               )}
 
