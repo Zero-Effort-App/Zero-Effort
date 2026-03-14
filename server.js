@@ -329,4 +329,7 @@ app.post('/api/validate-photo', async (req, res) => {
   }
 });
 
-app.listen(3002, () => console.log('Admin API server running on port 3002'))
+const PORT = process.env.PORT || 3002
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Admin API server running on port ${PORT}`)
+})
