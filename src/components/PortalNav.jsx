@@ -1,8 +1,8 @@
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Moon, Sun, Menu, X, Home, Briefcase, Building2, FileText, User, MessageCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Moon, Sun, Home, Briefcase, Building2, FileText, User, MessageCircle, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto }) {
@@ -10,9 +10,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const profileDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -23,19 +24,31 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Fetch unread count for applicant
   useEffect(() => {
-    if (!user || !location.pathname.includes('/applicant/')) return
+    if (!user || !location.pathname.includes('/applicant/')) return;
     async function fetchUnread() {
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
         .eq('applicant_id', user.id)
         .eq('is_read', false)
-        .eq('sender_type', 'company')
-      setUnreadCount(count || 0)
+        .eq('sender_type', 'company');
+      setUnreadCount(count || 0);
     }
-    fetchUnread()
+    fetchUnread();
   }, [user, location.pathname]);
 
   async function handleLogout() {
@@ -56,273 +69,538 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   const portalType = getPortalType();
 
   // Icon mapping for navigation links
-  const getNavIcon = (label, size = 14) => {
+  const getNavIcon = (label, size = 16) => {
+    const iconProps = { size, strokeWidth: 2 };
     switch(label) {
-      case 'Home': return <Home size={size} />;
-      case 'Browse Jobs': return <Briefcase size={size} />;
-      case 'Companies': return <Building2 size={size} />;
-      case 'My Applications': return <FileText size={size} />;
-      case 'My Profile': return <User size={size} />;
-      case 'Inbox': return <MessageCircle size={size} />;
+      case 'Home': return <Home {...iconProps} />;
+      case 'Browse Jobs': return <Briefcase {...iconProps} />;
+      case 'Companies': return <Building2 {...iconProps} />;
+      case 'My Applications': return <FileText {...iconProps} />;
+      case 'My Profile': return <User {...iconProps} />;
+      case 'Inbox': return <MessageCircle {...iconProps} />;
       default: return null;
     }
   };
 
+  const brandColors = {
+    primary: '#4f46e5', // indigo-600
+    primaryDark: '#4338ca', // indigo-700
+    primaryLight: '#818cf8', // indigo-400
+    accent: '#7c3aed', // violet-600
+  };
+
   return (
     <>
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        backgroundColor: 'var(--card)',
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-          height: '52px',
-        }}>
-          {/* Left - Text logo */}
-          <span style={{
-            fontSize: '18px',
-            fontWeight: 800,
-            color: 'var(--text)',
-            letterSpacing: '-0.5px'
-          }}>
-            Zero Effort
-          </span>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        .nav-header {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          background: white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+          border-bottom: 1px solid #e5e7eb;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          height: 56px; /* Reduced from 52px to 56px for better proportions */
+        }
 
-          {/* Right - Theme toggle only on mobile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Desktop nav - hidden on mobile */}
-            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {links.map(link => (
+        .nav-header.dark {
+          background: #1f2937;
+          border-bottom-color: #374151;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-brand {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 18px;
+          font-weight: 800;
+          color: ${brandColors.primary};
+          letter-spacing: -0.5px;
+          text-decoration: none;
+          transition: opacity 150ms ease;
+        }
+
+        .nav-brand:hover {
+          opacity: 0.8;
+        }
+
+        .nav-brand.dark {
+          color: ${brandColors.primaryLight};
+        }
+
+        .nav-brand-icon {
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(135deg, ${brandColors.primary}, ${brandColors.accent});
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 700;
+          font-size: 12px;
+        }
+
+        .nav-link {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 9999px;
+          border: none;
+          background: transparent;
+          color: #6b7280;
+          font-size: 14px; /* Reduced to text-sm (14px) */
+          font-weight: 500; /* Keep consistent weight */
+          cursor: pointer;
+          transition: 'color 150ms ease'; /* Only color transition */
+          text-decoration: none;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .nav-link:hover {
+          color: ${brandColors.primary}; /* Purple text color only */
+          font-weight: 500; /* Keep same weight to prevent jiggling */
+          /* NO background fill */
+        }
+
+        .nav-link.active {
+          background: transparent; /* Remove background fill */
+          color: ${brandColors.primary}; /* Purple text color */
+          font-weight: 700; /* Bold font weight only for active */
+          /* No border, no padding changes, no shadow */
+        }
+
+        .nav-link.dark {
+          color: #9ca3af;
+        }
+
+        .nav-link.dark:hover {
+          color: ${brandColors.primaryLight}; /* Purple text color for dark mode */
+          font-weight: 500; /* Keep same weight to prevent jiggling */
+          /* NO background fill */
+        }
+
+        .nav-link.dark.active {
+          background: transparent; /* Remove background fill */
+          color: ${brandColors.primaryLight}; /* Purple text color for dark mode */
+          font-weight: 700; /* Bold font weight only for active */
+          /* No border, no padding changes, no shadow */
+        }
+
+        .nav-link-icon {
+          flex-shrink: 0;
+          display: none; /* Force hide on desktop since mobile nav is separate */
+        }
+
+        .nav-badge {
+          background: #ef4444;
+          color: white;
+          border-radius: 9999px;
+          min-width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 0 4px;
+          margin-left: 4px;
+        }
+
+        .theme-toggle {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          background: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6b7280;
+          transition: all 150ms ease;
+        }
+
+        .theme-toggle:hover {
+          background: #f9fafb;
+          color: ${brandColors.primary};
+          border-color: ${brandColors.primary};
+        }
+
+        .theme-toggle.dark {
+          background: #374151;
+          border-color: #4b5563;
+          color: #9ca3af;
+        }
+
+        .theme-toggle.dark:hover {
+          background: #4b5563;
+          color: ${brandColors.primaryLight};
+          border-color: ${brandColors.primaryLight};
+        }
+
+        .profile-button {
+          display: flex;
+          align-items: center; /* Key fix for vertical alignment */
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          background: white;
+          cursor: pointer;
+          color: #374151;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 150ms ease;
+          text-decoration: none;
+          position: relative;
+          overflow: hidden;
+          height: 40px; /* Fixed height for consistency */
+          margin: 0; /* Remove any extra margin */
+        }
+
+        .profile-button:hover {
+          background: #f9fafb;
+          border-color: ${brandColors.primary};
+        }
+
+        .profile-button.dark {
+          background: #374151;
+          border-color: #4b5563;
+          color: #f3f4f6;
+        }
+
+        .profile-button.dark:hover {
+          background: #4b5563;
+          border-color: ${brandColors.primary};
+        }
+
+        .profile-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, ${brandColors.primary}, ${brandColors.accent});
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 700;
+          font-size: 11px;
+          flex-shrink: 0;
+          margin: 0; /* Remove any extra margin */
+        }
+
+        .profile-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #374151;
+          white-space: nowrap;
+          line-height: 1; /* Leading-none to remove extra line-height */
+          margin: 0; /* Remove any extra margin */
+          display: flex;
+          align-items: center; /* Ensure vertical centering */
+        }
+
+        .profile-name.dark {
+          color: #f3f4f6;
+        }
+
+        .profile-chevron {
+          color: #9ca3af;
+          transition: transform 150ms ease;
+          display: inline-flex; /* Inline-flex for proper alignment */
+          align-items: center; /* Ensure vertical centering */
+          margin: 0; /* Remove any extra margin */
+        }
+
+        .profile-button.open .profile-chevron {
+          transform: rotate(180deg);
+        }
+
+        .profile-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 200px;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          overflow: hidden;
+          z-index: 1000;
+        }
+
+        .profile-dropdown.dark {
+          background: #374151;
+          border-color: #4b5563;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border: none;
+          background: transparent;
+          color: #374151;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 150ms ease;
+          width: 100%;
+          text-align: left;
+        }
+
+        .dropdown-item:hover {
+          background: #f9fafb;
+        }
+
+        .dropdown-item.dark {
+          color: #f3f4f6;
+        }
+
+        .dropdown-item.dark:hover {
+          background: #4b5563;
+        }
+
+        .dropdown-divider {
+          height: 1px;
+          background: #e5e7eb;
+          margin: 4px 0;
+        }
+
+        .dropdown-divider.dark {
+          background: #4b5563;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+
+        @media (max-width: 767px) {
+          .desktop-nav {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      <nav className={`nav-header ${theme === 'dark' ? 'dark' : ''}`}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 20px',
+          height: '100%',
+          width: '100%', // Ensure full width
+        }}>
+          {/* Left Group - Brand Only */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexShrink: 0,
+          }}>
+            <div className="nav-brand" style={{
+              flexShrink: 0,
+            }}>
+              <div className="nav-brand-icon">ZE</div>
+              <span>Zero Effort</span>
+            </div>
+          </div>
+
+          {/* Spacer */}
+          <div style={{
+            flexGrow: 1, // This will push the right group to the right
+          }} />
+
+          {/* Right Group - Nav Links + Controls */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            flexShrink: 0, // Prevent shrinking
+          }}>
+            {/* Navigation Links */}
+            <div className="desktop-nav" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              {links.map((link, index) => (
                 <button
                   key={link.path}
-                  className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
+                  className={`nav-link ${theme === 'dark' ? 'dark' : ''} ${location.pathname === link.path ? 'active' : ''}`}
                   onClick={() => navigate(link.path)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: location.pathname === link.path ? 'var(--accent-d)' : 'transparent',
-                    color: location.pathname === link.path ? 'var(--accent2)' : 'var(--text)',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
+                  aria-label={`Navigate to ${link.label}`}
+                  aria-current={location.pathname === link.path ? 'page' : undefined}
                 >
-                  {getNavIcon(link.label)}
-                  {link.label}
+                  <span className="nav-link-icon">{getNavIcon(link.label)}</span>
+                  <span>{link.label}</span>
                   {link.badge > 0 && (
-                    <span style={{
-                      background: 'var(--accent)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '16px',
-                      height: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '9px',
-                      fontWeight: 700
-                    }}>{link.badge}</span>
+                    <span className="nav-badge">{link.badge}</span>
                   )}
                 </button>
               ))}
             </div>
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              style={{
-                width: '32px', height: '32px',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                backgroundColor: 'transparent',
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text2)'
-              }}
-            >
-              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
+            {/* Divider between nav links and controls */}
+            <div style={{
+              width: '1px',
+              height: '24px',
+              background: theme === 'dark' ? '#4b5563' : '#e5e7eb',
+              margin: '0 4px',
+            }} />
 
-            {/* Desktop only - user avatar and logout */}
-            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '50%',
-                background: 'var(--accent)', overflow: 'hidden',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 700, fontSize: '12px'
+            {/* Controls */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}>
+              {/* Theme Toggle */}
+              <button
+                className={`theme-toggle ${theme === 'dark' ? 'dark' : ''}`}
+                onClick={toggleTheme}
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              >
+                <div className={`theme-toggle-icon ${theme === 'dark' ? 'rotating' : ''}`}>
+                  {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </div>
+              </button>
+
+              {/* Mobile - Profile Section */}
+              <div className="mobile-nav" style={{
+                display: isMobile ? 'flex' : 'none',
+                alignItems: 'center',
+                gap: '8px',
               }}>
-                {userPhoto ? (
-                  <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : userInitials}
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    color: '#ef4444',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    transition: 'color 150ms ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = '#dc2626';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = '#ef4444';
+                  }}
+                >
+                  <LogOut size={14} />
+                  Log out
+                </button>
               </div>
-              <span style={{ fontSize: '14px', fontWeight: 600 }}>{userName}</span>
-              <button onClick={handleLogout} style={{
-                padding: '6px 12px', borderRadius: '8px',
-                border: '1px solid var(--border)',
-                background: 'transparent', cursor: 'pointer',
-                fontSize: '13px', color: 'var(--text2)'
-              }}>Log out</button>
+
+              {/* Desktop - Profile Dropdown */}
+              <div className="desktop-nav" style={{ display: isMobile ? 'none' : 'flex' }} ref={profileDropdownRef}>
+                <button
+                  className={`profile-button ${theme === 'dark' ? 'dark' : ''} ${isProfileDropdownOpen ? 'open' : ''}`}
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  aria-label="Profile menu"
+                  aria-expanded={isProfileDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="profile-avatar">
+                    {userPhoto ? (
+                      <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
+                  <span className="profile-name">{userName}</span>
+                  <span className="profile-chevron">
+                    <ChevronDown size={14} />
+                  </span>
+                </button>
+
+                {isProfileDropdownOpen && (
+                  <div className={`profile-dropdown ${theme === 'dark' ? 'dark' : ''}`} style={{
+                    minWidth: '140px'
+                  }}>
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        color: '#ef4444', // Red text color for destructive action
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        transition: 'background-color 150ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme === 'dark' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                      }}
+                    >
+                      <LogOut size={16} />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </nav>
-
-      {/* Mobile dropdown menu */}
-      {isMobile && isMobileMenuOpen && (
-        <>
-          {/* Dark overlay */}
-          <div
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{
-              position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              zIndex: 9998,
-              backdropFilter: 'blur(3px)',
-              animation: 'fadeIn 0.2s ease-out'
-            }}
-          />
-
-          {/* Side Drawer - slides from RIGHT */}
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: '75%',
-            maxWidth: '300px',
-            zIndex: 9999,
-            backgroundColor: 'var(--card)',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
-            overflowY: 'auto',
-            animation: 'slideInRight 0.25s ease-out'
-          }}>
-            {/* Drawer Header */}
-            <div style={{
-              padding: '20px 16px 16px',
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <img
-                src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
-                alt="Zero Effort"
-                style={{ height: '28px', width: 'auto' }}
-              />
-            </div>
-
-            {/* Nav Links */}
-            <div style={{ flex: 1, padding: '8px 0' }}>
-              {links.map(link => (
-                <a
-                  key={link.path}
-                  href={link.path}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(link.path);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '13px 16px',
-                    color: 'var(--text)',
-                    textDecoration: 'none',
-                    fontSize: '15px', fontWeight: location.pathname === link.path ? 700 : 500,
-                    borderLeft: location.pathname === link.path ? '3px solid var(--accent)' : '3px solid transparent',
-                    backgroundColor: location.pathname === link.path ? 'var(--accent-d)' : 'transparent'
-                  }}
-                >
-                  <span style={{ color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)' }}>
-                    {getNavIcon(link.label)}
-                  </span>
-                  {link.label}
-                  {link.label === 'Inbox' && unreadCount > 0 && (
-                    <span style={{
-                      marginLeft: 'auto', background: 'var(--accent)',
-                      color: 'white', borderRadius: '50%',
-                      width: '20px', height: '20px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '11px', fontWeight: 700
-                    }}>{unreadCount}</span>
-                  )}
-                </a>
-              ))}
-            </div>
-
-            {/* User info at bottom */}
-            <div style={{
-              padding: '16px',
-              borderTop: '1px solid var(--border)',
-              display: 'flex', alignItems: 'center', gap: '10px'
-            }}>
-              <div style={{
-                width: '38px', height: '38px', borderRadius: '50%',
-                background: 'var(--accent)', overflow: 'hidden', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 700, fontSize: '13px'
-              }}>
-                {userPhoto ? (
-                  <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : companyLogo ? (
-                  <img src={companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  userInitials
-                )}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: 'var(--text)' }}>
-                  {userName || 'User'}
-                </p>
-              </div>
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '6px 12px', borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                  background: 'transparent', cursor: 'pointer',
-                  fontSize: '13px', color: 'var(--text2)',
-                  fontWeight: 600
-                }}
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Bottom Navigation - Mobile Only */}
       <div className="bottom-nav" style={{
         position: 'fixed',
         bottom: 0, left: 0, right: 0,
         height: '64px',
-        backgroundColor: 'var(--card)',
-        borderTop: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+        backgroundColor: theme === 'dark' ? '#1f2937' : 'white',
+        borderTop: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+        display: 'flex', /* Restore bottom nav */
+        alignItems: 'center',
+        justifyContent: 'space-around',
         zIndex: 100,
         paddingBottom: 'env(safe-area-inset-bottom)'
       }}>
         {links.map(link => (
-          <a
+          <button
             key={link.path}
-            href={link.path}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate(link.path);
-            }}
+            onClick={() => navigate(link.path)}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: '4px', textDecoration: 'none', position: 'relative',
-              flex: 1, padding: '6px 0',
-              color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)'
+              gap: '4px', border: 'none', background: 'transparent',
+              position: 'relative', flex: 1, padding: '6px 0',
+              cursor: 'pointer',
+              color: location.pathname === link.path 
+                ? (theme === 'dark' ? brandColors.primaryLight : brandColors.primary)
+                : (theme === 'dark' ? '#9ca3af' : '#6b7280')
             }}
           >
             <div style={{ position: 'relative' }}>
@@ -330,7 +608,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               {link.label === 'Inbox' && unreadCount > 0 && (
                 <span style={{
                   position: 'absolute', top: '-6px', right: '-6px',
-                  background: 'var(--accent)', color: 'white',
+                  background: '#ef4444', color: 'white',
                   borderRadius: '50%', width: '16px', height: '16px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '9px', fontWeight: 700
@@ -351,7 +629,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                link.label === 'My Profile' ? 'Profile' :
                link.label}
             </span>
-          </a>
+          </button>
         ))}
       </div>
     </>
