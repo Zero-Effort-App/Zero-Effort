@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
+import busboy from 'busboy';
+import sharp from 'sharp';
 dotenv.config()
 
 console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
@@ -234,8 +236,8 @@ app.post('/api/send-message-notification', async (req, res) => {
 
 // Photo Validation Endpoint
 app.post('/api/validate-photo', async (req, res) => {
+  console.log('validate-photo called');
   try {
-    const busboy = require('busboy');
     const bb = busboy({ headers: req.headers });
     let fileBuffer = null;
     let fileSize = 0;
@@ -258,7 +260,6 @@ app.post('/api/validate-photo', async (req, res) => {
         }
 
         const errors = [];
-        const sharp = require('sharp');
 
         // Check 1: File size max 2MB
         if (fileSize > 2 * 1024 * 1024) {
@@ -266,7 +267,6 @@ app.post('/api/validate-photo', async (req, res) => {
         }
 
         // Check 2: White background
-        // Resize to 100x100 for fast processing
         const { data, info } = await sharp(fileBuffer)
           .resize(100, 100)
           .removeAlpha()
@@ -276,29 +276,24 @@ app.post('/api/validate-photo', async (req, res) => {
         const w = info.width;
         const h = info.height;
 
-        // Sample all edge pixels (top row, bottom row, left col, right col)
         let whiteCount = 0;
         let totalSampled = 0;
 
         for (let x = 0; x < w; x++) {
-          // Top row
           const topIdx = (0 * w + x) * 3;
           if (data[topIdx] > 210 && data[topIdx+1] > 210 && data[topIdx+2] > 210) whiteCount++;
           totalSampled++;
 
-          // Bottom row
           const botIdx = ((h-1) * w + x) * 3;
           if (data[botIdx] > 210 && data[botIdx+1] > 210 && data[botIdx+2] > 210) whiteCount++;
           totalSampled++;
         }
 
         for (let y = 1; y < h - 1; y++) {
-          // Left column
           const leftIdx = (y * w + 0) * 3;
           if (data[leftIdx] > 210 && data[leftIdx+1] > 210 && data[leftIdx+2] > 210) whiteCount++;
           totalSampled++;
 
-          // Right column
           const rightIdx = (y * w + (w-1)) * 3;
           if (data[rightIdx] > 210 && data[rightIdx+1] > 210 && data[rightIdx+2] > 210) whiteCount++;
           totalSampled++;
@@ -309,11 +304,11 @@ app.post('/api/validate-photo', async (req, res) => {
           errors.push(`Background must be plain white. Only ${Math.round(whiteRatio * 100)}% of the background is white.`);
         }
 
-        // Check 3: Square ratio (1x1 photo)
+        // Check 3: Square ratio
         const metadata = await sharp(fileBuffer).metadata();
         const ratio = metadata.width / metadata.height;
         if (ratio < 0.85 || ratio > 1.15) {
-          errors.push('Photo must be square (1:1 ratio). Please upload a proper 1x1 ID photo.');
+          errors.push('Photo must be square (1:1 ratio).');
         }
 
         if (errors.length > 0) {
@@ -323,14 +318,14 @@ app.post('/api/validate-photo', async (req, res) => {
 
       } catch (err) {
         console.error('Validation inner error:', err);
-        return res.status(500).json({ valid: false, error: 'Validation failed.' });
+        return res.status(500).json({ valid: false, error: err.message });
       }
     });
 
     req.pipe(bb);
   } catch (err) {
     console.error('Validation error:', err);
-    return res.status(500).json({ valid: false, error: 'Validation failed.' });
+    return res.status(500).json({ valid: false, error: err.message });
   }
 });
 
