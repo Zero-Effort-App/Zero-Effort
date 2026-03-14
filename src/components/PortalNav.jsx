@@ -74,46 +74,72 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         position: 'sticky', top: 0, zIndex: 100,
         backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
         borderBottom: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 16px',
           height: '52px',
-          maxWidth: '1200px',
-          margin: '0 auto'
         }}>
-          {/* Logo - bigger and cleaner */}
+          {/* Left - Logo */}
           <img
             src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
             alt="Zero Effort"
-            style={{ height: '30px', width: 'auto', objectFit: 'contain' }}
+            style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
           />
 
-          {/* Right side - portal badge + theme toggle */}
+          {/* Right - Desktop nav + theme toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Portal type badge */}
-            <span style={{
-              fontSize: '10px', fontWeight: 700, padding: '4px 10px',
-              borderRadius: '20px', letterSpacing: '0.05em',
-              backgroundColor: theme === 'dark' ? '#1e2030' : '#f3f4f6',
-              color: '#6366f1',
-              border: '1px solid #6366f1',
-              textTransform: 'uppercase'
-            }}>
-              {portalType}
-            </span>
+            {/* Desktop nav links - hidden on mobile via CSS */}
+            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {links.map(link => (
+                <button
+                  key={link.path}
+                  className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
+                  onClick={() => navigate(link.path)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: location.pathname === link.path ? 'var(--accent-d)' : 'transparent',
+                    color: location.pathname === link.path ? 'var(--accent2)' : 'var(--text)',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  {getNavIcon(link.label)}
+                  {link.label}
+                  {link.badge > 0 && (
+                    <span style={{
+                      background: 'var(--accent)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '16px',
+                      height: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '9px',
+                      fontWeight: 700
+                    }}>{link.badge}</span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-            {/* Theme toggle - smaller and cleaner */}
+            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               style={{
                 width: '32px', height: '32px',
                 borderRadius: '8px',
                 border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
-                backgroundColor: theme === 'dark' ? '#1e2030' : '#f3f4f6',
+                backgroundColor: 'transparent',
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: theme === 'dark' ? '#8b8fa8' : '#6b7280'
@@ -121,70 +147,30 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             >
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
+
+            {/* User avatar - desktop only */}
+            <div className="desktop-nav" style={{
+              display: 'flex', alignItems: 'center', gap: '8px'
+            }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: '#6366f1', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 700, fontSize: '12px', cursor: 'pointer'
+              }}>
+                {userPhoto ? (
+                  <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : userInitials}
+              </div>
+              <span style={{ fontSize: '14px', fontWeight: 600 }}>{userName}</span>
+              <button onClick={handleLogout} style={{
+                padding: '6px 12px', borderRadius: '8px',
+                border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+                background: 'transparent', cursor: 'pointer',
+                fontSize: '13px', color: theme === 'dark' ? '#8b8fa8' : '#6b7280'
+              }}>Log out</button>
+            </div>
           </div>
-        </div>
-
-        {/* Desktop navigation links */}
-        <div className="desktop-nav" style={{
-          display: 'flex', alignItems: 'center', gap: '4px',
-          height: '52px'
-        }}>
-          {links.map(link => (
-            <button
-              key={link.path}
-              className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
-              onClick={() => navigate(link.path)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: location.pathname === link.path ? 'var(--accent-d)' : 'transparent',
-                color: location.pathname === link.path ? 'var(--accent2)' : 'var(--text)',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              {getNavIcon(link.label)}
-              {link.label}
-              {link.badge > 0 && (
-                <span style={{
-                  background: 'var(--accent)',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '16px',
-                  height: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '9px',
-                  fontWeight: 700
-                }}>{link.badge}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Right side - theme toggle (desktop only) */}
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={toggleTheme}
-            style={{
-              width: '36px', height: '36px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              background: 'var(--bg2)',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--text)'
-            }}
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
         </div>
       </nav>
 
