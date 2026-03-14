@@ -397,10 +397,10 @@ export default function CompanyApplicants() {
           zIndex: 1000, padding: '16px', backdropFilter: 'blur(4px)'
         }}>
           <div style={{
-            background: 'var(--card)', borderRadius: '20px',
+            background: 'var(--surface)', borderRadius: '20px',
             padding: '28px', width: '100%', maxWidth: '480px',
             border: '1px solid var(--border)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
           }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
@@ -426,7 +426,8 @@ export default function CompanyApplicants() {
               background: 'var(--bg2)', borderRadius: '10px',
               padding: '10px 14px', marginBottom: '16px',
               fontSize: '13px', color: 'var(--text2)',
-              display: 'flex', alignItems: 'center', gap: '8px'
+              display: 'flex', alignItems: 'center', gap: '8px',
+              border: '1px solid var(--border)'
             }}>
               <MessageCircle size={14} />
               Message will appear in their inbox and be sent to their email.
@@ -446,6 +447,8 @@ export default function CompanyApplicants() {
                 boxSizing: 'border-box', lineHeight: '1.6',
                 fontFamily: 'inherit'
               }}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
 
             {/* Buttons */}
@@ -454,10 +457,12 @@ export default function CompanyApplicants() {
                 onClick={() => { setShowMessageModal(false); setMessageContent('') }}
                 style={{
                   flex: 1, padding: '12px', borderRadius: '12px',
-                  border: '1px solid var(--border)', background: 'transparent',
+                  border: '1px solid var(--border2)', background: 'var(--surface2)',
                   cursor: 'pointer', fontSize: '14px', fontWeight: 600,
                   color: 'var(--text)'
                 }}
+                onMouseEnter={e => e.target.style.borderColor = 'var(--accent)'}
+                onMouseLeave={e => e.target.style.borderColor = 'var(--border2)'}
               >
                 Cancel
               </button>
