@@ -81,16 +81,19 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           padding: '0 16px',
           height: '52px',
         }}>
-          {/* Left - Logo */}
-          <img
-            src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
-            alt="Zero Effort"
-            style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
-          />
+          {/* Left - Text logo */}
+          <span style={{
+            fontSize: '18px',
+            fontWeight: 800,
+            color: theme === 'dark' ? '#ffffff' : '#000000',
+            letterSpacing: '-0.5px'
+          }}>
+            Zero Effort
+          </span>
 
-          {/* Right - Desktop nav + theme toggle */}
+          {/* Right - Theme toggle only on mobile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Desktop nav links - hidden on mobile via CSS */}
+            {/* Desktop nav - hidden on mobile */}
             <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               {links.map(link => (
                 <button
@@ -148,15 +151,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
-            {/* User avatar - desktop only */}
-            <div className="desktop-nav" style={{
-              display: 'flex', alignItems: 'center', gap: '8px'
-            }}>
+            {/* Desktop only - user avatar and logout */}
+            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{
                 width: '32px', height: '32px', borderRadius: '50%',
                 background: '#6366f1', overflow: 'hidden',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 700, fontSize: '12px', cursor: 'pointer'
+                color: 'white', fontWeight: 700, fontSize: '12px'
               }}>
                 {userPhoto ? (
                   <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
