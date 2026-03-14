@@ -196,22 +196,26 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               top: 0, left: 0, right: 0, bottom: 0,
               backgroundColor: 'rgba(0,0,0,0.5)',
               zIndex: 9998,
-              backdropFilter: 'blur(3px)'
+              backdropFilter: 'blur(3px)',
+              animation: 'fadeIn 0.2s ease-out'
             }}
           />
 
-          {/* Side Drawer */}
+          {/* Side Drawer - slides from RIGHT */}
           <div style={{
             position: 'fixed',
-            top: 0, left: 0, bottom: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
             width: '75%',
             maxWidth: '300px',
             zIndex: 9999,
             backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
-            overflowY: 'auto'
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
+            overflowY: 'auto',
+            animation: 'slideInRight 0.25s ease-out'
           }}>
             {/* Drawer Header */}
             <div style={{
