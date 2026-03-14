@@ -187,116 +187,122 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
       {/* Mobile dropdown menu */}
       {isMobile && isMobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-          backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto'
-        }}>
-          {/* Menu Header */}
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 16px', height: '56px',
-            borderBottom: '1px solid var(--border)',
-            flexShrink: 0
-          }}>
-            <img
-              src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
-              alt="Zero Effort"
-              style={{ height: '32px', width: 'auto' }}
-            />
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              style={{
-                width: '34px', height: '34px', borderRadius: '8px',
-                border: '1px solid var(--border)', background: 'var(--bg2)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', color: 'var(--text)'
-              }}
-            >
-              <X size={16} />
-            </button>
-          </div>
+        <>
+          {/* Dark overlay */}
+          <div
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              zIndex: 9998,
+              backdropFilter: 'blur(3px)'
+            }}
+          />
 
-          {/* Nav Links */}
-          <div style={{ flex: 1, padding: '8px 0' }}>
-            {links.map(link => (
-              <a
-                key={link.path}
-                href={link.path}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(link.path);
-                  setIsMobileMenuOpen(false);
-                }}
+          {/* Side Drawer */}
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, bottom: 0,
+            width: '75%',
+            maxWidth: '300px',
+            zIndex: 9999,
+            backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
+            overflowY: 'auto'
+          }}>
+            {/* Drawer Header */}
+            <div style={{
+              padding: '20px 16px 16px',
+              borderBottom: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+            }}>
+              <img
+                src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
+                alt="Zero Effort"
+                style={{ height: '28px', width: 'auto' }}
+              />
+            </div>
+
+            {/* Nav Links */}
+            <div style={{ flex: 1, padding: '8px 0' }}>
+              {links.map(link => (
+                <a
+                  key={link.path}
+                  href={link.path}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(link.path);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '13px 16px',
+                    color: theme === 'dark' ? '#ffffff' : '#000000',
+                    textDecoration: 'none',
+                    fontSize: '15px', fontWeight: location.pathname === link.path ? 700 : 500,
+                    borderLeft: location.pathname === link.path ? '3px solid #6366f1' : '3px solid transparent',
+                    backgroundColor: location.pathname === link.path ? (theme === 'dark' ? '#1e2030' : '#f3f4f6') : 'transparent'
+                  }}
+                >
+                  <span style={{ color: location.pathname === link.path ? '#6366f1' : (theme === 'dark' ? '#8b8fa8' : '#6b7280') }}>
+                    {getNavIcon(link.label)}
+                  </span>
+                  {link.label}
+                  {link.label === 'Inbox' && unreadCount > 0 && (
+                    <span style={{
+                      marginLeft: 'auto', background: '#6366f1',
+                      color: 'white', borderRadius: '50%',
+                      width: '20px', height: '20px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '11px', fontWeight: 700
+                    }}>{unreadCount}</span>
+                  )}
+                </a>
+              ))}
+            </div>
+
+            {/* User info at bottom */}
+            <div style={{
+              padding: '16px',
+              borderTop: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+              display: 'flex', alignItems: 'center', gap: '10px'
+            }}>
+              <div style={{
+                width: '38px', height: '38px', borderRadius: '50%',
+                background: '#6366f1', overflow: 'hidden', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 700, fontSize: '13px'
+              }}>
+                {userPhoto ? (
+                  <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : companyLogo ? (
+                  <img src={companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  userInitials
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+                  {userName || 'User'}
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  padding: '16px 20px',
-                  color: 'var(--text)', textDecoration: 'none',
-                  fontSize: '16px', fontWeight: 500,
-                  borderLeft: location.pathname === link.path ? '3px solid var(--accent)' : '3px solid transparent',
-                  background: location.pathname === link.path ? 'var(--bg2)' : 'transparent'
+                  padding: '6px 12px', borderRadius: '8px',
+                  border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+                  background: 'transparent', cursor: 'pointer',
+                  fontSize: '13px', color: theme === 'dark' ? '#8b8fa8' : '#6b7280',
+                  fontWeight: 600
                 }}
               >
-                <span style={{ color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)' }}>
-                  {getNavIcon(link.label)}
-                </span>
-                {link.label}
-                {link.label === 'Inbox' && unreadCount > 0 && (
-                  <span style={{
-                    marginLeft: 'auto', background: 'var(--accent)',
-                    color: 'white', borderRadius: '50%',
-                    width: '22px', height: '22px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '11px', fontWeight: 700
-                  }}>{unreadCount}</span>
-                )}
-              </a>
-            ))}
-          </div>
-
-          {/* User info and logout at bottom */}
-          <div style={{
-            padding: '16px 20px',
-            borderTop: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', gap: '12px'
-          }}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              background: 'var(--accent)', overflow: 'hidden',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 700, fontSize: '14px', flexShrink: 0
-            }}>
-              {userPhoto ? (
-                <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : companyLogo ? (
-                <img src={companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                userInitials
-              )}
+                Log out
+              </button>
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600, fontSize: '15px', margin: 0 }}>{userName || 'User'}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '8px 16px', borderRadius: '8px',
-                border: '1px solid var(--border)', background: 'transparent',
-                cursor: 'pointer', fontSize: '14px', color: 'var(--text2)', fontWeight: 600
-              }}
-            >
-              Log out
-            </button>
           </div>
-        </div>
+        </>
       )}
     </>
   );
