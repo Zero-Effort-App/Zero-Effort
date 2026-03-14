@@ -187,15 +187,29 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
       {/* Mobile dropdown menu */}
       {isMobile && isMobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: '56px', left: 0, right: 0,
-          background: 'var(--card)',
-          borderBottom: '1px solid var(--border)',
-          zIndex: 99,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-          padding: '8px 0'
-        }}>
+        <>
+          {/* Dark overlay behind menu */}
+          <div
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              top: '56px', left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.4)',
+              zIndex: 98,
+              backdropFilter: 'blur(2px)'
+            }}
+          />
+
+          {/* Menu panel */}
+          <div style={{
+            position: 'fixed',
+            top: '56px', left: 0, right: 0,
+            background: 'var(--card)',
+            borderBottom: '1px solid var(--border)',
+            zIndex: 99,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            padding: '8px 0'
+          }}>
           {links.map(link => (
             <a
               key={link.path}
@@ -260,6 +274,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             </button>
           </div>
         </div>
+        </>
       )}
     </>
   );
