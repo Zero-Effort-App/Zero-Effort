@@ -15,6 +15,9 @@ export default function ZeloChatbot() {
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
 
+  // Detect mobile
+  const isMobile = window.innerWidth <= 768
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -132,28 +135,66 @@ JOB MATCHING RULES:
 
   return (
     <>
+      {/* Dark overlay for mobile */}
+      {open && isMobile && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 999,
+            backdropFilter: 'blur(2px)'
+          }}
+        />
+      )}
+
       {/* Chat Button */}
       <button 
         className="zelo-fab"
         onClick={() => setOpen(!open)}
         style={{
-          position: 'fixed', bottom: '24px', right: '24px',
-          zIndex: 1000
+          position: 'fixed',
+          bottom: isMobile ? '80px' : '24px',
+          right: '20px',
+          width: '52px', height: '52px',
+          borderRadius: '50%',
+          background: 'var(--accent)',
+          border: 'none', cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white'
         }}
       >
-        {open ? <X size={22} /> : <MessageCircle size={22} />}
+        {open ? <X size={20} /> : <MessageCircle size={22} />}
       </button>
 
       {/* Chat Window */}
       {open && (
         <div style={{
-          position: 'fixed', bottom: '90px', right: '24px',
-          width: '340px', maxWidth: 'calc(100vw - 48px)',
-          height: '480px', borderRadius: '16px',
-          backgroundColor: cardBg,
-          border: `1px solid ${borderColor}`,
+          position: 'fixed',
+          // Mobile: full screen bottom sheet
+          ...(isMobile ? {
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '85vh',
+            borderRadius: '20px 20px 0 0',
+            width: '100%'
+          } : {
+            // Desktop: floating window
+            bottom: '90px',
+            right: '24px',
+            width: '340px',
+            height: '480px',
+            borderRadius: '16px'
+          }),
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          zIndex: 1000, display: 'flex', flexDirection: 'column',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden'
         }}>
           {/* Header */}
