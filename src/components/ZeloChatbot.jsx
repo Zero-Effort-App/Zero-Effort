@@ -202,13 +202,29 @@ JOB MATCHING RULES:
             padding: '14px 16px',
             background: 'var(--accent)',
             color: 'white', fontWeight: 700, fontSize: '14px',
-            display: 'flex', alignItems: 'center', gap: '8px'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <Bot size={20} />
-            <div>
-              <div>Zelo — Career Assistant</div>
-              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Groq AI</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bot size={20} />
+              <div>
+                <div>Zelo — Career Assistant</div>
+                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Groq AI</div>
+              </div>
             </div>
+            {/* Close button */}
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none', cursor: 'pointer',
+                width: '28px', height: '28px',
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white'
+              }}
+            >
+              <X size={16} />
+            </button>
           </div>
 
           {/* Messages */}

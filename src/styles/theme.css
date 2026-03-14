@@ -822,6 +822,27 @@ nav {
 .events-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* ── DESKTOP NAV - SHOW ON LARGE SCREENS ── */
+.desktop-nav {
+  display: flex;
+}
+
+/* ── MOBILE MENU BUTTON - HIDE ON DESKTOP ── */
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop nav on mobile */
+  .desktop-nav {
+    display: none !important;
+  }
+  /* Show hamburger on mobile */
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+}
 .acount {
   display: inline-flex; align-items: center; gap: 4px;
   background: var(--accent-d); border: 1px solid rgba(99,102,241,.2);
