@@ -47,14 +47,14 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   const basePath = '/' + location.pathname.split('/')[1];
 
   // Icon mapping for navigation links
-  const getNavIcon = (label) => {
+  const getNavIcon = (label, size = 14) => {
     switch(label) {
-      case 'Home': return <Home size={14} />;
-      case 'Browse Jobs': return <Briefcase size={14} />;
-      case 'Companies': return <Building2 size={14} />;
-      case 'My Applications': return <FileText size={14} />;
-      case 'My Profile': return <User size={14} />;
-      case 'Inbox': return <MessageCircle size={14} />;
+      case 'Home': return <Home size={size} />;
+      case 'Browse Jobs': return <Briefcase size={size} />;
+      case 'Companies': return <Building2 size={size} />;
+      case 'My Applications': return <FileText size={size} />;
+      case 'My Profile': return <User size={size} />;
+      case 'Inbox': return <MessageCircle size={size} />;
       default: return null;
     }
   };
@@ -331,12 +331,12 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               gap: '4px', textDecoration: 'none', position: 'relative',
-              flex: 1, padding: '8px 0',
+              flex: 1, padding: '6px 0',
               color: location.pathname === link.path ? '#6366f1' : (theme === 'dark' ? '#8b8fa8' : '#6b7280')
             }}
           >
             <div style={{ position: 'relative' }}>
-              {getNavIcon(link.label)}
+              {getNavIcon(link.label, 20)}
               {link.label === 'Inbox' && unreadCount > 0 && (
                 <span style={{
                   position: 'absolute', top: '-6px', right: '-6px',
@@ -348,9 +348,18 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               )}
             </div>
             <span style={{
-              fontSize: '10px', fontWeight: location.pathname === link.path ? 700 : 400
+              fontSize: '9px',
+              fontWeight: location.pathname === link.path ? 700 : 400,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '60px',
+              textAlign: 'center'
             }}>
-              {link.label}
+              {link.label === 'Browse Jobs' ? 'Jobs' :
+               link.label === 'My Applications' ? 'Applications' :
+               link.label === 'My Profile' ? 'Profile' :
+               link.label}
             </span>
           </a>
         ))}
