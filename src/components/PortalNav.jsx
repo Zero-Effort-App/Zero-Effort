@@ -187,71 +187,89 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
       {/* Mobile dropdown menu */}
       {isMobile && isMobileMenuOpen && (
-        <>
-          {/* Dark overlay behind menu */}
-          <div
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{
-              position: 'fixed',
-              top: '56px', left: 0, right: 0, bottom: 0,
-              background: 'rgba(0,0,0,0.4)',
-              zIndex: 98,
-              backdropFilter: 'blur(2px)'
-            }}
-          />
-
-          {/* Menu panel */}
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'var(--card)',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto'
+        }}>
+          {/* Menu Header */}
           <div style={{
-            position: 'fixed',
-            top: '56px', left: 0, right: 0,
-            background: 'var(--card)',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 16px', height: '56px',
             borderBottom: '1px solid var(--border)',
-            zIndex: 99,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-            padding: '8px 0'
+            flexShrink: 0
           }}>
-          {links.map(link => (
-            <a
-              key={link.path}
-              href={link.path}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(link.path);
-                setIsMobileMenuOpen(false);
-              }}
+            <img
+              src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
+              alt="Zero Effort"
+              style={{ height: '32px', width: 'auto' }}
+            />
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '14px 20px',
-                color: 'var(--text)', textDecoration: 'none',
-                fontSize: '15px', fontWeight: 500,
-                borderLeft: location.pathname === link.path ? '3px solid var(--accent)' : '3px solid transparent',
-                background: location.pathname === link.path ? 'var(--bg2)' : 'transparent'
+                width: '34px', height: '34px', borderRadius: '8px',
+                border: '1px solid var(--border)', background: 'var(--bg2)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'var(--text)'
               }}
             >
-              {getNavIcon(link.label)}
-              {link.label}
-              {link.label === 'Inbox' && unreadCount > 0 && (
-                <span style={{
-                  marginLeft: 'auto', background: 'var(--accent)',
-                  color: 'white', borderRadius: '50%',
-                  width: '20px', height: '20px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '11px', fontWeight: 700
-                }}>{unreadCount}</span>
-              )}
-            </a>
-          ))}
+              <X size={16} />
+            </button>
+          </div>
 
-          {/* User info at bottom */}
+          {/* Nav Links */}
+          <div style={{ flex: 1, padding: '8px 0' }}>
+            {links.map(link => (
+              <a
+                key={link.path}
+                href={link.path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(link.path);
+                  setIsMobileMenuOpen(false);
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '16px 20px',
+                  color: 'var(--text)', textDecoration: 'none',
+                  fontSize: '16px', fontWeight: 500,
+                  borderLeft: location.pathname === link.path ? '3px solid var(--accent)' : '3px solid transparent',
+                  background: location.pathname === link.path ? 'var(--bg2)' : 'transparent'
+                }}
+              >
+                <span style={{ color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)' }}>
+                  {getNavIcon(link.label)}
+                </span>
+                {link.label}
+                {link.label === 'Inbox' && unreadCount > 0 && (
+                  <span style={{
+                    marginLeft: 'auto', background: 'var(--accent)',
+                    color: 'white', borderRadius: '50%',
+                    width: '22px', height: '22px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '11px', fontWeight: 700
+                  }}>{unreadCount}</span>
+                )}
+              </a>
+            ))}
+          </div>
+
+          {/* User info and logout at bottom */}
           <div style={{
-            padding: '14px 20px', borderTop: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px'
+            padding: '16px 20px',
+            borderTop: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', gap: '12px'
           }}>
             <div style={{
-              width: '36px', height: '36px', borderRadius: '50%',
+              width: '40px', height: '40px', borderRadius: '50%',
               background: 'var(--accent)', overflow: 'hidden',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 700, fontSize: '13px', flexShrink: 0
+              color: 'white', fontWeight: 700, fontSize: '14px', flexShrink: 0
             }}>
               {userPhoto ? (
                 <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -261,20 +279,21 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 userInitials
               )}
             </div>
-            <span style={{ fontWeight: 600, fontSize: '14px', flex: 1 }}>{userName || 'User'}</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 600, fontSize: '15px', margin: 0 }}>{userName || 'User'}</p>
+            </div>
             <button
               onClick={handleLogout}
               style={{
-                padding: '6px 14px', borderRadius: '8px',
+                padding: '8px 16px', borderRadius: '8px',
                 border: '1px solid var(--border)', background: 'transparent',
-                cursor: 'pointer', fontSize: '13px', color: 'var(--text2)', fontWeight: 600
+                cursor: 'pointer', fontSize: '14px', color: 'var(--text2)', fontWeight: 600
               }}
             >
               Log out
             </button>
           </div>
         </div>
-        </>
       )}
     </>
   );
