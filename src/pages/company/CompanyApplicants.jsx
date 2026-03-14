@@ -50,6 +50,7 @@ export default function CompanyApplicants() {
       setJobs(jbs);
       setApplicants(apps.map(a => ({
         ...a,
+        applicant_id: a.applicants?.id || a.applicant_id,
         name: `${a.applicants?.first_name || ''} ${a.applicants?.last_name || ''}`.trim(),
         ini: `${(a.applicants?.first_name || '?')[0]}${(a.applicants?.last_name || '?')[0]}`.toUpperCase(),
         email: a.applicants?.email || '',
@@ -108,10 +109,9 @@ export default function CompanyApplicants() {
     setSendingMessage(true)
     try {
       // Insert message to database
-      console.log('applicant id being inserted:', selectedApp.applicants.id)
       const { error } = await supabase.from('messages').insert({
         company_id: company.id,
-        applicant_id: selectedApp.applicants.id,
+        applicant_id: selectedApp.applicant_id,
         sender_type: 'company',
         content: messageContent.trim()
       })
