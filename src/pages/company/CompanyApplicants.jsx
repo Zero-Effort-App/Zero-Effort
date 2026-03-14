@@ -108,6 +108,7 @@ export default function CompanyApplicants() {
     setSendingMessage(true)
     try {
       // Insert message to database
+      console.log('applicant id being inserted:', selectedApp.applicants.id)
       const { error } = await supabase.from('messages').insert({
         company_id: company.id,
         applicant_id: selectedApp.applicants.id,

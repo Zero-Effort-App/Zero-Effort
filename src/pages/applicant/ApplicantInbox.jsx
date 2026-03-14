@@ -20,11 +20,15 @@ export default function ApplicantInbox() {
   }, [user])
 
   async function fetchConversations() {
+    console.log('Fetching conversations for user.id:', user.id)
+    console.log('user object:', user)
     const { data } = await supabase
       .from('messages')
       .select('*, companies(id, name, logo_url, logo_initials, color)')
       .eq('applicant_id', user.id)
       .order('created_at', { ascending: false })
+
+    console.log('Messages found:', data)
 
     if (data) {
       // Group by company
