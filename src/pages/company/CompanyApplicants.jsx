@@ -4,6 +4,7 @@ import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTi
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
+import { useToast } from '../../contexts/ToastContext';
 
 // Skeleton card component
 function SkeletonCard() {
