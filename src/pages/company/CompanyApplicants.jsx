@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime, formatDate, updateApplicationStatus } from '../../lib/db';
-import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone } from 'lucide-react';
+import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 import { useToast } from '../../contexts/ToastContext';
@@ -391,40 +391,71 @@ export default function CompanyApplicants() {
       {/* Message Modal */}
       {showMessageModal && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '16px'
+          zIndex: 1000, padding: '16px', backdropFilter: 'blur(4px)'
         }}>
           <div style={{
-            background: 'var(--card)', borderRadius: '16px',
-            padding: '24px', width: '100%', maxWidth: '480px',
-            border: '1px solid var(--border)'
+            background: 'var(--card)', borderRadius: '20px',
+            padding: '28px', width: '100%', maxWidth: '480px',
+            border: '1px solid var(--border)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
           }}>
-            <h3 style={{ fontWeight: 700, marginBottom: '8px' }}>
-              Message {selectedApp?.applicants?.first_name}
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '16px' }}>
-              This message will appear in their inbox and be sent to their email.
-            </p>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '12px',
+                background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'white'
+              }}>
+                <Mail size={20} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: 700, fontSize: '17px', margin: 0 }}>
+                  Message {selected?.applicants?.first_name}
+                </h3>
+                <p style={{ fontSize: '13px', color: 'var(--text2)', margin: 0 }}>
+                  Sent to {selected?.applicants?.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Info banner */}
+            <div style={{
+              background: 'var(--bg2)', borderRadius: '10px',
+              padding: '10px 14px', marginBottom: '16px',
+              fontSize: '13px', color: 'var(--text2)',
+              display: 'flex', alignItems: 'center', gap: '8px'
+            }}>
+              <MessageCircle size={14} />
+              Message will appear in their inbox and be sent to their email.
+            </div>
+
+            {/* Textarea */}
             <textarea
               value={messageContent}
               onChange={e => setMessageContent(e.target.value)}
               placeholder="Type your message here..."
-              rows={4}
+              rows={5}
               style={{
-                width: '100%', padding: '12px', borderRadius: '10px',
+                width: '100%', padding: '14px', borderRadius: '12px',
                 border: '1px solid var(--border)', background: 'var(--bg2)',
                 color: 'var(--text)', fontSize: '14px', outline: 'none',
-                resize: 'vertical', marginBottom: '16px', boxSizing: 'border-box'
+                resize: 'none', marginBottom: '20px',
+                boxSizing: 'border-box', lineHeight: '1.6',
+                fontFamily: 'inherit'
               }}
             />
-            <div style={{ display: 'flex', gap: '8px' }}>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => { setShowMessageModal(false); setMessageContent('') }}
                 style={{
-                  flex: 1, padding: '10px', borderRadius: '10px',
+                  flex: 1, padding: '12px', borderRadius: '12px',
                   border: '1px solid var(--border)', background: 'transparent',
-                  cursor: 'pointer', fontSize: '14px', color: 'var(--text)'
+                  cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                  color: 'var(--text)'
                 }}
               >
                 Cancel
@@ -433,11 +464,15 @@ export default function CompanyApplicants() {
                 onClick={handleSendMessage}
                 disabled={sendingMessage || !messageContent.trim()}
                 style={{
-                  flex: 1, padding: '10px', borderRadius: '10px',
-                  border: 'none', background: 'var(--accent)',
-                  cursor: 'pointer', fontSize: '14px', color: 'white', fontWeight: 600
+                  flex: 2, padding: '12px', borderRadius: '12px',
+                  border: 'none',
+                  background: sendingMessage || !messageContent.trim() ? 'var(--border)' : 'var(--accent)',
+                  cursor: sendingMessage || !messageContent.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '14px', fontWeight: 700, color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                 }}
               >
+                <Send size={15} />
                 {sendingMessage ? 'Sending...' : 'Send Message'}
               </button>
             </div>
