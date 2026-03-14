@@ -2,15 +2,17 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Menu, X, Home, Briefcase, Building2, FileText, User } from 'lucide-react';
+import { Moon, Sun, Menu, X, Home, Briefcase, Building2, FileText, User, MessageCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto }) {
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -20,6 +22,21 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Fetch unread count for applicant
+  useEffect(() => {
+    if (!user || !location.pathname.includes('/applicant/')) return
+    async function fetchUnread() {
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('applicant_id', user.id)
+        .eq('is_read', false)
+        .eq('sender_type', 'company')
+      setUnreadCount(count || 0)
+    }
+    fetchUnread()
+  }, [user, location.pathname]);
 
   async function handleLogout() {
     await logout();
@@ -37,6 +54,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       case 'Companies': return <Building2 size={14} />;
       case 'My Applications': return <FileText size={14} />;
       case 'My Profile': return <User size={14} />;
+      case 'Inbox': return <MessageCircle size={14} />;
       default: return null;
     }
   };
@@ -98,7 +116,16 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             >
               {getNavIcon(link.label)}
               {link.label}
-              {link.badge > 0 && <span className="nbadge" />}
+              {link.label === 'Inbox' && unreadCount > 0 && (
+                <span style={{
+                  background: 'var(--accent)', color: 'white',
+                  borderRadius: '50%', width: '16px', height: '16px',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '10px', fontWeight: 700, marginLeft: '6px'
+                }}>
+                  {unreadCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -170,7 +197,16 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             >
               {getNavIcon(link.label)}
               {link.label}
-              {link.badge > 0 && <span className="nbadge" />}
+              {link.label === 'Inbox' && unreadCount > 0 && (
+                <span style={{
+                  background: 'var(--accent)', color: 'white',
+                  borderRadius: '50%', width: '16px', height: '16px',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '10px', fontWeight: 700, marginLeft: '6px'
+                }}>
+                  {unreadCount}
+                </span>
+              )}
             </button>
           ))}
           <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>

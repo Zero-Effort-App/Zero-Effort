@@ -195,4 +195,41 @@ app.post('/api/chat', async (req, res) => {
   }
 })
 
+app.post('/api/send-message-notification', async (req, res) => {
+  try {
+    const { applicantEmail, applicantName, companyName, message } = req.body
+
+    const { error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: applicantEmail
+    })
+
+    // Send email using Supabase
+    const { error: emailError } = await supabaseAdmin
+      .from('_email_queue')
+      .insert({
+        to: applicantEmail,
+        subject: `New message from ${companyName} — Zero Effort`,
+        html: `
+          <h2>You have a new message from ${companyName}</h2>
+          <p>Hi ${applicantName},</p>
+          <p>${companyName} has sent you a message through Zero Effort:</p>
+          <blockquote style="border-left: 4px solid #6366f1; padding-left: 16px; margin: 16px 0; color: #555;">
+            ${message}
+          </blockquote>
+          <p>Log in to your Zero Effort account to reply:</p>
+          <a href="https://zero-effort-app.onrender.com/jobs/inbox" style="background: #6366f1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 8px;">
+            View Inbox
+          </a>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">Zero Effort Job Portal</p>
+        `
+      })
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Email notification error:', error)
+    res.status(500).json({ error: 'Failed to send notification' })
+  }
+})
+
 app.listen(3002, () => console.log('Admin API server running on port 3002'))

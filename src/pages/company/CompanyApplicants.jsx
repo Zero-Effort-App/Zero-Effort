@@ -5,6 +5,7 @@ import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Brie
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 
 // Skeleton card component
 function SkeletonCard() {
@@ -32,6 +33,9 @@ export default function CompanyApplicants() {
   const [filterRole, setFilterRole] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [isLoading, setIsLoading] = useState(true);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
   const { showToast } = useToast();
 
   async function loadData() {
@@ -96,6 +100,42 @@ export default function CompanyApplicants() {
 
   function copyText(text) {
     navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!')).catch(() => {});
+  }
+
+  async function handleSendMessage() {
+    if (!messageContent.trim() || sendingMessage) return
+    setSendingMessage(true)
+    try {
+      // Insert message to database
+      const { error } = await supabase.from('messages').insert({
+        company_id: company.id,
+        applicant_id: selectedApp.applicants.id,
+        sender_type: 'company',
+        content: messageContent.trim()
+      })
+      if (error) throw error
+
+      // Send email notification via Express server
+      await fetch('https://zero-effort-server.onrender.com/api/send-message-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantEmail: selectedApp.applicants.email,
+          applicantName: `${selectedApp.applicants.first_name} ${selectedApp.applicants.last_name}`,
+          companyName: company.name,
+          message: messageContent.trim()
+        })
+      })
+
+      setShowMessageModal(false)
+      setMessageContent('')
+      showToast('Message sent successfully! 🎉', 'success')
+    } catch (err) {
+      console.error('Send message error:', err)
+      showToast('Failed to send message. Please try again.', 'error')
+    } finally {
+      setSendingMessage(false)
+    }
   }
 
   const selectedApp = selected ? applicants.find(a => a.id === selected) : null;
@@ -278,7 +318,19 @@ export default function CompanyApplicants() {
                   style={selectedApp.status === 'declined' ? { opacity: .5, cursor: 'default' } : {}}
                 ><X size={14} style={{ marginRight: '4px' }} /> Decline</button>
               </div>
-              <button className="btn-contact" onClick={() => openContact(selectedApp)}><Mail size={14} style={{ marginRight: '4px' }} /> Contact Applicant</button>
+              <button
+  onClick={() => setShowMessageModal(true)}
+  style={{
+    width: '100%', padding: '12px',
+    borderRadius: '10px', border: '1px solid var(--border)',
+    background: 'var(--bg2)', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text)'
+  }}
+>
+  <Mail size={16} />
+  Contact Applicant
+</button>
             </>
           ) : (
             <div className="empty-dp">
@@ -335,6 +387,63 @@ export default function CompanyApplicants() {
           <button className="btn-primary" style={{ maxWidth: 140, margin: '1.25rem auto 0', display: 'block' }} onClick={() => setModal({ type: null, data: null })}>Done</button>
         </div>
       </Modal>
+
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '16px'
+        }}>
+          <div style={{
+            background: 'var(--card)', borderRadius: '16px',
+            padding: '24px', width: '100%', maxWidth: '480px',
+            border: '1px solid var(--border)'
+          }}>
+            <h3 style={{ fontWeight: 700, marginBottom: '8px' }}>
+              Message {selectedApp?.applicants?.first_name}
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '16px' }}>
+              This message will appear in their inbox and be sent to their email.
+            </p>
+            <textarea
+              value={messageContent}
+              onChange={e => setMessageContent(e.target.value)}
+              placeholder="Type your message here..."
+              rows={4}
+              style={{
+                width: '100%', padding: '12px', borderRadius: '10px',
+                border: '1px solid var(--border)', background: 'var(--bg2)',
+                color: 'var(--text)', fontSize: '14px', outline: 'none',
+                resize: 'vertical', marginBottom: '16px', boxSizing: 'border-box'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => { setShowMessageModal(false); setMessageContent('') }}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: '1px solid var(--border)', background: 'transparent',
+                  cursor: 'pointer', fontSize: '14px', color: 'var(--text)'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendMessage}
+                disabled={sendingMessage || !messageContent.trim()}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: 'none', background: 'var(--accent)',
+                  cursor: 'pointer', fontSize: '14px', color: 'white', fontWeight: 600
+                }}
+              >
+                {sendingMessage ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
