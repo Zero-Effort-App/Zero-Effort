@@ -232,4 +232,106 @@ app.post('/api/send-message-notification', async (req, res) => {
   }
 })
 
+// Photo Validation Endpoint
+app.post('/api/validate-photo', async (req, res) => {
+  try {
+    const busboy = require('busboy');
+    const bb = busboy({ headers: req.headers });
+    let fileBuffer = null;
+    let fileSize = 0;
+
+    bb.on('file', (name, file, info) => {
+      const chunks = [];
+      file.on('data', (chunk) => {
+        chunks.push(chunk);
+        fileSize += chunk.length;
+      });
+      file.on('close', () => {
+        fileBuffer = Buffer.concat(chunks);
+      });
+    });
+
+    bb.on('close', async () => {
+      try {
+        if (!fileBuffer) {
+          return res.json({ valid: false, errors: ['No photo uploaded'] });
+        }
+
+        const errors = [];
+        const sharp = require('sharp');
+
+        // Check 1: File size max 2MB
+        if (fileSize > 2 * 1024 * 1024) {
+          errors.push('Photo must be less than 2MB.');
+        }
+
+        // Check 2: White background
+        // Resize to 100x100 for fast processing
+        const { data, info } = await sharp(fileBuffer)
+          .resize(100, 100)
+          .removeAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+
+        const w = info.width;
+        const h = info.height;
+
+        // Sample all edge pixels (top row, bottom row, left col, right col)
+        let whiteCount = 0;
+        let totalSampled = 0;
+
+        for (let x = 0; x < w; x++) {
+          // Top row
+          const topIdx = (0 * w + x) * 3;
+          if (data[topIdx] > 210 && data[topIdx+1] > 210 && data[topIdx+2] > 210) whiteCount++;
+          totalSampled++;
+
+          // Bottom row
+          const botIdx = ((h-1) * w + x) * 3;
+          if (data[botIdx] > 210 && data[botIdx+1] > 210 && data[botIdx+2] > 210) whiteCount++;
+          totalSampled++;
+        }
+
+        for (let y = 1; y < h - 1; y++) {
+          // Left column
+          const leftIdx = (y * w + 0) * 3;
+          if (data[leftIdx] > 210 && data[leftIdx+1] > 210 && data[leftIdx+2] > 210) whiteCount++;
+          totalSampled++;
+
+          // Right column
+          const rightIdx = (y * w + (w-1)) * 3;
+          if (data[rightIdx] > 210 && data[rightIdx+1] > 210 && data[rightIdx+2] > 210) whiteCount++;
+          totalSampled++;
+        }
+
+        const whiteRatio = whiteCount / totalSampled;
+        if (whiteRatio < 0.75) {
+          errors.push(`Background must be plain white. Only ${Math.round(whiteRatio * 100)}% of the background is white.`);
+        }
+
+        // Check 3: Square ratio (1x1 photo)
+        const metadata = await sharp(fileBuffer).metadata();
+        const ratio = metadata.width / metadata.height;
+        if (ratio < 0.85 || ratio > 1.15) {
+          errors.push('Photo must be square (1:1 ratio). Please upload a proper 1x1 ID photo.');
+        }
+
+        if (errors.length > 0) {
+          return res.json({ valid: false, errors });
+        }
+        return res.json({ valid: true, message: 'Photo passed all validation checks.' });
+
+      } catch (err) {
+        console.error('Validation inner error:', err);
+        return res.status(500).json({ valid: false, error: 'Validation failed.' });
+      }
+    });
+
+    req.pipe(bb);
+  } catch (err) {
+    console.error('Validation error:', err);
+    return res.status(500).json({ valid: false, error: 'Validation failed.' });
+  }
+});
+
 app.listen(3002, () => console.log('Admin API server running on port 3002'))
