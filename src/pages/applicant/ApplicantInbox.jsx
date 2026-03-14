@@ -134,7 +134,7 @@ export default function ApplicantInbox() {
         {/* Conversation List */}
         {(!selectedConvo || window.innerWidth > 768) && (
           <div style={{
-            background: 'var(--card)', borderRadius: '12px',
+            background: 'var(--surface)', borderRadius: '12px',
             border: '1px solid var(--border)', overflow: 'hidden',
             display: 'flex', flexDirection: 'column'
           }}>
@@ -211,7 +211,7 @@ export default function ApplicantInbox() {
         {/* Chat Window */}
         {selectedConvo && (
           <div style={{
-            background: 'var(--card)', borderRadius: '12px',
+            background: 'var(--surface)', borderRadius: '12px',
             border: '1px solid var(--border)', overflow: 'hidden',
             display: 'flex', flexDirection: 'column'
           }}>
