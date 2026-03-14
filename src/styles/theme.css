@@ -70,6 +70,72 @@ html, body {
 /* ── MOBILE RESPONSIVE ── */
 
 @media (max-width: 768px) {
+  /* Admin/Company tables */
+  .tbl-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Page padding */
+  .page-wrap, .dash-wrap, .admin-wrap {
+    padding: 12px !important;
+  }
+
+  /* Grids to single column */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Cards full width */
+  .co-card, .job-card {
+    width: 100% !important;
+  }
+
+  /* Modals full screen on mobile */
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Split layouts stack */
+  .split-layout {
+    flex-direction: column !important;
+  }
+
+  /* Buttons full width */
+  .btn-full-mobile {
+    width: 100% !important;
+  }
+
+  /* Typography */
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 18px !important; }
+
+  /* Hide desktop-only elements */
+  .desktop-only { display: none !important; }
+
+  /* Filter bars stack */
+  .filter-bar {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .filter-bar > * {
+    width: 100% !important;
+  }
+
+  /* Inbox layout */
+  .inbox-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   /* Prevent horizontal overflow */
   .page-wrap, .dash-wrap, .admin-wrap {
     padding: 12px !important;
@@ -94,11 +160,6 @@ html, body {
   /* Cards grid - single column */
   .co-grid, .job-grid, .app-grid, .stats-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  /* Stats - 2 columns on mobile */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
   }
 
   /* Modals - full screen bottom sheet */
@@ -221,12 +282,6 @@ html, body {
     gap: 4px !important;
   }
 
-  /* Filter bars */
-  .filter-bar {
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
-
   /* Profile layout */
   .profile-layout {
     flex-direction: column !important;
@@ -285,6 +340,25 @@ html, body {
   /* Company logo in nav */
   .nav-logo {
     height: 32px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .page-wrap, .dash-wrap {
+    padding: 8px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Tablet fixes */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .page-wrap, .dash-wrap {
+    padding: 20px !important;
   }
 }
 

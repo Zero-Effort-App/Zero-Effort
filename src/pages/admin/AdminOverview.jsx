@@ -4,11 +4,13 @@ import { getCompanies, getJobs, getEvents, getActivityLog, getLiveStats, formatT
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import CompanyLogo from '../../components/CompanyLogo';
+import { Calendar } from 'lucide-react';
 
 export default function AdminOverview() {
   const [stats, setStats] = useState({ totalCompanies: 0, totalJobs: 0, totalApplications: 0, totalEvents: 0 });
   const [companies, setCompanies] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [events, setEvents] = useState([]);
   const [resetRequests, setResetRequests] = useState([]);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -21,11 +23,12 @@ export default function AdminOverview() {
   useEffect(() => {
     async function load() {
       try {
-        const [s, cos, act, requests] = await Promise.all([
+        const [s, cos, act, requests, eventsData] = await Promise.all([
           getLiveStats(),
           getCompanies(),
           getActivityLog(10),
           loadResetRequests(),
+          loadUpcomingEvents(),
         ]);
         setStats(s);
         setCompanies(cos.slice(0, 4));
@@ -36,6 +39,17 @@ export default function AdminOverview() {
     }
     load();
   }, []);
+
+  async function loadUpcomingEvents() {
+    try {
+      const { data: eventsData } = await supabase.from('events').select('*').order('date', { ascending: true }).limit(3);
+      setEvents(eventsData || []);
+      return eventsData;
+    } catch (err) {
+      console.error('Error loading events:', err);
+      return [];
+    }
+  }
 
   async function loadResetRequests() {
     try {
@@ -132,7 +146,7 @@ export default function AdminOverview() {
         <span className="sh-title"><span className="sh-dot" />Top Companies</span>
         <button className="sh-more" onClick={() => navigate('/admin/companies')}>View all →</button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '.875rem', marginBottom: '2rem' }} className="stagger">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '.875rem', marginBottom: '2rem' }} className="stagger">
         {companies.map(c => (
           <div key={c.id} className="scard" style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '.5rem' }}>
@@ -182,23 +196,52 @@ export default function AdminOverview() {
         ))}
       </div>
 
-      <div className="sh">
-        <span className="sh-title"><span className="sh-dot" />Recent Activity</span>
-        <button className="sh-more" onClick={() => navigate('/admin/activity')}>View all →</button>
-      </div>
-      <div className="act-list stagger">
-        {activity.slice(0, 5).map(a => (
-          <div key={a.id} className="act-row">
-            <div className={`act-icon ${a.type}`}>{a.icon}</div>
-            <div className="act-info">
-              <div className="act-main">{a.message}</div>
-              <div className="act-sub">{a.sub_text}</div>
-            </div>
-            <div className="act-time">{formatTime(a.created_at)}</div>
+      {/* Replace Recent Activity with Upcoming Events */}
+      <div style={{ marginTop: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+            Upcoming Events
+          </h2>
+          <a href="/admin/events" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+            View all →
+          </a>
+        </div>
+
+        {events.length === 0 ? (
+          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text2)', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+            <Calendar size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
+            <p style={{ fontSize: '14px' }}>No upcoming events</p>
           </div>
-        ))}
-        {activity.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text3)', fontSize: '.8rem' }}>No recent activity.</div>
+        ) : (
+          events.slice(0, 3).map(event => (
+            <div key={event.id} style={{
+              background: 'var(--surface)', borderRadius: '12px',
+              border: '1px solid var(--border)', padding: '16px',
+              marginBottom: '10px', display: 'flex', gap: '14px', alignItems: 'center'
+            }}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '10px',
+                background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'white', flexShrink: 0
+              }}>
+                <Calendar size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{event.title}</p>
+                <p style={{ fontSize: '12px', color: 'var(--text2)' }}>
+                  {event.type} · {new Date(event.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })} · {event.location}
+                </p>
+              </div>
+              <span style={{
+                fontSize: '11px', fontWeight: 600, padding: '4px 10px',
+                borderRadius: '20px', background: 'rgba(99,102,241,0.1)',
+                color: 'var(--accent)', flexShrink: 0
+              }}>
+                {event.is_upcoming ? 'Upcoming' : 'Past'}
+              </span>
+            </div>
+          ))
         )}
       </div>
 

@@ -303,7 +303,11 @@ export default function ApplicantJobs() {
         </select>
       </div>
 
-      <div className="split" style={{ gridTemplateColumns: 'minmax(280px, 315px) 1fr' }}>
+      <div className="split" style={{
+        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'minmax(280px, 315px) 1fr',
+        gap: '1.1rem',
+        alignItems: 'start'
+      }}>
         <div className="jlist">
           {filtered.length > 0 ? filtered.map(j => (
             <div key={j.id} className={`jlcard ${selected === j.id ? 'sel' : ''}`} onClick={() => setSelected(j.id)}>

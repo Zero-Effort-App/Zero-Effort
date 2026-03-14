@@ -213,65 +213,67 @@ export default function AdminCompanies() {
         </select>
       </div>
 
-      <div className="co-grid-admin stagger">
-        {filtered.map(c => (
-          <div key={c.id} className="co-card-admin">
-            <div onClick={() => openDetail(c)} style={{ cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '.75rem' }}>
-                <CompanyLogo company={c} size={42} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{c.name}</div>
-                  <div style={{ fontSize: '.72rem', color: 'var(--text2)' }}>{c.industry}</div>
-                </div>
-                <span style={{ fontSize: '.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 5, background: c.is_active ? 'rgba(16,185,129,.08)' : 'rgba(244,63,94,.08)', border: `1px solid ${c.is_active ? 'rgba(16,185,129,.2)' : 'rgba(244,63,94,.2)'}`, color: c.is_active ? 'var(--success)' : 'var(--danger)' }}>
-                  {c.is_active ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              <div style={{ fontSize: '.775rem', color: 'var(--text2)', lineHeight: 1.6 }}>
-                {c.description?.slice(0, 100)}{c.description?.length > 100 ? '...' : ''}
-              </div>
-            </div>
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
-              {companiesWithAccounts.includes(c.id) ? (
-                <button 
-                  className="btn-acc" 
-                  disabled 
-                  style={{ 
-                    background: 'var(--bg2)', 
-                    color: 'var(--text3)', 
-                    cursor: 'not-allowed',
-                    fontSize: '.75rem',
-                    padding: '6px 12px'
-                  }}
-                >
-                  Portal Account Active ✓
-                </button>
-              ) : (
-                <button 
-                  className="btn-acc" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openCreatePortalAccount(c);
-                  }}
-                  style={{ 
-                    fontSize: '.75rem',
-                    padding: '6px 12px'
-                  }}
-                >
-                  Create Portal Account
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-        {filtered.length === 0 && !isLoading && (
-          <div style={{ gridColumn: '1/-1', padding: '3rem', textAlign: 'center', color: 'var(--text3)', fontSize: '.82rem' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🗂️</div>
-            <p>No companies added yet</p>
-            <p style={{ fontSize: '.7rem', marginTop: '0.5rem' }}>Companies will appear here once added</p>
-          </div>
-        )}
+      <div className="tbl-wrap" style={{ overflowX: 'auto' }}>
+        <table className="listings-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Industry</th>
+              <th>Status</th>
+              <th>Portal Account</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(c => (
+              <tr key={c.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <CompanyLogo company={c} size={32} />
+                    <div>
+                      <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{c.name}</div>
+                      <div style={{ fontSize: '.72rem', color: 'var(--text2)' }}>{c.industry}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{c.industry}</td>
+                <td>
+                  <span style={{ fontSize: '.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 5, background: c.is_active ? 'rgba(16,185,129,.08)' : 'rgba(244,63,94,.08)', border: `1px solid ${c.is_active ? 'rgba(16,185,129,.2)' : 'rgba(244,63,94,.2)'}`, color: c.is_active ? 'var(--success)' : 'var(--danger)' }}>
+                    {c.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td>
+                  {companiesWithAccounts.includes(c.id) ? (
+                    <span style={{ fontSize: '.7rem', color: 'var(--success)' }}>✓ Active</span>
+                  ) : (
+                    <button 
+                      className="tbl-btn" 
+                      onClick={() => openCreateAccount(c)}
+                      style={{ fontSize: '.7rem' }}
+                    >
+                      Create Account
+                    </button>
+                  )}
+                </td>
+                <td>
+                  <div className="tbl-actions">
+                    <button className="tbl-btn" onClick={() => openEdit(c)}>Edit</button>
+                    <button className="tbl-btn danger" onClick={() => openRemove(c)}>Remove</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {filtered.length === 0 && !isLoading && (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text3)', fontSize: '.82rem' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🗂️</div>
+          <p>No companies added yet</p>
+          <p style={{ fontSize: '.7rem', marginTop: '0.5rem' }}>Companies will appear here once added</p>
+        </div>
+      )}
 
       {/* Detail Modal */}
       <Modal isOpen={modal.type === 'detail'} onClose={closeModal}>

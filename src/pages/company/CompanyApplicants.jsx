@@ -167,7 +167,12 @@ export default function CompanyApplicants() {
         </select>
       </div>
 
-      <div className="split">
+      <div className="split" style={{
+        display: 'grid',
+        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '340px 1fr',
+        gap: '1.1rem',
+        alignItems: 'start'
+      }}>
         <div className="apl-list-panel">
           {filtered.map(a => (
             <div

@@ -127,7 +127,7 @@ export default function ApplicantInbox() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: selectedConvo ? '280px 1fr' : '1fr',
+        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : (selectedConvo ? '280px 1fr' : '1fr'),
         gap: '16px',
         height: '600px'
       }}>
