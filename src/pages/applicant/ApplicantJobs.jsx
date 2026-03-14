@@ -33,6 +33,7 @@ function SkeletonCard() {
 export default function ApplicantJobs() {
   const { profile } = useOutletContext();
   const location = useLocation();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -50,7 +51,16 @@ export default function ApplicantJobs() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -304,7 +314,7 @@ export default function ApplicantJobs() {
       </div>
 
       <div className="split" style={{
-        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'minmax(280px, 315px) 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 315px) 1fr',
         gap: '1.1rem',
         alignItems: 'start'
       }}>

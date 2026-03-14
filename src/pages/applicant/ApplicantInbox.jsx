@@ -11,7 +11,16 @@ export default function ApplicantInbox() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const bottomRef = useRef(null)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch all conversations (unique companies that messaged this applicant)
   useEffect(() => {
@@ -127,12 +136,12 @@ export default function ApplicantInbox() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : (selectedConvo ? '280px 1fr' : '1fr'),
+        gridTemplateColumns: isMobile ? '1fr' : (selectedConvo ? '280px 1fr' : '1fr'),
         gap: '16px',
         height: '600px'
       }}>
         {/* Conversation List */}
-        {(!selectedConvo || window.innerWidth > 768) && (
+        {(!selectedConvo || !isMobile) && (
           <div style={{
             background: 'var(--surface)', borderRadius: '12px',
             border: '1px solid var(--border)', overflow: 'hidden',

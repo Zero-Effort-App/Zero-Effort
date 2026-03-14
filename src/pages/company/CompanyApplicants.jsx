@@ -34,6 +34,7 @@ export default function CompanyApplicants() {
   const [filterRole, setFilterRole] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageContent, setMessageContent] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -73,6 +74,14 @@ export default function CompanyApplicants() {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => { loadData(); }, [company]);
 
@@ -169,7 +178,7 @@ export default function CompanyApplicants() {
 
       <div className="split" style={{
         display: 'grid',
-        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '340px 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',
         gap: '1.1rem',
         alignItems: 'start'
       }}>
