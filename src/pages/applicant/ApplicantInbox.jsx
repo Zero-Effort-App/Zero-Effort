@@ -75,10 +75,7 @@ export default function ApplicantInbox() {
         filter: `applicant_id=eq.${user.id}` 
       }, payload => {
         setMessages(prev => [...prev, payload.new])
-        const markRead = async () => {
-          await markAsRead()
-        };
-        markRead();
+        markAsRead();
       })
       .subscribe()
 

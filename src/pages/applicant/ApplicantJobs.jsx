@@ -115,17 +115,18 @@ export default function ApplicantJobs() {
   // Check if already applied when job is selected
   useEffect(() => {
     async function checkApplied() {
-      if (!selectedJob || !profile) return
+      const selectedJobData = selected ? jobs.find(j => j.id === selected) : null;
+      if (!selectedJobData || !profile) return
       const { data } = await supabase
         .from('applications')
         .select('id')
-        .eq('job_id', selectedJob.id)
+        .eq('job_id', selectedJobData.id)
         .eq('applicant_id', profile.id)
         .maybeSingle()
       setHasApplied(!!data)
     }
     checkApplied()
-  }, [selectedJob, profile]);
+  }, [selected, jobs, profile]);
 
   function co(cid) { return companies.find(c => c.id === cid) || {}; }
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
@@ -177,11 +178,14 @@ export default function ApplicantJobs() {
   async function handleApply(jobId) {
     if (!profile) { showToast('Please login to apply'); return; }
     
+    const selectedJobData = selected ? jobs.find(j => j.id === selected) : null;
+    if (!selectedJobData) { showToast('Please select a job first'); return; }
+    
     // Check if already applied
     const { data: existing } = await supabase
       .from('applications')
       .select('id')
-      .eq('job_id', selectedJob.id)
+      .eq('job_id', selectedJobData.id)
       .eq('applicant_id', profile.id)
       .maybeSingle()
 
@@ -248,7 +252,7 @@ export default function ApplicantJobs() {
           .eq('id', profile.id);
       }
 
-      setModal({ type: 'success', data: { title: selectedJob?.title, co: selectedJob?.co } });
+      setModal({ type: 'success', data: { title: selectedJobData?.title, co: selectedJobData?.co } });
       
       // Reset form
       setResumeFile(null);
@@ -261,7 +265,7 @@ export default function ApplicantJobs() {
 
     } catch (err) {
       if (err.message?.includes('duplicate')) {
-        setModal({ type: 'success', data: { title: selectedJob?.title, co: selectedJob?.co } });
+        setModal({ type: 'success', data: { title: selectedJobData?.title, co: selectedJobData?.co } });
       } else {
         showToast('Error submitting application: ' + err.message);
       }
