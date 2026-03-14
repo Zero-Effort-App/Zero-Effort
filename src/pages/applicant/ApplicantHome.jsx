@@ -73,9 +73,6 @@ export default function ApplicantHome() {
   return (
     <div className="pw">
       <div className="hero">
-        <div className="hero-badge" style={{ background: 'var(--accent-d)', borderColor: 'rgba(99,102,241,.22)', color: 'var(--accent2)' }}>
-          Zero Effort — Official Job Portal
-        </div>
         <div className="hero-h1">
           {profile ? (
             <>Welcome, <span className="ac">{profile.first_name}.</span><br />Find your next role here.</>
