@@ -50,58 +50,21 @@ export default function ZeloChatbot() {
     setLoading(true)
 
     try {
-      console.log('Sending to server...')
       const { jobs, companies } = await fetchJobsAndCompanies()
-      console.log('Jobs fetched:', jobs.length, 'Companies:', companies.length)
 
       const jobsList = jobs.length > 0
         ? jobs.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary} — Requirements: ${j.requirements?.join(', ')}`).join('\n')
-        : 'No active job listings currently.'
+        : 'No jobs available'
 
       const companiesList = companies.length > 0
-        ? companies.map(c => `- ${c.name} (${c.industry}): ${c.description}`).join('\n')
-        : 'No active companies currently.'
+        ? companies.map(c => `- ${c.name} (${c.industry}) — ${c.description || 'No description'} — Tags: ${c.tags?.join(', ') || 'None'}`).join('\n')
+        : 'No companies available'
 
-      const systemPrompt = `You are Zelo, a professional career assistant for Zero Effort — a job portal in the Philippines. Your ONLY purpose is to help users with career-related topics.
+      const systemPrompt = `You are Zelo, a helpful career assistant for Zero Effort job portal. Current data:\n\nAVAILABLE JOBS:\n${jobsList}\n\nAVAILABLE COMPANIES:\n${companiesList}\n\nGuidelines:\n- Be friendly and professional\n- Help users find relevant jobs\n- Provide company information\n- Guide through application process\n- Keep responses concise but helpful\n- If you don't know something, say so honestly\n- Never make up job listings or company information`
 
-STRICT RULES:
-- ONLY answer questions about: jobs, careers, companies, applications, resume tips, interview advice, salary, skills development, and the Zero Effort platform
-- If asked about ANYTHING else (love life, politics, weather, entertainment, personal problems, etc.) — politely decline and redirect to career topics
-- Never offer advice outside of career and job-related topics
-- Keep responses professional, warm, and encouraging
-- Use emojis occasionally to keep it friendly
-
-RESPONSE STYLE RULES:
-- Keep responses SHORT and conversational — maximum 3-4 sentences
-- Never use long bullet point lists — maximum 3 bullet points if needed
-- Be direct and to the point
-- Ask one follow-up question at a time to keep the conversation flowing
-- If giving steps, limit to 3 steps maximum
-- Feel like a friendly chat, not a formal report
-
-When redirecting off-topic questions, use this format:
-"I'm Zelo, your career assistant! I can only help with job and career-related questions. Is there anything career-related I can help you with today? 😊"
-
-Here are the CURRENT ACTIVE JOB LISTINGS:
-${jobsList}
-
-Here are the CURRENT ACTIVE COMPANIES:
-${companiesList}
-
-JOB MATCHING RULES:
-- When user mentions any skill or interest, IMMEDIATELY check BOTH the job listings AND companies
-- If jobs match their skills → recommend them directly
-- If no jobs match but a company matches their field → say "No current openings for [skill] right now, but [Company Name] is in [industry] — worth watching their listings! 👀"
-- If nothing matches at all → say "No current openings or companies match [skill] right now. Check back soon as new jobs are posted regularly! 💪"
-- NEVER suggest unrelated jobs as alternatives
-- NEVER say a job "might not be the best fit" and then suggest it anyway
-- Always be honest and direct about job availability
-- Keep it to 2-3 sentences maximum`
-
-      // Build conversation history for Claude
-      const conversationHistory = newMessages.map(m => ({
-        role: m.role,
-        content: m.content
+      const conversationHistory = newMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content
       }))
 
       const response = await fetch('https://zero-effort-server.onrender.com/api/chat', {
@@ -109,19 +72,15 @@ JOB MATCHING RULES:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system: systemPrompt, messages: conversationHistory })
       })
-      console.log('Server response status:', response.status)
+
+      if (!response.ok) throw new Error('Failed to get response')
       const data = await response.json()
-      console.log('Server response data:', JSON.stringify(data).substring(0, 200))
 
       const botReply = data.content?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
 
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }])
-    } catch (err) {
-      console.error('Chatbot error:', err)
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: "Sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏"
-      }])
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again!' }])
     } finally {
       setLoading(false)
     }

@@ -72,8 +72,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     <>
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
-        backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
-        borderBottom: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+        backgroundColor: 'var(--card)',
+        borderBottom: '1px solid var(--border)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center',
@@ -85,7 +85,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           <span style={{
             fontSize: '18px',
             fontWeight: 800,
-            color: theme === 'dark' ? '#ffffff' : '#000000',
+            color: 'var(--text)',
             letterSpacing: '-0.5px'
           }}>
             Zero Effort
@@ -141,11 +141,11 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               style={{
                 width: '32px', height: '32px',
                 borderRadius: '8px',
-                border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+                border: '1px solid var(--border)',
                 backgroundColor: 'transparent',
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: theme === 'dark' ? '#8b8fa8' : '#6b7280'
+                color: 'var(--text2)'
               }}
             >
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
@@ -155,7 +155,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{
                 width: '32px', height: '32px', borderRadius: '50%',
-                background: '#6366f1', overflow: 'hidden',
+                background: 'var(--accent)', overflow: 'hidden',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 700, fontSize: '12px'
               }}>
@@ -166,9 +166,9 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               <span style={{ fontSize: '14px', fontWeight: 600 }}>{userName}</span>
               <button onClick={handleLogout} style={{
                 padding: '6px 12px', borderRadius: '8px',
-                border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+                border: '1px solid var(--border)',
                 background: 'transparent', cursor: 'pointer',
-                fontSize: '13px', color: theme === 'dark' ? '#8b8fa8' : '#6b7280'
+                fontSize: '13px', color: 'var(--text2)'
               }}>Log out</button>
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             width: '75%',
             maxWidth: '300px',
             zIndex: 9999,
-            backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
+            backgroundColor: 'var(--card)',
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
@@ -210,7 +210,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             {/* Drawer Header */}
             <div style={{
               padding: '20px 16px 16px',
-              borderBottom: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+              borderBottom: '1px solid var(--border)',
             }}>
               <img
                 src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'}
@@ -233,20 +233,20 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '13px 16px',
-                    color: theme === 'dark' ? '#ffffff' : '#000000',
+                    color: 'var(--text)',
                     textDecoration: 'none',
                     fontSize: '15px', fontWeight: location.pathname === link.path ? 700 : 500,
-                    borderLeft: location.pathname === link.path ? '3px solid #6366f1' : '3px solid transparent',
-                    backgroundColor: location.pathname === link.path ? (theme === 'dark' ? '#1e2030' : '#f3f4f6') : 'transparent'
+                    borderLeft: location.pathname === link.path ? '3px solid var(--accent)' : '3px solid transparent',
+                    backgroundColor: location.pathname === link.path ? 'var(--accent-d)' : 'transparent'
                   }}
                 >
-                  <span style={{ color: location.pathname === link.path ? '#6366f1' : (theme === 'dark' ? '#8b8fa8' : '#6b7280') }}>
+                  <span style={{ color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)' }}>
                     {getNavIcon(link.label)}
                   </span>
                   {link.label}
                   {link.label === 'Inbox' && unreadCount > 0 && (
                     <span style={{
-                      marginLeft: 'auto', background: '#6366f1',
+                      marginLeft: 'auto', background: 'var(--accent)',
                       color: 'white', borderRadius: '50%',
                       width: '20px', height: '20px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -260,12 +260,12 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             {/* User info at bottom */}
             <div style={{
               padding: '16px',
-              borderTop: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+              borderTop: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', gap: '10px'
             }}>
               <div style={{
                 width: '38px', height: '38px', borderRadius: '50%',
-                background: '#6366f1', overflow: 'hidden', flexShrink: 0,
+                background: 'var(--accent)', overflow: 'hidden', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 700, fontSize: '13px'
               }}>
@@ -278,7 +278,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+                <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: 'var(--text)' }}>
                   {userName || 'User'}
                 </p>
               </div>
@@ -286,9 +286,9 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 onClick={handleLogout}
                 style={{
                   padding: '6px 12px', borderRadius: '8px',
-                  border: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+                  border: '1px solid var(--border)',
                   background: 'transparent', cursor: 'pointer',
-                  fontSize: '13px', color: theme === 'dark' ? '#8b8fa8' : '#6b7280',
+                  fontSize: '13px', color: 'var(--text2)',
                   fontWeight: 600
                 }}
               >
@@ -304,8 +304,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         position: 'fixed',
         bottom: 0, left: 0, right: 0,
         height: '64px',
-        backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
-        borderTop: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+        backgroundColor: 'var(--card)',
+        borderTop: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
         zIndex: 100,
         paddingBottom: 'env(safe-area-inset-bottom)'
@@ -322,7 +322,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               gap: '4px', textDecoration: 'none', position: 'relative',
               flex: 1, padding: '6px 0',
-              color: location.pathname === link.path ? '#6366f1' : (theme === 'dark' ? '#8b8fa8' : '#6b7280')
+              color: location.pathname === link.path ? 'var(--accent)' : 'var(--text2)'
             }}
           >
             <div style={{ position: 'relative' }}>
@@ -330,7 +330,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
               {link.label === 'Inbox' && unreadCount > 0 && (
                 <span style={{
                   position: 'absolute', top: '-6px', right: '-6px',
-                  background: '#6366f1', color: 'white',
+                  background: 'var(--accent)', color: 'white',
                   borderRadius: '50%', width: '16px', height: '16px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '9px', fontWeight: 700

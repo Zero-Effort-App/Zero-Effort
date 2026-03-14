@@ -27,9 +27,6 @@ export default function AdminSettings() {
 
   async function createAdminAccount(email, password, fullName) {
   try {
-    // Log for debugging
-    console.log('Creating admin account for:', email, 'with password length:', password.length);
-
     // Create admin account via local API (bypasses rate limits)
     const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
       method: 'POST',
