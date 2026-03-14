@@ -42,8 +42,11 @@ export default function ApplicantJobs() {
   const [modal, setModal] = useState({ type: null, data: null });
   const [resumeFile, setResumeFile] = useState(null);
   const [portfolioFile, setPortfolioFile] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [applicationGender, setApplicationGender] = useState('');
+  const [photoValidating, setPhotoValidating] = useState(false);
+  const [photoError, setPhotoError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
@@ -100,6 +103,39 @@ export default function ApplicantJobs() {
 
   function co(cid) { return companies.find(c => c.id === cid) || {}; }
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setPhotoValidating(true);
+    setPhotoError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const res = await fetch('https://zero-effort-server.onrender.com/api/validate-photo', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json();
+
+      if (!result.valid) {
+        setPhotoError(result.errors?.join(' ') || 'Invalid photo.');
+        e.target.value = '';
+        return;
+      }
+
+      setPhotoFile(file);
+    } catch (err) {
+      console.error('Photo validation error:', err);
+      setPhotoFile(file);
+    } finally {
+      setPhotoValidating(false);
+    }
+  }
 
   const filtered = jobs.filter(j => {
     const q = search.toLowerCase();
@@ -356,6 +392,30 @@ export default function ApplicantJobs() {
               </span>
             </div>
 
+            <div className="fgroup">
+              <label className="flabel">1x1 Photo <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png"
+                onChange={handlePhotoChange}
+                style={{ marginBottom: '0.5rem' }}
+              />
+              {photoFile && <span style={{ fontSize: '.78rem', color: 'var(--success)' }}>✅ {photoFile.name}</span>}
+              {photoValidating && (
+                <p style={{ fontSize: '12px', color: 'var(--accent2)', marginTop: '6px' }}>
+                  ⏳ Validating photo...
+                </p>
+              )}
+              {photoError && (
+                <p style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '6px' }}>
+                  ❌ {photoError}
+                </p>
+              )}
+              <span style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '2px' }}>
+                Required: JPG/PNG, square (1:1), white background, max 2MB
+              </span>
+            </div>
+
             <div className="msep">Cover letter</div>
             <div className="fgroup">
               <textarea
@@ -385,7 +445,7 @@ export default function ApplicantJobs() {
             </div>
 
             {isSubmitting && <p style={{ textAlign: 'center', color: 'var(--text2)', fontSize: '.78rem' }}>Uploading files and submitting application...</p>}
-            <button className="btn-primary" onClick={() => handleApply(modal.data.id)} disabled={isSubmitting}>
+            <button className="btn-primary" onClick={() => handleApply(modal.data.id)} disabled={isSubmitting || photoValidating}>
               {isSubmitting ? 'Submitting...' : 'Submit application →'}
             </button>
           </div>
