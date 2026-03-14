@@ -171,13 +171,13 @@ export default function ApplicantInbox() {
                     {/* Company Avatar */}
                     <div style={{
                       width: '40px', height: '40px', borderRadius: '10px',
-                      background: convo.company.color || 'var(--accent)',
+                      background: convo.company.logo_url ? 'transparent' : (convo.company.color || 'var(--accent)'),
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 700, fontSize: '13px', color: 'white',
                       overflow: 'hidden', flexShrink: 0
                     }}>
                       {convo.company.logo_url ? (
-                        <img src={convo.company.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={convo.company.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
                       ) : (
                         convo.company.logo_initials || convo.company.name?.[0]
                       )}
@@ -228,12 +228,12 @@ export default function ApplicantInbox() {
               </button>
               <div style={{
                 width: '36px', height: '36px', borderRadius: '8px',
-                background: selectedConvo.company.color || 'var(--accent)',
+                background: selectedConvo.company.logo_url ? 'transparent' : (selectedConvo.company.color || 'var(--accent)'),
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700, fontSize: '12px', color: 'white', overflow: 'hidden'
               }}>
                 {selectedConvo.company.logo_url ? (
-                  <img src={selectedConvo.company.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={selectedConvo.company.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }} />
                 ) : (
                   selectedConvo.company.logo_initials || selectedConvo.company.name?.[0]
                 )}
