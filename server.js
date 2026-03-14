@@ -300,7 +300,7 @@ app.post('/api/validate-photo', async (req, res) => {
         }
 
         const whiteRatio = whiteCount / totalSampled;
-        if (whiteRatio < 0.75) {
+        if (whiteRatio < 0.40) {
           errors.push(`Background must be plain white. Only ${Math.round(whiteRatio * 100)}% of the background is white.`);
         }
 
