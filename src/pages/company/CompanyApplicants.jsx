@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime } from '../../lib/db';
+import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime, updateApplicationStatus } from '../../lib/db';
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
