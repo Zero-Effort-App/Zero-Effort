@@ -850,14 +850,37 @@ nav {
   to { opacity: 1; }
 }
 
+/* ── BOTTOM NAVIGATION ── */
+.bottom-nav {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  /* Hide desktop nav on mobile */
+  /* Add padding to prevent content hiding behind bottom nav */
+  .page-wrap, .dash-wrap, .admin-wrap {
+    padding-bottom: 80px !important;
+  }
+
+  /* Show bottom nav only on mobile */
+  .bottom-nav {
+    display: flex !important;
+  }
+
+  /* Hide hamburger menu on mobile - use bottom nav instead */
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
+  /* Hide top nav links on mobile */
   .desktop-nav {
     display: none !important;
   }
-  /* Show hamburger on mobile */
-  .mobile-menu-btn {
-    display: flex !important;
+}
+
+@media (min-width: 769px) {
+  /* Hide bottom nav on desktop/tablet */
+  .bottom-nav {
+    display: none !important;
   }
 }
 .acount {

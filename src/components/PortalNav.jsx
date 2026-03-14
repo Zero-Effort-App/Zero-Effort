@@ -308,6 +308,53 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           </div>
         </>
       )}
+
+      {/* Bottom Navigation - Mobile Only */}
+      <div className="bottom-nav" style={{
+        position: 'fixed',
+        bottom: 0, left: 0, right: 0,
+        height: '64px',
+        backgroundColor: theme === 'dark' ? '#13151f' : '#ffffff',
+        borderTop: `1px solid ${theme === 'dark' ? '#2a2d3e' : '#e5e7eb'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+        zIndex: 100,
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}>
+        {links.map(link => (
+          <a
+            key={link.path}
+            href={link.path}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(link.path);
+            }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: '4px', textDecoration: 'none', position: 'relative',
+              flex: 1, padding: '8px 0',
+              color: location.pathname === link.path ? '#6366f1' : (theme === 'dark' ? '#8b8fa8' : '#6b7280')
+            }}
+          >
+            <div style={{ position: 'relative' }}>
+              {getNavIcon(link.label)}
+              {link.label === 'Inbox' && unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-6px', right: '-6px',
+                  background: '#6366f1', color: 'white',
+                  borderRadius: '50%', width: '16px', height: '16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '9px', fontWeight: 700
+                }}>{unreadCount}</span>
+              )}
+            </div>
+            <span style={{
+              fontSize: '10px', fontWeight: location.pathname === link.path ? 700 : 400
+            }}>
+              {link.label}
+            </span>
+          </a>
+        ))}
+      </div>
     </>
   );
 }
