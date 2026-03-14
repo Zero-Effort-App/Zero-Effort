@@ -50,8 +50,11 @@ export default function ApplicantInbox() {
   // Fetch messages for selected conversation
   useEffect(() => {
     if (!selectedConvo) return
-    fetchMessages()
-    markAsRead()
+    const run = async () => {
+      await fetchMessages()
+      await markAsRead()
+    };
+    run();
 
     // Subscribe to realtime
     const channel = supabase
@@ -63,7 +66,10 @@ export default function ApplicantInbox() {
         filter: `applicant_id=eq.${user.id}` 
       }, payload => {
         setMessages(prev => [...prev, payload.new])
-        markAsRead()
+        const markRead = async () => {
+          await markAsRead()
+        };
+        markRead();
       })
       .subscribe()
 

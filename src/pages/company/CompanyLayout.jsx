@@ -16,31 +16,32 @@ export default function CompanyLayout() {
   const { showToast } = useToast();
 
   useEffect(() => {
-    async function init() {
-      let p = profile;
-      if (!p || p.role !== 'company') {
-        const session = await checkSession('company');
-        if (!session) { navigate('/company/login'); return; }
-        p = session.profile;
-      }
-      try {
-        const co = await getCompanyProfile(p.company_id);
-        setCompany(co);
-        
-        // Check if company is disabled
-        if (co && !co.is_active) {
-          await supabase.auth.signOut();
-          navigate('/company');
-          showToast('Your company account has been disabled. Please contact the administrator.', 'error');
-          return;
-        }
-      } catch (err) {
-        console.error('Error loading company profile:', err);
-      }
-      setLoading(false);
-    }
     init();
   }, []);
+
+  async function init() {
+    let p = profile;
+    if (!p || p.role !== 'company') {
+      const session = await checkSession('company');
+      if (!session) { navigate('/company/login'); return; }
+      p = session.profile;
+    }
+    try {
+      const co = await getCompanyProfile(p.company_id);
+      setCompany(co);
+      
+      // Check if company is disabled
+      if (co && !co.is_active) {
+        await supabase.auth.signOut();
+        navigate('/company');
+        showToast('Your company account has been disabled. Please contact the administrator.', 'error');
+        return;
+      }
+    } catch (err) {
+      console.error('Error loading company profile:', err);
+    }
+    setLoading(false);
+  }
 
   if (loading) return <LoadingOverlay show />;
 

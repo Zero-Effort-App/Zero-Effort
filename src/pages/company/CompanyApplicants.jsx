@@ -25,6 +25,7 @@ function SkeletonCard() {
 
 export default function CompanyApplicants() {
   const { company } = useOutletContext();
+  const navigate = useNavigate();
   const [applicants, setApplicants] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [selected, setSelected] = useState(null);

@@ -13,31 +13,32 @@ export default function ApplicantLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function loadApplicantData() {
-      if (!user) return
-      const { data } = await supabase
-        .from('applicants')
-        .select('first_name, last_name, photo_url')
-        .eq('id', user.id)
-        .single()
-
-      if (data) {
-        setUserPhoto(data.photo_url || '')
-      }
-    }
-    
-    async function init() {
-      if (!profile || profile.role !== 'applicant') {
-        const session = await checkSession('applicant');
-        if (!session) { navigate('/applicant/login'); return; }
-      }
-      if (user) {
-        loadApplicantData()
-      }
-      setLoading(false);
-    }
     init();
   }, [user, profile]);
+
+  async function loadApplicantData() {
+    if (!user) return
+    const { data } = await supabase
+      .from('applicants')
+      .select('first_name, last_name, photo_url')
+      .eq('id', user.id)
+      .single()
+
+    if (data) {
+      setUserPhoto(data.photo_url || '')
+    }
+  }
+  
+  async function init() {
+    if (!profile || profile.role !== 'applicant') {
+      const session = await checkSession('applicant');
+      if (!session) { navigate('/applicant/login'); return; }
+    }
+    if (user) {
+      await loadApplicantData()
+    }
+    setLoading(false);
+  }
 
   if (loading) return <LoadingOverlay show />;
 
