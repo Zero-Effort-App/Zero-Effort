@@ -78,7 +78,6 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         schema: 'public',
         table: 'messages',
       }, (payload) => {
-        console.log('New message received:', payload.new);
         // Only update badge if message is for this user
         const isApplicant = window.location.pathname.includes('/applicant/');
         const isCompany = window.location.pathname.includes('/company/');
@@ -90,7 +89,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
       })
       .subscribe((status) => {
-        console.log('Subscription status:', status);
+        // Subscription established
       });
 
     return () => {
