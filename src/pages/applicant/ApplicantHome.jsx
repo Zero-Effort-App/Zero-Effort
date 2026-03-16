@@ -23,30 +23,34 @@ export default function ApplicantHome() {
   useEffect(() => {
     async function load() {
       try {
-        const [cos, jobs, evts, apps, hires] = await Promise.all([
+        // Fetch companies, events, applications, and recent hires
+        const [cos, evts, apps, hires] = await Promise.all([
           getCompanies(true),
-          getJobs(true),
           getEvents(true),
           profile?.id ? getMyApplications(profile.id) : Promise.resolve([]),
           getRecentHires(10),
         ]);
+        
+        // Fetch featured jobs properly
+        const { data: jobsData } = await supabase
+          .from('jobs')
+          .select('*, companies(name, logo_url, logo_initials, color)')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(4);
+        
+        console.log('Featured jobs:', jobsData);
+        
         setCompanies(cos);
         setEvents(evts.slice(0, 6));
         setRecentHires(hires);
+        setFeaturedJobs(jobsData || []);
         setStats({
-          openPositions: jobs.length,
+          openPositions: jobsData?.length || 0,
           companiesHiring: cos.length,
           myApps: apps.length,
           upcomingEvents: evts.length,
         });
-
-        const now = new Date();
-        const featured = jobs.map(j => {
-          const daysAgo = Math.floor((now - new Date(j.posted_at)) / (1000 * 60 * 60 * 24));
-          const co = cos.find(c => c.id === j.company_id);
-          return { ...j, co, daysAgo, isNew: daysAgo <= 3, ago: daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago` };
-        });
-        setFeaturedJobs(featured.filter(j => j.isNew || j.id <= 4).slice(0, 4));
       } catch (err) {
         console.error('Error loading home data:', err);
       }
@@ -237,13 +241,13 @@ export default function ApplicantHome() {
           </div>
           <div className="jgrid stagger">
             {featuredJobs.map(j => {
-              const co = j.co;
+              const co = j.companies;
               return (
                 <div key={j.id} className="jcard" onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: j.id } })}>
                   <div className="jcard-stripe" style={{ background: co?.color ? `linear-gradient(90deg,${co.color},${co.color}55)` : 'linear-gradient(90deg,#6366f1,#6366f155)' }} />
                   <div className="jcard-top">
                     <CompanyLogo company={co} size={40} />
-                    {j.isNew && <span className="new-b">New</span>}
+                    <span className="new-b">New</span>
                   </div>
                   <div className="jcard-title">{j.title}</div>
                   <div className="jcard-co">{co?.name || '—'}</div>
@@ -254,7 +258,7 @@ export default function ApplicantHome() {
                   </div>
                   <div className="jcard-foot">
                     <span className="jcard-sal">{displaySalary(j.salary)}</span>
-                    <span className="jcard-ago">{j.ago}</span>
+                    <span className="jcard-ago">Today</span>
                   </div>
                 </div>
               );
