@@ -17,6 +17,7 @@ export default function ZeloChatbot() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
+  const dataCache = useRef(null)
 
   // Detect mobile
   const isMobile = window.innerWidth <= 768
@@ -26,21 +27,23 @@ export default function ZeloChatbot() {
   }, [messages])
 
   async function fetchJobsAndCompanies() {
-    try {
-      const { data: jobs } = await supabase
-        .from('jobs')
-        .select('title, type, department, salary, description, requirements, companies(name, industry)')
-        .eq('status', 'active')
+    if (dataCache.current) return dataCache.current
+    
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('title, type, department, salary, companies(name, industry)')
+      .eq('status', 'active')
+      .limit(20)
 
-      const { data: companies } = await supabase
-        .from('companies')
-        .select('name, industry, description, tags')
-        .eq('is_active', true)
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('name, industry, tags')
+      .eq('is_active', true)
+      .limit(20)
 
-      return { jobs: jobs || [], companies: companies || [] }
-    } catch {
-      return { jobs: [], companies: [] }
-    }
+    const result = { jobs: jobs || [], companies: companies || [] }
+    dataCache.current = result
+    return result
   }
 
   async function handleSend() {

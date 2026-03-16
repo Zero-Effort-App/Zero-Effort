@@ -32,6 +32,7 @@ export default function ApplicantInbox() {
       .select('*, companies(id, name, logo_url, logo_initials, color)')
       .eq('applicant_id', user.id)
       .order('created_at', { ascending: false })
+      .limit(100)
 
     if (data) {
       // Group by company
@@ -91,6 +92,7 @@ export default function ApplicantInbox() {
       .eq('applicant_id', user.id)
       .eq('company_id', selectedConvo.company.id)
       .order('created_at', { ascending: true })
+      .limit(50)
     if (data) setMessages(data)
   }
 

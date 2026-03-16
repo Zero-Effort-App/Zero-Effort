@@ -171,6 +171,9 @@ app.post('/api/chat', async (req, res) => {
       }))
     ]
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -182,8 +185,10 @@ app.post('/api/chat', async (req, res) => {
         messages: groqMessages,
         max_tokens: 1000,
         temperature: 0.7
-      })
-    })
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
 
     console.log('Groq response status:', response.status)
     const data = await response.json()

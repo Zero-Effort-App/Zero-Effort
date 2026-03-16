@@ -33,6 +33,7 @@ export default function CompanyInbox() {
       .select('*, applicants(id, first_name, last_name, photo_url)')
       .eq('company_id', company.id)
       .order('created_at', { ascending: false })
+      .limit(100)
 
     if (data) {
       const grouped = {}
@@ -90,6 +91,7 @@ export default function CompanyInbox() {
       .eq('company_id', company.id)
       .eq('applicant_id', selectedConvo.applicant.id)
       .order('created_at', { ascending: true })
+      .limit(50)
     if (data) setMessages(data)
   }
 
