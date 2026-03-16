@@ -22,9 +22,9 @@ export default function ApplicantLanding() {
   return (
     <Landing
       portalType="applicant"
-      badge="Zero Effort · Official Career Hub"
+      badge=""
       title={title}
-      description="Your gateway to job opportunities inside Zero Effort. Browse companies, explore open roles, and apply — all in one place built just for the Park."
+      description="Find your next opportunity. Browse companies, explore open jobs, and submit your application in minutes."
       buttonText="Get Started"
       tickerItems={tickerItems}
       showLogo={true}

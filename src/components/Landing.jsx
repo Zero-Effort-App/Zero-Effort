@@ -28,7 +28,7 @@ export default function Landing({ portalType, badge, title, description, buttonT
         justifyContent: 'center',
         padding: '2rem 1rem'
       }}>
-        <div className="land-badge">{badge}</div>
+        {badge && <div className="land-badge">{badge}</div>}
         {showLogo ? (
           <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
@@ -60,22 +60,8 @@ export default function Landing({ portalType, badge, title, description, buttonT
           <button className="btn-land" onClick={() => navigate(authPath)}>
             {buttonText} &nbsp;→
           </button>
-          <span className="land-note">Zero Effort · Verified accounts</span>
         </div>
       </div>
-
-      {tickerItems && (
-        <div className="land-ticker">
-          <div className="ticker-track">
-            {tickerItems.concat(tickerItems).map((item, i) => (
-              <span key={i}>
-                {i > 0 && <span className="sep" style={{ margin: '0 1.25rem' }}>|</span>}
-                ✦ {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
