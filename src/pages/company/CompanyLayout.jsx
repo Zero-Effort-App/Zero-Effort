@@ -51,6 +51,7 @@ export default function CompanyLayout() {
     { path: '/company/dashboard', label: 'Dashboard' },
     { path: '/company/listings', label: 'My Listings' },
     { path: '/company/applicants', label: 'Applicants' },
+    { path: '/company/inbox', label: 'Inbox' },
     { path: '/company/profile', label: 'Company Profile' },
   ];
 

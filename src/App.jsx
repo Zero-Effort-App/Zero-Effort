@@ -25,6 +25,7 @@ import CompanyLayout from './pages/company/CompanyLayout';
 import CompanyDashboard from './pages/company/CompanyDashboard';
 import CompanyListings from './pages/company/CompanyListings';
 import CompanyApplicants from './pages/company/CompanyApplicants';
+import CompanyInbox from './pages/company/CompanyInbox';
 import CompanyProfile from './pages/company/CompanyProfile';
 
 // Applicant
@@ -71,6 +72,7 @@ export default function App() {
                   <Route path="dashboard" element={<CompanyDashboard />} />
                   <Route path="listings" element={<CompanyListings />} />
                   <Route path="applicants" element={<CompanyApplicants />} />
+                  <Route path="inbox" element={<CompanyInbox />} />
                   <Route path="profile" element={<CompanyProfile />} />
                 </Route>
               </Route>

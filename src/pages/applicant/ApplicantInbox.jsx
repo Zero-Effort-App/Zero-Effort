@@ -123,7 +123,7 @@ export default function ApplicantInbox() {
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0)
 
   return (
-    <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ padding: '24px 24px 80px 24px', maxWidth: '900px', margin: '0 auto' }}>
       <h1 style={{ fontWeight: 800, fontSize: '24px', marginBottom: '4px' }}>Inbox</h1>
       <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px' }}>
         Messages from companies
@@ -133,7 +133,7 @@ export default function ApplicantInbox() {
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : (selectedConvo ? '280px 1fr' : '1fr'),
         gap: '16px',
-        height: '600px'
+        height: 'calc(100vh - 220px)'
       }}>
         {/* Conversation List */}
         {(!selectedConvo || !isMobile) && (
