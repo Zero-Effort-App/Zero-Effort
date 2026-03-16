@@ -73,10 +73,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         event: '*',
         schema: 'public',
         table: 'messages',
-      }, () => {
+      }, (payload) => {
+        console.log('Real-time message received:', payload);
         fetchUnread();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
