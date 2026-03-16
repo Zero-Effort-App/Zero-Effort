@@ -416,11 +416,16 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             gap: '8px',
             flexShrink: 0,
           }}>
-            <div className="nav-brand" style={{
-              flexShrink: 0,
-            }}>
-              <div className="nav-brand-icon">ZE</div>
-              <span>Zero Effort</span>
+            <div className="nav-brand" style={{ flexShrink: 0 }}>
+              <span style={{
+                fontSize: '1rem',
+                fontWeight: 800,
+                letterSpacing: '-0.5px',
+                background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>Zero Effort</span>
             </div>
           </div>
 
