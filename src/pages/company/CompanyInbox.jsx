@@ -55,7 +55,12 @@ export default function CompanyInbox() {
 
   useEffect(() => {
     if (!selectedConvo) return
-    fetchMessages()
+    const run = async () => {
+      await fetchMessages()
+      await markAsRead()
+      fetchConversations()
+    }
+    run()
 
     const channel = supabase
       .channel(`company-messages-${company.id}-${selectedConvo.applicant.id}`)
@@ -84,6 +89,16 @@ export default function CompanyInbox() {
       .eq('applicant_id', selectedConvo.applicant.id)
       .order('created_at', { ascending: true })
     if (data) setMessages(data)
+  }
+
+  async function markAsRead() {
+    if (!selectedConvo) return
+    await supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('company_id', company.id)
+      .eq('applicant_id', selectedConvo.applicant.id)
+      .eq('sender_type', 'applicant')
   }
 
   async function handleSend() {
