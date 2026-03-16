@@ -309,7 +309,7 @@ export default function ApplicantHome() {
 
           {/* Salary */}
           <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
-            ₱{Number(job.salary).toLocaleString()}
+            {job.salary ? `₱${job.salary.toString().replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` : 'Not specified'}
           </p>
         </div>
       ))}

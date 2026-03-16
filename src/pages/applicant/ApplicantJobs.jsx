@@ -335,7 +335,7 @@ export default function ApplicantJobs() {
                 <span className="pill" style={{ fontSize: '.62rem' }}>{j.department}</span>
               </div>
               <div className="jlcard-meta">
-                <span className="jlcard-sal">{j.salary}</span>
+                <span className="jlcard-sal">{j.salary ? `₱${j.salary.toString().replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` : 'Not specified'}</span>
                 <span className="jlcard-date">{j.ago}</span>
               </div>
             </div>
