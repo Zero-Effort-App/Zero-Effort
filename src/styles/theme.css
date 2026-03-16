@@ -78,7 +78,8 @@ html, body {
 
   /* Page padding */
   .page-wrap, .dash-wrap, .admin-wrap {
-    padding: 12px !important;
+    padding: 12px 12px 80px 12px !important;
+    overflow-x: hidden !important;
   }
 
   /* Grids to single column */
@@ -386,6 +387,10 @@ html, body {
     bottom: 0 !important;
     margin: 0 !important;
   }
+}
+
+@media(max-width: 768px) {
+  .pw { padding-bottom: 80px !important; }
 }
 
 body {
@@ -899,7 +904,7 @@ nav {
 /* ── APPLICANT LIST PANEL ── */
 .apl-list-panel {
   display: flex; flex-direction: column; gap: .45rem;
-  max-height: calc(100vh - 200px); overflow-y: auto; padding-right: 3px;
+  max-height: calc(100vh - 260px); overflow-y: auto; padding-right: 3px;
 }
 .apl-list-panel::-webkit-scrollbar { width: 3px; }
 .apl-list-panel::-webkit-scrollbar-thumb { background: var(--border2); }
@@ -925,8 +930,8 @@ nav {
 /* ── DETAIL PANEL ── */
 .dpanel {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 1.6rem 1.6rem 5rem 1.6rem; position: sticky; top: 72px;
-  max-height: calc(100vh - 96px); overflow-y: auto;
+  border-radius: 16px; padding: 1.6rem 1.6rem 6rem 1.6rem; position: sticky; top: 72px;
+  max-height: calc(100vh - 160px); overflow-y: auto;
 }
 .dpanel::-webkit-scrollbar { width: 3px; }
 .dpanel::-webkit-scrollbar-thumb { background: var(--border2); }
@@ -1213,7 +1218,7 @@ nav {
 .jcard-ago { font-size: .65rem; color: var(--text3); }
 
 /* ── JOB LIST ── */
-.jlist { display: flex; flex-direction: column; gap: .5rem; max-height: calc(100vh - 195px); overflow-y: auto; padding-right: 3px; }
+.jlist { display: flex; flex-direction: column; gap: .5rem; max-height: calc(100vh - 260px); overflow-y: auto; padding-right: 3px; }
 .jlist::-webkit-scrollbar { width: 3px; }
 .jlist::-webkit-scrollbar-thumb { background: var(--border2); }
 .jlcard {
