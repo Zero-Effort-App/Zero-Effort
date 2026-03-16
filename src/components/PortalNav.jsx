@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Moon, Sun, Home, Briefcase, Building2, FileText, User, MessageCircle, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto }) {
+export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto, profile }) {
   const { theme, toggleTheme } = useTheme();
   const { logout, user } = useAuth();
   const navigate = useNavigate();
@@ -36,20 +36,52 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch unread count for applicant
+  // Fetch unread count for applicant and company with real-time updates
   useEffect(() => {
-    if (!user || !location.pathname.includes('/applicant/')) return;
+    if (!user) return;
+
+    const isApplicant = location.pathname.includes('/applicant/');
+    const isCompany = location.pathname.includes('/company/');
+
+    if (!isApplicant && !isCompany) return;
+
     async function fetchUnread() {
-      const { count } = await supabase
+      let query = supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
-        .eq('applicant_id', user.id)
-        .eq('is_read', false)
-        .eq('sender_type', 'company');
+        .eq('is_read', false);
+
+      if (isApplicant) {
+        query = query.eq('applicant_id', user.id).eq('sender_type', 'company');
+      } else if (isCompany && profile?.company_id) {
+        query = query.eq('company_id', profile.company_id).eq('sender_type', 'applicant');
+      } else {
+        return;
+      }
+
+      const { count } = await query;
       setUnreadCount(count || 0);
     }
+
     fetchUnread();
-  }, [user, location.pathname]);
+
+    // Real-time subscription
+    const channelName = `unread-${user.id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+      }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, profile, location.pathname]);
 
   async function handleLogout() {
     await logout();
@@ -457,8 +489,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 >
                   <span className="nav-link-icon">{getNavIcon(link.label)}</span>
                   <span>{link.label}</span>
-                  {link.badge > 0 && (
-                    <span className="nav-badge">{link.badge}</span>
+                  {link.label === 'Inbox' && unreadCount > 0 && (
+                    <span style={{
+                      background: '#ef4444', color: 'white',
+                      borderRadius: '50%', width: '16px', height: '16px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '9px', fontWeight: 700, marginLeft: '4px'
+                    }}>{unreadCount}</span>
                   )}
                 </button>
               ))}
