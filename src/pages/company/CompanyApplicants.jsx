@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime, formatDate, updateApplicationStatus } from '../../lib/db';
-import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send } from 'lucide-react';
+import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 import { useToast } from '../../contexts/ToastContext';
@@ -183,6 +183,7 @@ export default function CompanyApplicants() {
         gap: '1.1rem',
         alignItems: 'start'
       }}>
+        {(!isMobile || !selected) && (
         <div className="apl-list-panel">
           {filtered.map(a => (
             <div
@@ -228,8 +229,25 @@ export default function CompanyApplicants() {
             </div>
           )}
         </div>
+        )}
 
         <div className="dpanel">
+        {(!isMobile || selected) && (
+          <>
+          {isMobile && selected && (
+            <button
+              onClick={() => setSelected(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'none', border: 'none', color: 'var(--text2)',
+                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                padding: '0', marginBottom: '16px', fontFamily: 'inherit'
+              }}
+            >
+              <ChevronLeft size={18} />
+              Back to applicants
+            </button>
+          )}
           {selectedApp ? (
             <>
               <div className="dp-head">
@@ -371,6 +389,9 @@ export default function CompanyApplicants() {
               <p>Select an applicant to view their profile</p>
             </div>
           )}
+        )}
+        </>
+        )}
         </div>
       </div>
 
