@@ -36,7 +36,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch unread count for applicant and company with real-time updates
+  // Fetch unread count for applicant and company
   useEffect(() => {
     if (!user) return;
 
@@ -64,9 +64,34 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     }
 
     fetchUnread();
+  }, [location.pathname, user, profile]);
 
-    // Real-time subscription
-    const channelName = `unread-${user.id}`;
+  // Separate useEffect for real-time subscription - only runs once
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchUnread() {
+      const isApplicant = window.location.pathname.includes('/applicant/');
+      const isCompany = window.location.pathname.includes('/company/');
+
+      let query = supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_read', false);
+
+      if (isApplicant) {
+        query = query.eq('applicant_id', user.id).eq('sender_type', 'company');
+      } else if (isCompany && profile?.company_id) {
+        query = query.eq('company_id', profile.company_id).eq('sender_type', 'applicant');
+      } else {
+        return;
+      }
+
+      const { count } = await query;
+      setUnreadCount(count || 0);
+    }
+
+    const channelName = `unread-nav-${user.id}`;
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', {
@@ -84,7 +109,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, profile, location.pathname]);
+  }, [user]); // Only depends on user - never recreates on navigation
 
   async function handleLogout() {
     await logout();
