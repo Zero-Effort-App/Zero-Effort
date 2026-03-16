@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanies, getJobs, getEvents, getMyApplications, getRecentHires, formatDate } from '../../lib/db';
 import { Briefcase, Building2, FileText, CalendarDays, CheckCircle, Clock, MapPin } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
+import { supabase } from '../../lib/supabase';
 
 function displaySalary(salary) {
   if (!salary) return 'Not specified'
