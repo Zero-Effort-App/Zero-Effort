@@ -128,6 +128,13 @@ export default function ApplicantJobs() {
     checkApplied()
   }, [selected, jobs, profile]);
 
+  // Handle incoming navigation state for job selection
+  useEffect(() => {
+    if (location.state?.selectedJobId) {
+      setSelected(location.state.selectedJobId);
+    }
+  }, [location.state]);
+
   function co(cid) { return companies.find(c => c.id === cid) || {}; }
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
 
