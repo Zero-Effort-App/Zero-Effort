@@ -170,9 +170,9 @@ export default function ApplicantHome() {
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
               Upcoming Hiring Events
             </h2>
-            <a href="/applicant/events" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+            <button onClick={() => navigate('/applicant/jobs')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               View all →
-            </a>
+            </button>
           </div>
 
           <div style={{
@@ -242,9 +242,9 @@ export default function ApplicantHome() {
         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} />
         Featured Openings
       </h2>
-      <a href="/jobs/browse" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+      <button onClick={() => navigate('/applicant/jobs')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         View all →
-      </a>
+      </button>
     </div>
 
     {/* Horizontal swipeable cards */}
