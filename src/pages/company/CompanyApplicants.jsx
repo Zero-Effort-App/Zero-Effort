@@ -58,6 +58,7 @@ export default function CompanyApplicants() {
         phone: a.applicants?.phone || '',
         gender: a.applicants?.gender || '',
         photo_url: a.applicants?.photo_url || '',
+        application_photo: a.photo_url || '',
         date: formatDate(a.applied_at),
         jobTitle: a.jobs?.title || '—',
         jobType: a.jobs?.type || '',
@@ -289,6 +290,22 @@ export default function CompanyApplicants() {
                   <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text)', background: 'var(--bg2)', padding: '12px', borderRadius: '8px' }}>
                     {selectedApp.cover}
                   </p>
+                </div>
+              )}
+
+              {selectedApp.application_photo && (
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>1x1 ID PHOTO</p>
+                  <div style={{ 
+                    width: '100px', height: '100px', borderRadius: '8px', 
+                    overflow: 'hidden', border: '2px solid var(--border)' 
+                  }}>
+                    <img 
+                      src={selectedApp.application_photo} 
+                      alt="1x1 ID Photo" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  </div>
                 </div>
               )}
 
