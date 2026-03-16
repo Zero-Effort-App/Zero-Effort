@@ -35,6 +35,7 @@ export default function CompanyInbox() {
     if (data) {
       const grouped = {}
       data.forEach(msg => {
+        if (!msg.applicants) return // skip if no applicant data
         const applicantId = msg.applicant_id
         if (!grouped[applicantId]) {
           grouped[applicantId] = {
@@ -142,7 +143,7 @@ export default function CompanyInbox() {
                   <p style={{ fontSize: '14px' }}>No messages yet</p>
                 </div>
               ) : (
-                conversations.map(convo => (
+                conversations.filter(convo => convo.applicant).map(convo => (
                   <div
                     key={convo.applicant.id}
                     onClick={() => setSelectedConvo(convo)}
