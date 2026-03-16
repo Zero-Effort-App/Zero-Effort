@@ -322,9 +322,11 @@ export default function ApplicantJobs() {
         gap: '1.1rem',
         alignItems: 'start'
       }}>
+        {/* On mobile, hide job list when job is selected */}
+        {(!isMobile || !selected) && (
         <div className="jlist">
           {filtered.length > 0 ? filtered.map(j => (
-            <div key={j.id} className={`jlcard ${selected === j.id ? 'sel' : ''}`} onClick={() => setSelected(j.id)}>
+            <div key={j.id} className={`jlcard ${selected === j.id ? 'sel' : ''}`} onClick={() => setSelected(selected === j.id ? null : j.id)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div className="jlcard-title">{j.title}</div>
                 {j.isNew && <span className="new-b" style={{ fontSize: '.62rem' }}>New</span>}
@@ -350,7 +352,9 @@ export default function ApplicantJobs() {
             </div>
           )}
         </div>
+        )}
 
+        {(!isMobile || selected) && (
         <div className="dpanel">
           {selectedJob ? (
             <>
@@ -416,6 +420,7 @@ export default function ApplicantJobs() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Apply Modal */}
