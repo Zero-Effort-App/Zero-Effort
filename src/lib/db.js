@@ -178,7 +178,7 @@ export async function submitApplication(applicationData) {
 export async function getMyApplications(applicantId) {
   const { data, error } = await supabase
     .from('applications')
-    .select('*, jobs(title, company_id, companies(name, logo_initials, color))')
+    .select('*, jobs(title, company_id, companies(name, logo_initials, logo_url, color))')
     .eq('applicant_id', applicantId)
     .order('applied_at', { ascending: false });
   if (error) throw error;

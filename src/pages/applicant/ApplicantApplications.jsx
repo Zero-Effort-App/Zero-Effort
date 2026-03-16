@@ -33,6 +33,7 @@ export default function ApplicantApplications() {
             cid: a.jobs?.company_id,
             coColor: co.color || '#6366f1',
             coInitials: co.logo_initials || (co.name ? co.name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'),
+            coLogo: co.logo_url || null,
             date: new Date(a.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             status: a.status,
           };
@@ -106,9 +107,18 @@ export default function ApplicantApplications() {
           const [cls, lbl] = statusMap[a.status] || ['s-pending', 'Under Review'];
           return (
             <div key={a.id} className="apl-row">
-              <div className="apl-logo" style={{ background: a.coColor + '20', color: a.coColor }}>
-                {a.coInitials}
-              </div>
+              <div className="apl-logo" style={{ 
+  background: a.coLogo ? 'transparent' : (a.coColor + '20'), 
+  color: a.coColor,
+  overflow: 'hidden',
+  padding: a.coLogo ? '0' : undefined
+}}>
+  {a.coLogo ? (
+    <img src={a.coLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9px', display: 'block' }} />
+  ) : (
+    a.coInitials
+  )}
+</div>
               <div className="apl-info">
                 <div className="apl-title">{a.title}</div>
                 <div className="apl-co">{a.co}</div>
