@@ -315,7 +315,7 @@ export default function CompanyApplicants() {
                 <div style={{ marginBottom: '20px' }}>
                   <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>1x1 ID PHOTO</p>
                   <div style={{ 
-                    width: '100px', height: '100px', borderRadius: '8px', 
+                    width: '140px', height: '160px', borderRadius: '8px', 
                     overflow: 'hidden', border: '2px solid var(--border)' 
                   }}>
                     <img 
