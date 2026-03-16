@@ -273,12 +273,12 @@ export default function ApplicantHome() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '10px',
-              background: job.companies?.color || '#6366f1',
+              background: job.companies?.logo_url ? 'transparent' : (job.companies?.color || '#6366f1'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               overflow: 'hidden', flexShrink: 0
             }}>
               {job.companies?.logo_url ? (
-                <img src={job.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={job.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
               ) : (
                 <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
                   {job.companies?.logo_initials || job.companies?.name?.[0]}
@@ -309,7 +309,12 @@ export default function ApplicantHome() {
 
           {/* Salary */}
           <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
-            {job.salary ? `₱${job.salary.toString().replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` : 'Not specified'}
+            {(() => {
+  if (!job.salary) return 'Salary not specified';
+  const clean = job.salary.toString().replace(/[^0-9]/g, '');
+  if (!clean || clean === '0') return 'Salary not specified';
+  return `₱${parseInt(clean).toLocaleString()}`;
+})()}
           </p>
         </div>
       ))}
