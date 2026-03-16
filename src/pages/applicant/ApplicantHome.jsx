@@ -259,7 +259,7 @@ export default function ApplicantHome() {
       {featuredJobs.map(job => (
         <div
           key={job.id}
-          onClick={() => navigate('/jobs/browse', { state: { selectedJobId: job.id } })}
+          onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: job.id } })}
           style={{
             minWidth: '240px', maxWidth: '240px',
             background: 'var(--card)', borderRadius: '16px',
