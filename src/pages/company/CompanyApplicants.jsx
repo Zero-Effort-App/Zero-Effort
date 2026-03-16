@@ -233,7 +233,6 @@ export default function CompanyApplicants() {
 
         {(!isMobile || selected) && (
         <div className="dpanel">
-          <>
           {isMobile && selected && (
             <button
               onClick={() => setSelected(null)}
@@ -277,8 +276,6 @@ export default function CompanyApplicants() {
                 {selectedApp.jobDept && <span className="dp-chip"><Briefcase size={12} style={{ marginRight: '4px' }} /> {selectedApp.jobDept}</span>}
               </div>
               <hr className="dp-div" />
-
-              {/* Contact Information */}
               <div style={{ marginBottom: '20px' }}>
                 <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>CONTACT INFORMATION</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -300,8 +297,6 @@ export default function CompanyApplicants() {
                   )}
                 </div>
               </div>
-
-              {/* Cover Letter */}
               {selectedApp.cover && (
                 <div style={{ marginBottom: '20px' }}>
                   <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>COVER LETTER</p>
@@ -310,78 +305,44 @@ export default function CompanyApplicants() {
                   </p>
                 </div>
               )}
-
               {selectedApp.application_photo && (
                 <div style={{ marginBottom: '20px' }}>
                   <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.08em', marginBottom: '10px' }}>1x1 ID PHOTO</p>
-                  <div style={{ 
-                    width: '140px', height: '160px', borderRadius: '8px', 
-                    overflow: 'hidden', border: '2px solid var(--border)' 
-                  }}>
-                    <img 
-                      src={selectedApp.application_photo} 
-                      alt="1x1 ID Photo" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                    />
+                  <div style={{ width: '140px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '2px solid var(--border)' }}>
+                    <img src={selectedApp.application_photo} alt="1x1 ID Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 </div>
               )}
-
               <div className="dp-sec">
                 <div className="dp-sec-h">Documents</div>
                 {selectedApp.hasResume && selectedApp.resumeUrl && (
-                  <a 
-                    href={selectedApp.resumeUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', marginBottom: '.5rem', textDecoration: 'none', cursor: 'pointer' }}
-                  >
+                  <a href={selectedApp.resumeUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', marginBottom: '.5rem', textDecoration: 'none', cursor: 'pointer' }}>
                     <FileText size={14} style={{ marginRight: '4px' }} /><span>Resume / CV</span>
                     <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View →</span>
                   </a>
                 )}
                 {selectedApp.hasPortfolio && selectedApp.portfolioUrl && (
-                  <a 
-                    href={selectedApp.portfolioUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', textDecoration: 'none', cursor: 'pointer' }}
-                  >
+                  <a href={selectedApp.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '.6rem .9rem', fontSize: '.78rem', fontWeight: 600, color: 'var(--text2)', textDecoration: 'none', cursor: 'pointer' }}>
                     <FolderOpen size={14} style={{ marginRight: '4px' }} /><span>Portfolio</span>
                     <span style={{ marginLeft: 'auto', fontSize: '.68rem', color: 'var(--accent)' }}>View Portfolio →</span>
                   </a>
                 )}
               </div>
-
               <hr className="dp-div" />
-
               <div className="action-row">
-                <button
-                  className="btn-accept"
-                  onClick={() => handleSetStatus(selectedApp.id, 'accepted')}
-                  disabled={selectedApp.status === 'accepted'}
-                  style={selectedApp.status === 'accepted' ? { opacity: .5, cursor: 'default' } : {}}
-                ><CheckCircle size={14} style={{ marginRight: '4px' }} /> Accept</button>
-                <button
-                  className="btn-decline"
-                  onClick={() => handleSetStatus(selectedApp.id, 'declined')}
-                  disabled={selectedApp.status === 'declined'}
-                  style={selectedApp.status === 'declined' ? { opacity: .5, cursor: 'default' } : {}}
-                ><X size={14} style={{ marginRight: '4px' }} /> Decline</button>
+                <button className="btn-accept" onClick={() => handleSetStatus(selectedApp.id, 'accepted')} disabled={selectedApp.status === 'accepted'} style={selectedApp.status === 'accepted' ? { opacity: .5, cursor: 'default' } : {}}>
+                  <CheckCircle size={14} style={{ marginRight: '4px' }} /> Accept
+                </button>
+                <button className="btn-decline" onClick={() => handleSetStatus(selectedApp.id, 'declined')} disabled={selectedApp.status === 'declined'} style={selectedApp.status === 'declined' ? { opacity: .5, cursor: 'default' } : {}}>
+                  <X size={14} style={{ marginRight: '4px' }} /> Decline
+                </button>
               </div>
-              <button
-  onClick={() => setShowMessageModal(true)}
-  style={{
-    width: '100%', padding: '12px',
-    borderRadius: '10px', border: '1px solid var(--border)',
-    background: 'var(--bg2)', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text)'
-  }}
->
-  <Mail size={16} />
-  Contact Applicant
-</button>
+              <button onClick={() => setShowMessageModal(true)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
+                <Mail size={16} />
+                Contact Applicant
+              </button>
             </>
           ) : (
             <div className="empty-dp">
@@ -389,8 +350,6 @@ export default function CompanyApplicants() {
               <p>Select an applicant to view their profile</p>
             </div>
           )}
-        )}
-        </>
         </div>
         )}
       </div>
