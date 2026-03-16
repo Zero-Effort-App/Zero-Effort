@@ -270,13 +270,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-button.dark {
-          background: #374151;
-          border-color: #4b5563;
+          background: #4b5563; /* Lighter background for better contrast */
+          border-color: #6b7280;
           color: #f3f4f6;
         }
 
         .profile-button.dark:hover {
-          background: #4b5563;
+          background: #6b7280; /* Slightly darker on hover */
           border-color: ${brandColors.primary};
         }
 
@@ -308,7 +308,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-name.dark {
-          color: #f3f4f6;
+          color: white !important; /* Force white text for visibility in dark mode */
         }
 
         .profile-chevron {
@@ -317,6 +317,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           display: inline-flex; /* Inline-flex for proper alignment */
           align-items: center; /* Ensure vertical centering */
           margin: 0; /* Remove any extra margin */
+        }
+
+        .profile-chevron.dark {
+          color: #d1d5db; /* Lighter color for dark mode visibility */
         }
 
         .profile-button.open .profile-chevron {
@@ -531,7 +535,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                     )}
                   </div>
                   <span className="profile-name">{userName}</span>
-                  <span className="profile-chevron">
+                  <span className={`profile-chevron ${theme === 'dark' ? 'dark' : ''}`}>
                     <ChevronDown size={14} />
                   </span>
                 </button>
