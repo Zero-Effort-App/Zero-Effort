@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime, formatDate, updateApplicationStatus } from '../../lib/db';
-import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft } from 'lucide-react';
+import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 import { useToast } from '../../contexts/ToastContext';
@@ -37,6 +37,7 @@ export default function CompanyApplicants() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageContent, setMessageContent] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const { showToast } = useToast();
 
@@ -123,7 +124,9 @@ export default function CompanyApplicants() {
         company_id: company.id,
         applicant_id: selectedApp.applicant_id,
         sender_type: 'company',
-        content: messageContent.trim()
+        content: meetingLink.trim() 
+  ? `${messageContent.trim()}\n\n📅 Meeting Link: ${meetingLink.trim()}` 
+  : messageContent.trim()
       })
       if (error) throw error
 
@@ -141,6 +144,7 @@ export default function CompanyApplicants() {
 
       setShowMessageModal(false)
       setMessageContent('')
+      setMeetingLink('')
       showToast('Message sent successfully! 🎉', 'success')
     } catch (err) {
       console.error('Send message error:', err)
@@ -445,6 +449,23 @@ export default function CompanyApplicants() {
               Message will appear in their inbox and be sent to their email.
             </div>
 
+            {/* Optional Meeting Link */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: '6px' }}>
+                Meeting Link (optional)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '10px 14px' }}>
+                <Video size={14} style={{ color: 'var(--text2)', flexShrink: 0 }} />
+                <input
+                  type="url"
+                  value={meetingLink}
+                  onChange={e => setMeetingLink(e.target.value)}
+                  placeholder="Paste Google Meet, Zoom, or Teams link..."
+                  style={{ background: 'none', border: 'none', outline: 'none', fontSize: '13px', color: 'var(--text)', flex: 1, fontFamily: 'inherit' }}
+                />
+              </div>
+            </div>
+
             {/* Textarea */}
             <textarea
               value={messageContent}
@@ -466,7 +487,7 @@ export default function CompanyApplicants() {
             {/* Buttons */}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
-                onClick={() => { setShowMessageModal(false); setMessageContent('') }}
+                onClick={() => { setShowMessageModal(false); setMessageContent(''); setMeetingLink('') }}
                 style={{
                   flex: 1, padding: '12px', borderRadius: '12px',
                   border: '1px solid var(--border2)', background: 'var(--surface2)',
