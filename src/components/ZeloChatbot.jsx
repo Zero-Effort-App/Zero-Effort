@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -7,6 +8,8 @@ import { Bot, MessageCircle, X, Send } from 'lucide-react'
 export default function ZeloChatbot() {
   const { theme } = useTheme()
   const { user } = useAuth()
+  const location = useLocation();
+  const isInboxPage = location.pathname.includes('/inbox');
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
     { role: 'assistant', content: `Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
@@ -108,6 +111,7 @@ export default function ZeloChatbot() {
       )}
 
       {/* Chat Button */}
+      {!isInboxPage && (
       <button 
         className="zelo-fab"
         onClick={() => setOpen(!open)}
@@ -127,6 +131,7 @@ export default function ZeloChatbot() {
       >
         {open ? <X size={20} /> : <MessageCircle size={22} />}
       </button>
+      )}
 
       {/* Chat Window */}
       {open && (
