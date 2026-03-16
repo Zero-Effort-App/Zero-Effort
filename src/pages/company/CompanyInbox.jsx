@@ -12,6 +12,8 @@ export default function CompanyInbox() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [swipedConvo, setSwipedConvo] = useState(null)
+  const [touchStart, setTouchStart] = useState(null)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -118,6 +120,17 @@ export default function CompanyInbox() {
     setSending(false)
   }
 
+  async function deleteConversation(applicantId) {
+    await supabase
+      .from('messages')
+      .delete()
+      .eq('company_id', company.id)
+      .eq('applicant_id', applicantId)
+    setSwipedConvo(null)
+    if (selectedConvo?.applicant.id === applicantId) setSelectedConvo(null)
+    fetchConversations()
+  }
+
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0)
 
   return (
@@ -161,47 +174,76 @@ export default function CompanyInbox() {
                 conversations.filter(convo => convo.applicant).map(convo => (
                   <div
                     key={convo.applicant.id}
-                    onClick={() => setSelectedConvo(convo)}
-                    style={{
-                      padding: '14px 16px', cursor: 'pointer',
-                      background: selectedConvo?.applicant.id === convo.applicant.id ? 'var(--bg2)' : 'transparent',
-                      borderBottom: '1px solid var(--border)',
-                      display: 'flex', alignItems: 'center', gap: '12px'
-                    }}
+                    style={{ position: 'relative', overflow: 'hidden' }}
                   >
+                    {/* Delete button revealed on swipe */}
                     <div style={{
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      background: 'var(--accent)',
+                      position: 'absolute', right: 0, top: 0, bottom: 0,
+                      width: '80px', background: 'var(--danger)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 700, fontSize: '13px', color: 'white',
-                      overflow: 'hidden', flexShrink: 0
-                    }}>
-                      {convo.applicant.photo_url ? (
-                        <img src={convo.applicant.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        `${convo.applicant.first_name?.[0] || ''}${convo.applicant.last_name?.[0] || ''}` 
-                      )}
+                      cursor: 'pointer', zIndex: 1
+                    }}
+                      onClick={() => deleteConversation(convo.applicant.id)}
+                    >
+                      <span style={{ color: 'white', fontSize: '12px', fontWeight: 600 }}>Delete</span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600, fontSize: '14px' }}>
-                          {convo.applicant.first_name} {convo.applicant.last_name}
-                        </span>
-                        {convo.unreadCount > 0 && (
-                          <span style={{
-                            background: 'var(--accent)', color: 'white',
-                            borderRadius: '50%', width: '18px', height: '18px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '10px', fontWeight: 700
-                          }}>{convo.unreadCount}</span>
+
+                    {/* Conversation item */}
+                    <div
+                      onClick={() => swipedConvo === convo.applicant.id ? setSwipedConvo(null) : setSelectedConvo(convo)}
+                      onTouchStart={e => setTouchStart(e.touches[0].clientX)}
+                      onTouchEnd={e => {
+                        if (touchStart === null) return
+                        const diff = touchStart - e.changedTouches[0].clientX
+                        if (diff > 50) setSwipedConvo(convo.applicant.id)
+                        else if (diff < -20) setSwipedConvo(null)
+                        setTouchStart(null)
+                      }}
+                      style={{
+                        padding: '14px 16px', cursor: 'pointer',
+                        background: selectedConvo?.applicant.id === convo.applicant.id ? 'var(--bg2)' : 'var(--surface)',
+                        borderBottom: '1px solid var(--border)',
+                        display: 'flex', alignItems: 'center', gap: '12px',
+                        transform: swipedConvo === convo.applicant.id ? 'translateX(-80px)' : 'translateX(0)',
+                        transition: 'transform 0.3s ease',
+                        position: 'relative', zIndex: 2
+                      }}
+                    >
+                      {/* existing avatar and content */}
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%',
+                        background: 'var(--accent)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 700, fontSize: '13px', color: 'white',
+                        overflow: 'hidden', flexShrink: 0
+                      }}>
+                        {convo.applicant.photo_url ? (
+                          <img src={convo.applicant.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          `${convo.applicant.first_name?.[0] || ''}${convo.applicant.last_name?.[0] || ''}` 
                         )}
                       </div>
-                      <p style={{
-                        fontSize: '12px', color: 'var(--text2)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                      }}>
-                        {convo.lastMessage.content}
-                      </p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                            {convo.applicant.first_name} {convo.applicant.last_name}
+                          </span>
+                          {convo.unreadCount > 0 && (
+                            <span style={{
+                              background: 'var(--accent)', color: 'white',
+                              borderRadius: '50%', width: '18px', height: '18px',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '10px', fontWeight: 700
+                            }}>{convo.unreadCount}</span>
+                          )}
+                        </div>
+                        <p style={{
+                          fontSize: '12px', color: 'var(--text2)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                        }}>
+                          {convo.lastMessage.content}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))
