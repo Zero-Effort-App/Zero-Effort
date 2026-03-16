@@ -233,39 +233,88 @@ export default function ApplicantHome() {
         </>
       )}
 
-      {featuredJobs.length > 0 && (
-        <>
-          <div className="sh">
-            <span className="sh-title"><span className="sh-dot" />Featured Openings</span>
-            <button className="sh-more" onClick={() => navigate('/applicant/jobs')}>View all →</button>
+      {/* Featured Openings Section */}
+{featuredJobs.length > 0 && (
+  <div style={{ marginTop: '32px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} />
+        Featured Openings
+      </h2>
+      <a href="/jobs/browse" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+        View all →
+      </a>
+    </div>
+
+    {/* Horizontal swipeable cards */}
+    <div style={{
+      display: 'flex', gap: '14px',
+      overflowX: 'auto', paddingBottom: '8px',
+      scrollSnapType: 'x mandatory',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+    }}>
+      {featuredJobs.map(job => (
+        <div
+          key={job.id}
+          onClick={() => navigate('/jobs/browse')}
+          style={{
+            minWidth: '240px', maxWidth: '240px',
+            background: 'var(--card)', borderRadius: '16px',
+            border: '1px solid var(--border)', padding: '18px',
+            scrollSnapAlign: 'start', flexShrink: 0,
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          {/* Company Logo + Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '10px',
+              background: job.companies?.color || '#6366f1',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', flexShrink: 0
+            }}>
+              {job.companies?.logo_url ? (
+                <img src={job.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
+                  {job.companies?.logo_initials || job.companies?.name?.[0]}
+                </span>
+              )}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '11px', color: 'var(--text2)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {job.companies?.name}
+              </p>
+            </div>
           </div>
-          <div className="jgrid stagger">
-            {featuredJobs.map(j => {
-              const co = j.companies;
-              return (
-                <div key={j.id} className="jcard" onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: j.id } })}>
-                  <div className="jcard-stripe" style={{ background: co?.color ? `linear-gradient(90deg,${co.color},${co.color}55)` : 'linear-gradient(90deg,#6366f1,#6366f155)' }} />
-                  <div className="jcard-top">
-                    <CompanyLogo company={co} size={40} />
-                    <span className="new-b">New</span>
-                  </div>
-                  <div className="jcard-title">{j.title}</div>
-                  <div className="jcard-co">{co?.name || '—'}</div>
-                  <div className="jcard-pills">
-                    <span className="pill"><MapPin size={11} style={{ marginRight: '4px' }} /> Zero Effort</span>
-                    <span className="pill"><Clock size={11} style={{ marginRight: '4px' }} /> {j.type}</span>
-                    <span className="pill">{j.department}</span>
-                  </div>
-                  <div className="jcard-foot">
-                    <span className="jcard-sal">{displaySalary(j.salary)}</span>
-                    <span className="jcard-ago">Today</span>
-                  </div>
-                </div>
-              );
-            })}
+
+          {/* Job Title */}
+          <div>
+            <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px', lineHeight: '1.3' }}>{job.title}</p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{
+                fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                background: 'var(--bg2)', color: 'var(--text2)'
+              }}>{job.type}</span>
+              <span style={{
+                fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                background: 'var(--bg2)', color: 'var(--text2)'
+              }}>{job.department}</span>
+            </div>
           </div>
-        </>
-      )}
+
+          {/* Salary */}
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
+            ₱{Number(job.salary).toLocaleString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
     </div>
   );
 }
