@@ -70,37 +70,24 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   useEffect(() => {
     if (!user) return;
 
-    async function fetchUnread() {
-      const isApplicant = window.location.pathname.includes('/applicant/');
-      const isCompany = window.location.pathname.includes('/company/');
-
-      let query = supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
-
-      if (isApplicant) {
-        query = query.eq('applicant_id', user.id).eq('sender_type', 'company');
-      } else if (isCompany && profile?.company_id) {
-        query = query.eq('company_id', profile.company_id).eq('sender_type', 'applicant');
-      } else {
-        return;
-      }
-
-      const { count } = await query;
-      setUnreadCount(count || 0);
-    }
-
     const channelName = `unread-nav-${user.id}`;
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'messages',
       }, (payload) => {
-        console.log('Real-time message received:', payload);
-        fetchUnread();
+        console.log('New message received:', payload.new);
+        // Only update badge if message is for this user
+        const isApplicant = window.location.pathname.includes('/applicant/');
+        const isCompany = window.location.pathname.includes('/company/');
+        
+        if (isApplicant && payload.new.applicant_id === user.id && payload.new.sender_type === 'company') {
+          setUnreadCount(prev => prev + 1);
+        } else if (isCompany && payload.new.sender_type === 'applicant') {
+          setUnreadCount(prev => prev + 1);
+        }
       })
       .subscribe((status) => {
         console.log('Subscription status:', status);
@@ -109,7 +96,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]); // Only depends on user - never recreates on navigation
+  }, [user]);
 
   async function handleLogout() {
     await logout();
