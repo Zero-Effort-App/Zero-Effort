@@ -231,8 +231,8 @@ export default function CompanyApplicants() {
         </div>
         )}
 
-        <div className="dpanel">
         {(!isMobile || selected) && (
+        <div className="dpanel">
           <>
           {isMobile && selected && (
             <button
@@ -391,8 +391,8 @@ export default function CompanyApplicants() {
           )}
         )}
         </>
-        )}
         </div>
+        )}
       </div>
 
       {/* Contact Modal */}
