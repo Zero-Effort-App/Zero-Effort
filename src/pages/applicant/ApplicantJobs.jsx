@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { getJobs, getCompanies, submitApplication, uploadFile } from '../../lib/db';
-import { Calendar, Clock, Star, Briefcase } from 'lucide-react';
+import { Calendar, Clock, Star, Briefcase, ChevronLeft } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 import Modal from '../../components/Modal';
@@ -358,6 +358,20 @@ export default function ApplicantJobs() {
         <div className="dpanel">
           {selectedJob ? (
             <>
+              {isMobile && selected && (
+                <button
+                  onClick={() => setSelected(null)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    background: 'none', border: 'none', color: 'var(--text2)',
+                    fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                    padding: '0', marginBottom: '16px', fontFamily: 'inherit'
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                  Back to jobs
+                </button>
+              )}
               <div className="dp-head">
                 <CompanyLogo company={selectedCo} size={52} />
                 <div>
