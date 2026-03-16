@@ -40,8 +40,6 @@ export default function ApplicantHome() {
           .order('created_at', { ascending: false })
           .limit(4);
         
-        console.log('Featured jobs:', jobsData);
-        
         setCompanies(cos);
         setEvents(evts.slice(0, 6));
         setRecentHires(hires);
@@ -262,7 +260,7 @@ export default function ApplicantHome() {
           onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: job.id } })}
           style={{
             minWidth: '240px', maxWidth: '240px',
-            background: 'var(--card)', borderRadius: '16px',
+            background: 'var(--surface)', borderRadius: '16px',
             border: '1px solid var(--border)', padding: '18px',
             scrollSnapAlign: 'start', flexShrink: 0,
             display: 'flex', flexDirection: 'column', gap: '12px',

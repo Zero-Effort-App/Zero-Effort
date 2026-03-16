@@ -98,10 +98,6 @@ async function handleCreateAdmin(formData) {
 
   setDeleting(true);
   try {
-    // Log for debugging
-    console.log('Deleting admin account with ID:', admin.id, 'email:', admin.email);
-
-    // Get user's auth ID first
     const userResponse = await fetch('https://zero-effort-server.onrender.com/api/get-user-by-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

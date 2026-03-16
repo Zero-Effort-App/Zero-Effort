@@ -148,7 +148,7 @@ export default function ZeloChatbot() {
             height: '480px',
             borderRadius: '16px'
           }),
-          background: 'var(--card)',
+          background: 'var(--surface)',
           border: '1px solid var(--border)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           zIndex: 1000,

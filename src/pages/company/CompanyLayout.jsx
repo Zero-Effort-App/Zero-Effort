@@ -27,6 +27,7 @@ export default function CompanyLayout() {
       p = session.profile;
     }
     try {
+      if (!p.company_id) { navigate('/company/login'); return; }
       const co = await getCompanyProfile(p.company_id);
       setCompany(co);
       
