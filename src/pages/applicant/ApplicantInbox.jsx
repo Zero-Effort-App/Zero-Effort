@@ -264,7 +264,36 @@ export default function ApplicantInbox() {
                     color: msg.sender_type === 'applicant' ? 'white' : 'var(--text)',
                     fontSize: '14px', lineHeight: '1.5'
                   }}>
-                    {msg.content}
+                    {(() => {
+                      const content = msg.content;
+                      const meetingLinkMatch = content.match(/📅 Meeting Link: (https?:\/\/[^\s]+)/);
+                      
+                      if (meetingLinkMatch) {
+                        const textPart = content.replace(/\n\n📅 Meeting Link: https?:\/\/[^\s]+/, '');
+                        const link = meetingLinkMatch[1];
+                        return (
+                          <>
+                              <p style={{ margin: '0 0 10px 0' }}>{textPart}</p>
+                              
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '6px',
+                                  background: 'var(--accent)', color: 'white',
+                                  padding: '8px 12px', borderRadius: '8px',
+                                  textDecoration: 'none', fontSize: '13px', fontWeight: 600,
+                                  width: 'fit-content'
+                                }}
+                              >
+                                📅 Join Meeting
+                              </a>
+                          </>
+                        );
+                      }
+                      return <span>{content}</span>;
+                    })()}
                   </div>
                   <p style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px',
                     textAlign: msg.sender_type === 'applicant' ? 'right' : 'left'
