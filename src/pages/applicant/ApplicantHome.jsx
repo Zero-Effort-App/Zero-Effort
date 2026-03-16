@@ -76,7 +76,7 @@ export default function ApplicantHome() {
   }
 
   return (
-    <div className="pw">
+    <div className="pw" style={{ paddingBottom: '80px' }}>
       <div className="hero">
         <div className="hero-h1">
           {profile ? (
