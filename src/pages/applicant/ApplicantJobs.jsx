@@ -40,6 +40,7 @@ export default function ApplicantJobs() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterDept, setFilterDept] = useState('');
+  const [filterCompany, setFilterCompany] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [resumeFile, setResumeFile] = useState(null);
   const [portfolioFile, setPortfolioFile] = useState(null);
@@ -130,6 +131,9 @@ export default function ApplicantJobs() {
 
   // Handle incoming navigation state for job selection
   useEffect(() => {
+    if (location.state?.filterCompanyId) {
+      setFilterCompany(location.state.filterCompanyId);
+    }
     if (location.state?.selectedJobId) {
       setSelected(location.state.selectedJobId);
     }
@@ -176,7 +180,8 @@ export default function ApplicantJobs() {
     const matchQ = j.title?.toLowerCase().includes(q) || j.co?.toLowerCase().includes(q);
     const matchType = !filterType || j.type === filterType;
     const matchDepartment = !filterDept || j.department === filterDept;
-    return matchQ && matchType && matchDepartment;
+    const matchCompany = !filterCompany || j.company_id === filterCompany;
+    return matchQ && matchType && matchDepartment && matchCompany;
   });
 
   const selectedJob = selected ? jobs.find(j => j.id === selected) : null;
