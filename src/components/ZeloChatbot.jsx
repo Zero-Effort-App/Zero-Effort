@@ -146,30 +146,35 @@ export default function ZeloChatbot() {
 
       {/* Permanent Widget - All Screen Sizes */}
       {!isInboxPage && (
-  <div
-    onClick={() => setOpen(true)}
+  <button
+    className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
+    onClick={() => setOpen(!open)}
     style={{
       position: 'fixed',
-      top: '6px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 200,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-      cursor: 'pointer',
+      bottom: '80px',
+      right: '20px',
+      width: '52px', height: '52px',
+      borderRadius: '50%',
+      background: 'var(--accent)',
+      border: 'none', cursor: 'pointer',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+      zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: 'white'
     }}
   >
-    <img
-      src="/zelo-avatar.png"
-      alt="Zelo"
-      style={{ width: '44px', height: '44px', objectFit: 'contain' }}
-    />
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>Hi! I'm Zelo</span>
-      <span style={{ fontSize: '10px', color: 'var(--text2)', lineHeight: 1.3 }}>I'm here to help!</span>
-    </div>
-  </div>
+    {open ? <X size={20} /> : (
+      <img
+        src="/zelo-avatar.png"
+        alt="Zelo"
+        style={{
+          width: '52px', height: '52px',
+          objectFit: 'contain',
+          borderRadius: '50%'
+        }}
+      />
+    )}
+  </button>
 )}
 
       {/* Chat Window */}
