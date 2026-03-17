@@ -22,16 +22,36 @@ export async function subscribeToPush(userId, userType) {
     alert('Permission result: ' + permission);
     if (permission !== 'granted') return false;
 
-    const registration = await navigator.serviceWorker.ready;
-    alert('Service worker ready');
-    
+    // Wait for service worker with timeout
+    let registration;
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      alert('SW registrations found: ' + registrations.length);
+      
+      if (registrations.length > 0) {
+        registration = registrations[0];
+      } else {
+        registration = await navigator.serviceWorker.register('/sw.js');
+        alert('SW registered fresh');
+      }
+    } catch (swErr) {
+      alert('SW error: ' + swErr.message);
+      return false;
+    }
+
+    alert('Using registration, scope: ' + registration.scope);
+
     let subscription = await registration.pushManager.getSubscription();
     if (!subscription) {
+      alert('No existing subscription, creating new...');
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
+    } else {
+      alert('Found existing subscription');
     }
+
     alert('Subscribed! Saving to server...');
 
     const response = await fetch('https://zero-effort-server.onrender.com/api/push/subscribe', {
