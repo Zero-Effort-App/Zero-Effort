@@ -132,7 +132,19 @@ export default function ZeloChatbot() {
           color: 'white'
         }}
       >
-        {open ? <X size={20} /> : <MessageCircle size={22} />}
+        {open ? <X size={20} /> : (
+  <img 
+    src="/zelo-avatar.png" 
+    alt="Zelo"
+    style={{ 
+      width: '52px', 
+      height: '52px', 
+      objectFit: 'contain',
+      objectPosition: 'center',
+      borderRadius: '50%'
+    }} 
+  />
+)}
       </button>
       )}
 
