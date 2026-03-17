@@ -44,8 +44,8 @@ export default function CompanyLayout() {
     }
     setLoading(false);
     
-    if (p?.id) {
-      subscribeToPush(p.id, 'company');
+    if (user?.id) {
+      subscribeToPush(user.id, 'company');
     }
   }
 
