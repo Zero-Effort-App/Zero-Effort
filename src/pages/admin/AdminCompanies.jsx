@@ -129,11 +129,12 @@ export default function AdminCompanies() {
       // Step 1: Validate passwords match
       if (password !== confirmPassword) {
         showToast('Passwords do not match');
+        setCreatingAccount(false);
         return;
       }
 
       // Step 2: Create account via local API (bypasses rate limits)
-      const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
+      const response = await fetch('/api/create-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,6 +151,7 @@ export default function AdminCompanies() {
         } else {
           throw new Error(result.error);
         }
+        setCreatingAccount(false);
         return;
       }
 

@@ -150,7 +150,7 @@ export default function CompanyProfile() {
                   height: '80px',
                   borderRadius: '16px',
                   objectFit: 'contain',
-                  background: 'var(--surface2)',
+                  background: 'transparent',
                   border: '1px solid var(--border)'
                 }}
               />
