@@ -113,10 +113,41 @@ export default function ZeloChatbot() {
         />
       )}
 
+      <style>{`
+  @keyframes zeloSlideUp {
+    0% {
+      opacity: 0;
+      transform: scale(0.8) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  @keyframes zeloSlideDown {
+    0% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) translateY(20px);
+    }
+  }
+  @keyframes zeloFabPulse {
+    0% { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    50% { box-shadow: 0 4px 30px rgba(99,102,241,0.7), 0 0 0 8px rgba(99,102,241,0.1); }
+    100% { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+  }
+  .zelo-fab-idle {
+    animation: zeloFabPulse 2.5s ease-in-out infinite;
+  }
+`}</style>
+
       {/* Chat Button */}
       {!isInboxPage && (
       <button 
-        className="zelo-fab"
+        className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
         onClick={() => setOpen(!open)}
         style={{
           position: 'fixed',
@@ -174,7 +205,9 @@ export default function ZeloChatbot() {
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          animation: 'zeloSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          transformOrigin: 'bottom right',
         }}>
           {/* Header */}
           <div style={{
