@@ -345,6 +345,91 @@ export async function getRecentHires(limit = 10) {
   }
 }
 
+// ── MESSAGES ──
+export async function sendMessage(messageData) {
+  const { data, error } = await supabase.from('messages').insert([messageData]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getMessagesBetweenCompanyAndApplicant(companyId, applicantId) {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('applicant_id', applicantId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateMeetingStatus(messageId, status) {
+  // For now, we'll store the meeting status in the message content
+  // In a future update, you might want to add a meeting_status column to the messages table
+  const { data, error } = await supabase
+    .from('messages')
+    .select('content')
+    .eq('id', messageId)
+    .single();
+  
+  if (error) throw error;
+  
+  // Parse meeting info from content and update status
+  let updatedContent = data.content;
+  if (status === 'confirmed') {
+    updatedContent = data.content.replace(/📅 Meeting Status: Pending/, '📅 Meeting Status: ✅ Confirmed');
+  } else if (status === 'rejected') {
+    updatedContent = data.content.replace(/📅 Meeting Status: Pending/, '📅 Meeting Status: ❌ Rejected');
+  }
+  
+  const { data: updatedData, error: updateError } = await supabase
+    .from('messages')
+    .update({ content: updatedContent })
+    .eq('id', messageId)
+    .select()
+    .single();
+  
+  if (updateError) throw updateError;
+  return updatedData;
+}
+
+export async function getLatestMeetingDetails(companyId, applicantId) {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('content, created_at')
+    .eq('company_id', companyId)
+    .eq('applicant_id', applicantId)
+    .ilike('content', '%Meeting Link:%')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error && error.code !== 'PGRST116') throw error;
+  
+  // Parse meeting details from content
+  if (data?.content) {
+    const content = data.content;
+    const meetingLink = content.match(/🔗 Meeting Link: (.+)/)?.[1] || '';
+    const meetingDate = content.match(/📅 Meeting Date: (.+)/)?.[1] || '';
+    const meetingTime = content.match(/⏰ Meeting Time: (.+)/)?.[1] || '';
+    const meetingStatus = content.includes('✅ Confirmed') ? 'confirmed' : 
+                         content.includes('❌ Rejected') ? 'rejected' : 'pending';
+    
+    return {
+      meeting_details: {
+        link: meetingLink,
+        date: meetingDate,
+        time: meetingTime,
+        status: meetingStatus
+      },
+      created_at: data.created_at
+    };
+  }
+  
+  return data;
+}
+
 // ── LIVE STATS ──
 export async function getLiveStats() {
   const [companies, jobs, applications, events] = await Promise.all([

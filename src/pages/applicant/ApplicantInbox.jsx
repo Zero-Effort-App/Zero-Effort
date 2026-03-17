@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { MessageCircle, Send, Building2, ChevronLeft } from 'lucide-react'
+import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X } from 'lucide-react'
 
 export default function ApplicantInbox() {
   const { user } = useAuth()
@@ -264,6 +264,59 @@ export default function ApplicantInbox() {
     }
   }
 
+  // Handle meeting response
+  async function handleMeetingResponse(messageId, action) {
+    try {
+      // Update meeting status in the message content
+      const { data: messageData } = await supabase
+        .from('messages')
+        .select('content')
+        .eq('id', messageId)
+        .single()
+      
+      if (messageData) {
+        let updatedContent = messageData.content;
+        if (action === 'accept') {
+          updatedContent = messageData.content.replace('📅 Meeting Status: Pending', '📅 Meeting Status: ✅ Confirmed');
+        } else if (action === 'decline') {
+          updatedContent = messageData.content.replace('📅 Meeting Status: Pending', '📅 Meeting Status: ❌ Declined');
+        }
+        
+        await supabase
+          .from('messages')
+          .update({ content: updatedContent })
+          .eq('id', messageId);
+        
+        // Send response message
+        const responseMessage = action === 'accept' 
+          ? 'Thank you for the invitation! I have accepted the meeting and look forward to discussing this opportunity.'
+          : 'Thank you for considering me. Unfortunately, I will not be able to attend the scheduled meeting.';
+        
+        await supabase.from('messages').insert({
+          applicant_id: user.id,
+          company_id: selectedConvo.company.id,
+          sender_type: 'applicant',
+          content: responseMessage
+        });
+        
+        // Refresh messages
+        await fetchMessages();
+      }
+    } catch (error) {
+      console.error('Error handling meeting response:', error)
+    }
+  }
+
+  // Parse meeting details from message content
+  function parseMeetingDetails(content) {
+    const meetingDate = content.match(/📅 Meeting Date: ([^\n]+)/)?.[1];
+    const meetingTime = content.match(/⏰ Meeting Time: ([^\n]+)/)?.[1];
+    const meetingLink = content.match(/🔗 Meeting Link: ([^\n]+)/)?.[1];
+    const meetingStatus = content.match(/📅 Meeting Status: ([^\n]+)/)?.[1];
+    
+    return { meetingDate, meetingTime, meetingLink, meetingStatus };
+  }
+
   // Initial fetch
   useEffect(() => {
     if (user) {
@@ -407,43 +460,127 @@ export default function ApplicantInbox() {
               {messages.map(msg => (
                 <div key={msg.id} style={{
                   alignSelf: msg.sender_type === 'applicant' ? 'flex-end' : 'flex-start',
-                  maxWidth: '70%'
+                  maxWidth: '80%'
                 }}>
                   <div style={{
-                    padding: '10px 14px', borderRadius: '12px',
+                    padding: '12px 16px', borderRadius: '12px',
                     background: msg.sender_type === 'applicant' ? 'var(--accent)' : 'var(--bg2)',
                     color: msg.sender_type === 'applicant' ? 'white' : 'var(--text)',
                     fontSize: '14px', lineHeight: '1.5'
                   }}>
                     {(() => {
                       const content = msg.content;
-                      const meetingLinkMatch = content.match(/📅 Meeting Link: (https?:\/\/[^\s]+)/);
+                      const meetingDetails = parseMeetingDetails(content);
                       
-                      if (meetingLinkMatch) {
-                        const textPart = content.replace(/\n\n📅 Meeting Link: https?:\/\/[^\s]+/, '');
-                        const link = meetingLinkMatch[1];
+                      // Check if this message contains meeting details
+                      if (meetingDetails.meetingLink) {
+                        const mainMessage = content.split('\n\n📅 Meeting Date:')[0];
+                        
                         return (
-                          <>
-                              <p style={{ margin: '0 0 10px 0' }}>{textPart}</p>
+                          <div>
+                            {/* Main message content */}
+                            <p style={{ margin: '0 0 16px 0', whiteSpace: 'pre-line' }}>
+                              {mainMessage}
+                            </p>
+                            
+                            {/* Meeting details card */}
+                            <div style={{
+                              background: msg.sender_type === 'applicant' ? 'rgba(255,255,255,0.1)' : 'rgba(124, 58, 237, 0.05)',
+                              borderRadius: '8px',
+                              padding: '12px',
+                              border: msg.sender_type === 'applicant' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(124, 58, 237, 0.2)'
+                            }}>
+                              {/* Meeting info header */}
+                              <div style={{ 
+                                display: 'flex', alignItems: 'center', gap: '8px', 
+                                marginBottom: '10px', fontWeight: 600, fontSize: '13px' 
+                              }}>
+                                <Calendar size={14} />
+                                Interview Meeting
+                                {meetingDetails.meetingStatus?.includes('✅') && (
+                                  <span style={{ color: '#10b981', fontSize: '11px' }}>Confirmed</span>
+                                )}
+                                {meetingDetails.meetingStatus?.includes('❌') && (
+                                  <span style={{ color: '#ef4444', fontSize: '11px' }}>Declined</span>
+                                )}
+                              </div>
                               
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: '6px',
-                                  background: 'var(--accent)', color: 'white',
-                                  padding: '8px 12px', borderRadius: '8px',
-                                  textDecoration: 'none', fontSize: '13px', fontWeight: 600,
-                                  width: 'fit-content'
-                                }}
-                              >
-                                📅 Join Meeting
-                              </a>
-                          </>
+                              {/* Meeting details */}
+                              {meetingDetails.meetingDate && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '12px' }}>
+                                  <Calendar size={12} style={{ color: 'var(--text2)' }} />
+                                  <span>{meetingDetails.meetingDate}</span>
+                                </div>
+                              )}
+                              
+                              {meetingDetails.meetingTime && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '12px' }}>
+                                  <Clock size={12} style={{ color: 'var(--text2)' }} />
+                                  <span>{meetingDetails.meetingTime}</span>
+                                </div>
+                              )}
+                              
+                              {/* Meeting link or action buttons */}
+                              {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink ? (
+                                <a
+                                  href={meetingDetails.meetingLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    background: '#10b981', color: 'white',
+                                    padding: '8px 12px', borderRadius: '6px',
+                                    textDecoration: 'none', fontSize: '12px', fontWeight: 600,
+                                    marginTop: '8px'
+                                  }}
+                                >
+                                  <Video size={12} />
+                                  Join Meeting
+                                </a>
+                              ) : meetingDetails.meetingStatus?.includes('Pending') ? (
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                  <button
+                                    onClick={() => handleMeetingResponse(msg.id, 'accept')}
+                                    style={{
+                                      flex: 1, display: 'flex', alignItems: 'center', gap: '4px',
+                                      background: '#10b981', color: 'white',
+                                      padding: '6px 10px', borderRadius: '6px',
+                                      border: 'none', fontSize: '11px', fontWeight: 600,
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <CheckCircle size={12} />
+                                    Accept
+                                  </button>
+                                  <button
+                                    onClick={() => handleMeetingResponse(msg.id, 'decline')}
+                                    style={{
+                                      flex: 1, display: 'flex', alignItems: 'center', gap: '4px',
+                                      background: '#ef4444', color: 'white',
+                                      padding: '6px 10px', borderRadius: '6px',
+                                      border: 'none', fontSize: '11px', fontWeight: 600,
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <X size={12} />
+                                    Decline
+                                  </button>
+                                </div>
+                              ) : meetingDetails.meetingStatus?.includes('❌') ? (
+                                <div style={{
+                                  fontSize: '11px', color: '#ef4444',
+                                  marginTop: '8px', fontStyle: 'italic'
+                                }}>
+                                  Meeting declined
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
                         );
                       }
-                      return <span>{content}</span>;
+                      
+                      // Regular message without meeting details
+                      return <span style={{ whiteSpace: 'pre-line' }}>{content}</span>;
                     })()}
                   </div>
                   <p style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px',
