@@ -228,6 +228,7 @@ export async function getCompanyApplications(companyId) {
       `)
       .in('job_id', jobIds)
       .order('applied_at', { ascending: false })
+      .limit(100)
 
     if (error) throw error
     return data || []
