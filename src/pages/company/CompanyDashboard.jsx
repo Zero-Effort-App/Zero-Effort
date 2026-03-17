@@ -48,15 +48,68 @@ export default function CompanyDashboard() {
 
   return (
     <div className="pw">
-      <div className="hero">
-        <div className="hero-badge">Company Dashboard</div>
-        <div className="hero-h1">
-          Welcome back,<br /><span className="gc">{company.name?.split(' ')[0]}.</span>
+      <div className="hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <div className="hero-badge">Company Dashboard</div>
+          <div className="hero-h1">
+            Welcome back,<br /><span className="gc">{company.name?.split(' ')[0]}.</span>
+          </div>
+          <div className="hero-p">Here's a snapshot of your hiring activity inside Zero Effort.</div>
+          <div className="hero-btns">
+            <button className="btn-acc" onClick={() => navigate('/company/listings')}>+ Post a job</button>
+            <button className="btn-ghost" onClick={() => navigate('/company/applicants')}>Review applicants →</button>
+          </div>
         </div>
-        <div className="hero-p">Here's a snapshot of your hiring activity inside Zero Effort.</div>
-        <div className="hero-btns">
-          <button className="btn-acc" onClick={() => navigate('/company/listings')}>+ Post a job</button>
-          <button className="btn-ghost" onClick={() => navigate('/company/applicants')}>Review applicants →</button>
+
+        {/* Company Logo Right Side */}
+        <div style={{
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <div style={{
+            width: '100px',
+            height: '100px',
+            borderRadius: '20px',
+            background: company.color || 'var(--accent)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '3px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+            overflow: 'hidden'
+          }}>
+            {company.logo_url ? (
+              <img
+                src={company.logo_url}
+                alt={company.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '17px' }}
+              />
+            ) : (
+              <span style={{
+                fontSize: '2rem',
+                fontWeight: 800,
+                color: 'white',
+                letterSpacing: '-1px'
+              }}>
+                {company.logo_initials || company.name?.[0]}
+              </span>
+            )}
+          </div>
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: 'var(--text2)',
+            textAlign: 'center',
+            maxWidth: '120px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {company.name}
+          </span>
         </div>
       </div>
 
