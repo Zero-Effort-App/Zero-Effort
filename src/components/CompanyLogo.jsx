@@ -9,7 +9,7 @@ export default function CompanyLogo({ company, size = 40 }) {
           height: size,
           borderRadius: '10px',
           objectFit: 'cover',
-          background: 'var(--surface2)',
+          background: 'transparent',
           border: '1px solid var(--border)'
         }}
       />

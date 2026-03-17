@@ -194,7 +194,7 @@ export default function CompanyProfile() {
             <label className="flabel">Company Logo</label>
             {company?.logo_url && !logoFile && (
               <img src={company.logo_url} alt="Current Logo"
-                style={{ height: '60px', borderRadius: '10px', marginBottom: '8px', border: '1px solid var(--border)' }}
+                style={{ height: '60px', borderRadius: '10px', marginBottom: '8px', border: '1px solid var(--border)', background: 'transparent' }}
               />
             )}
             <input
