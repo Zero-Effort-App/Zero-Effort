@@ -360,6 +360,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           margin: 0; /* Remove any extra margin */
         }
 
+        .profile-avatar img {
+          background: transparent;
+        }
+
         .profile-name {
           font-size: 14px;
           font-weight: 600;
