@@ -10,7 +10,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { subscribeToPush } from '../../lib/pushNotifications';
 
 export default function CompanyLayout() {
-  const { profile, checkSession } = useAuth();
+  const { profile, checkSession, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
   const navigate = useNavigate();
