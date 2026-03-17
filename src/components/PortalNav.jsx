@@ -212,31 +212,32 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 16px;
-          border-radius: 9999px;
+          padding: 10px 18px; // Increased padding for better touch targets
+          border-radius: 12px; // More modern border radius
           border: none;
           background: transparent;
           color: #6b7280;
-          font-size: 14px; /* Reduced to text-sm (14px) */
-          font-weight: 500; /* Keep consistent weight */
+          font-size: 14px;
+          font-weight: 500;
           cursor: pointer;
-          transition: 'color 150ms ease'; /* Only color transition */
+          transition: 'all 200ms ease'; // Smooth transitions for all properties
           text-decoration: none;
           position: relative;
           overflow: hidden;
+          white-space: nowrap; // Prevent text wrapping
         }
 
         .nav-link:hover {
-          color: ${brandColors.primary}; /* Purple text color only */
-          font-weight: 500; /* Keep same weight to prevent jiggling */
-          /* NO background fill */
+          color: ${brandColors.primary};
+          background: 'rgba(99, 102, 241, 0.08)'; // Subtle background on hover
+          transform: 'translateY(-1px)'; // Subtle lift effect
         }
 
         .nav-link.active {
-          background: transparent; /* Remove background fill */
-          color: ${brandColors.primary}; /* Purple text color */
-          font-weight: 700; /* Bold font weight only for active */
-          /* No border, no padding changes, no shadow */
+          background: 'rgba(99, 102, 241, 0.12)'; // More prominent background for active
+          color: ${brandColors.primary};
+          font-weight: 600; // Slightly bolder for active state
+          box-shadow: '0 1px 3px rgba(99, 102, 241, 0.1)'; // Subtle shadow
         }
 
         .nav-link.dark {
@@ -244,16 +245,16 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .nav-link.dark:hover {
-          color: ${brandColors.primaryLight}; /* Purple text color for dark mode */
-          font-weight: 500; /* Keep same weight to prevent jiggling */
-          /* NO background fill */
+          color: ${brandColors.primaryLight};
+          background: 'rgba(129, 140, 248, 0.08)'; // Dark mode hover background
+          transform: 'translateY(-1px)';
         }
 
         .nav-link.dark.active {
-          background: transparent; /* Remove background fill */
-          color: ${brandColors.primaryLight}; /* Purple text color for dark mode */
-          font-weight: 700; /* Bold font weight only for active */
-          /* No border, no padding changes, no shadow */
+          background: 'rgba(129, 140, 248, 0.15)'; // Dark mode active background
+          color: ${brandColors.primaryLight};
+          font-weight: 600;
+          box-shadow: '0 1px 3px rgba(129, 140, 248, 0.1)';
         }
 
         .nav-link-icon {
@@ -467,6 +468,16 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             display: none !important;
           }
         }
+
+        @media (max-width: 1024px) {
+          .nav-link {
+            padding: 8px 14px; // Slightly smaller padding on tablets
+            font-size: 13px;
+          }
+          .desktop-nav {
+            gap: '4px'; // Tighter spacing on smaller screens
+          }
+        }
       `}</style>
 
       <nav className={`nav-header ${theme === 'dark' ? 'dark' : ''}`}>
@@ -513,7 +524,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             <div className="desktop-nav" style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
+              gap: '6px', // Increased spacing between nav items
             }}>
               {links.map((link, index) => (
                 <button
@@ -528,9 +539,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   {link.label === 'Inbox' && unreadCount > 0 && (
                     <span style={{
                       background: '#ef4444', color: 'white',
-                      borderRadius: '50%', width: '16px', height: '16px',
+                      borderRadius: '50%', width: '18px', height: '18px', // Slightly larger badge
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '9px', fontWeight: 700, marginLeft: '4px'
+                      fontSize: '10px', fontWeight: 700, marginLeft: '6px', // Better spacing
+                      boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)' // Subtle shadow
                     }}>{unreadCount}</span>
                   )}
                 </button>
