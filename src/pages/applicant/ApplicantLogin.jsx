@@ -129,6 +129,17 @@ export default function ApplicantLogin() {
     setIsLoading(true) // Secondary loading state
     
     try {
+      console.log('🚀 Starting registration...');
+      console.log('📧 Email:', email);
+      console.log('🔒 Password length:', password.length);
+      console.log('🔒 Password contains uppercase:', /[A-Z]/.test(password));
+      console.log('🔒 Password contains lowercase:', /[a-z]/.test(password));
+      console.log('🔒 Password contains number:', /[0-9]/.test(password));
+      console.log('🔒 Password contains special:', /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password));
+      console.log('👤 First name:', firstName);
+      console.log('👤 Last name:', lastName);
+      console.log('📱 Phone:', phone);
+      
       // Show immediate feedback
       showToast('Creating your account...', 'info')
       
@@ -136,13 +147,20 @@ export default function ApplicantLogin() {
       showToast('Setting up your profile...', 'info')
       const { userId } = await sendRegistrationOTP({ email, password, firstName, lastName, phone })
       
+      console.log('✅ Registration successful, user ID:', userId);
+      
       // Success feedback
       showToast('Account created! Check your email for the verification code.', 'success')
       setPendingRegistration({ email, password, firstName, lastName, phone, userId })
       setRegisteredEmail(email)
       setShowOTP(true)
     } catch (err) {
-      console.error('Registration error:', err)
+      console.error('❌ Registration failed!');
+      console.error('❌ Full error object:', err);
+      console.error('❌ Error message:', err.message);
+      console.error('❌ Error stack:', err.stack);
+      console.error('❌ Error details:', JSON.stringify(err, null, 2));
+      
       setError(err.message || 'Registration failed')
       showToast(err.message || 'Registration failed', 'error')
     } finally {

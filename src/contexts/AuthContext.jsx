@@ -74,48 +74,57 @@ export function AuthProvider({ children }) {
 
   async function sendRegistrationOTP({ email, password, firstName, lastName, phone }) {
   try {
-    // Parallel validation and account creation
-    const [captchaResponse] = await Promise.all([
-      fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: 'dummy' }) // Will be validated on frontend
-      }),
-      // Start account creation immediately
-      fetch('https://zero-effort-server.onrender.com/api/create-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          metadata: { first_name: firstName, last_name: lastName }
-        })
-      })
-    ])
+    console.log('📧 sendRegistrationOTP called with:', { email, passwordLength: password.length, firstName, lastName, phone });
     
-    const accountResult = await captchaResponse.json()
-    if (!captchaResponse.ok) throw new Error(accountResult.error || 'Account creation failed')
-
-    const userId = accountResult?.user?.id
-    if (!userId) throw new Error('Could not retrieve user ID')
-
-    // Send OTP in parallel with user record preparation
-    const [otpResult] = await Promise.all([
-      supabase.auth.signInWithOtp({
+    // Create account directly (no CAPTCHA needed)
+    const accountResponse = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         email,
-        options: { shouldCreateUser: false }
+        password,
+        metadata: { first_name: firstName, last_name: lastName }
       })
-    ])
+    });
     
-    if (otpResult.error) throw otpResult.error
-
-    return { userId }
-  } catch (error) {
-    console.error('sendRegistrationOTP error:', error)
-    if (error.message?.includes('already registered') || error.message?.includes('email_exists')) {
-      throw new Error('This email is already registered. Please sign in instead.')
+    const accountResult = await accountResponse.json();
+    console.log('💾 Account creation response:', accountResult);
+    
+    if (!accountResponse.ok) {
+      console.error('❌ Account creation failed:', accountResult);
+      throw new Error(accountResult.error || 'Account creation failed');
     }
-    throw error
+
+    const userId = accountResult?.user?.id;
+    if (!userId) {
+      console.error('❌ No user ID returned:', accountResult);
+      throw new Error('Could not retrieve user ID');
+    }
+    
+    console.log('✅ User created with ID:', userId);
+
+    // Send OTP for email verification
+    const otpResult = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false }
+    });
+    
+    console.log('📧 OTP result:', otpResult);
+    
+    if (otpResult.error) {
+      console.error('❌ OTP error:', otpResult.error);
+      throw otpResult.error;
+    }
+
+    return { userId };
+  } catch (error) {
+    console.error('❌ sendRegistrationOTP full error:', error);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
+    
+    if (error.message?.includes('already registered') || error.message?.includes('email_exists')) {
+      throw new Error('This email is already registered. Please sign in instead.');
+    }
+    throw error;
   }
 }
 
