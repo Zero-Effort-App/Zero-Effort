@@ -39,7 +39,51 @@ export default function ApplicantJobs() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterDept, setFilterDept] = useState('');
+  // Add file validation functions
+  const validateResumeFile = (file) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    if (file.size > maxSize) {
+      showToast('Resume file must be under 5MB', 'error');
+      return false;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Resume must be a PDF or Word document', 'error');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const validatePortfolioFile = (file) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+    
+    if (file.size > maxSize) {
+      showToast('Portfolio file must be under 5MB', 'error');
+      return false;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Portfolio must be a PDF, Word document, or ZIP file', 'error');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const validatePhotoFile = (file) => {
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    
+    if (file.size > maxSize) {
+      showToast('Photo file must be under 2MB', 'error');
+      return false;
+    }
+    
+    return true;
+  };
   const [filterCompany, setFilterCompany] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [resumeFile, setResumeFile] = useState(null);
@@ -50,6 +94,7 @@ export default function ApplicantJobs() {
   const [photoValidating, setPhotoValidating] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(null); // Track which file is uploading
   const [isLoading, setIsLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -257,23 +302,50 @@ export default function ApplicantJobs() {
 
       // Upload resume if file selected (REQUIRED)
       if (resumeFile) {
-        showToast('Uploading resume...', 'info');
-        resumeUrl = await uploadFile(resumeFile, 'resumes', profile.id);
-        if (!resumeUrl) {
-          throw new Error('Failed to upload resume');
+        try {
+          setUploadingFile('resume');
+          showToast('Uploading resume...', 'info');
+          resumeUrl = await uploadFile(resumeFile, 'resumes', profile.id);
+          showToast('Resume uploaded successfully', 'success');
+        } catch (error) {
+          console.error('Resume upload error:', error);
+          showToast(`Resume upload failed: ${error.message}`, 'error');
+          return; // Stop application submission if resume upload fails
+        } finally {
+          setUploadingFile(null);
         }
       }
 
       // Upload portfolio if file selected
       if (portfolioFile) {
-        showToast('Uploading portfolio...', 'info');
-        portfolioUrl = await uploadFile(portfolioFile, 'portfolios', profile.id);
+        try {
+          setUploadingFile('portfolio');
+          showToast('Uploading portfolio...', 'info');
+          portfolioUrl = await uploadFile(portfolioFile, 'portfolios', profile.id);
+          showToast('Portfolio uploaded successfully', 'success');
+        } catch (error) {
+          console.error('Portfolio upload error:', error);
+          showToast(`Portfolio upload failed: ${error.message}`, 'error');
+          // Continue with application even if portfolio upload fails
+        } finally {
+          setUploadingFile(null);
+        }
       }
 
       // Upload photo if file selected
       if (photoFile) {
-        showToast('Uploading photo...', 'info');
-        photoUrl = await uploadFile(photoFile, 'photos', profile.id);
+        try {
+          setUploadingFile('photo');
+          showToast('Uploading photo...', 'info');
+          photoUrl = await uploadFile(photoFile, 'photos', profile.id);
+          showToast('Photo uploaded successfully', 'success');
+        } catch (error) {
+          console.error('Photo upload error:', error);
+          showToast(`Photo upload failed: ${error.message}`, 'error');
+          // Continue with application even if photo upload fails
+        } finally {
+          setUploadingFile(null);
+        }
       }
 
       // Submit application with file URLs - resume is now required
@@ -496,21 +568,45 @@ export default function ApplicantJobs() {
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
-                onChange={e => setResumeFile(e.target.files[0])}
+                onChange={e => {
+                  const file = e.target.files[0];
+                  if (file && validateResumeFile(file)) {
+                    setResumeFile(file);
+                  } else {
+                    e.target.value = ''; // Clear the input
+                  }
+                }}
                 style={{ marginBottom: '0.5rem' }}
               />
               {resumeFile && <span style={{ fontSize: '.78rem', color: 'var(--success)' }}>✅ {resumeFile.name}</span>}
+              {uploadingFile === 'resume' && (
+                <span style={{ fontSize: '.78rem', color: 'var(--accent2)', marginTop: '4px' }}>
+                  ⏳ Uploading resume... Please wait.
+                </span>
+              )}
             </div>
             <div className="fgroup">
               <label>Portfolio (optional)</label>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.zip,.jpg,.jpeg,.png"
-                onChange={e => setPortfolioFile(e.target.files[0])}
+                onChange={e => {
+                  const file = e.target.files[0];
+                  if (file && validatePortfolioFile(file)) {
+                    setPortfolioFile(file);
+                  } else {
+                    e.target.value = ''; // Clear the input
+                  }
+                }}
               />
               {portfolioFile && (
                 <span style={{ fontSize: '12px', color: 'var(--text2)', marginTop: '4px' }}>
                   ✅ {portfolioFile.name}
+                </span>
+              )}
+              {uploadingFile === 'portfolio' && (
+                <span style={{ fontSize: '12px', color: 'var(--accent2)', marginTop: '4px' }}>
+                  ⏳ Uploading portfolio... Please wait.
                 </span>
               )}
               <span style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '2px' }}>
@@ -527,6 +623,11 @@ export default function ApplicantJobs() {
                 style={{ marginBottom: '0.5rem' }}
               />
               {photoFile && <span style={{ fontSize: '.78rem', color: 'var(--success)' }}>✅ {photoFile.name}</span>}
+              {uploadingFile === 'photo' && (
+                <span style={{ fontSize: '.78rem', color: 'var(--accent2)', marginTop: '4px' }}>
+                  ⏳ Uploading photo... Please wait.
+                </span>
+              )}
               {photoValidating && (
                 <p style={{ fontSize: '12px', color: 'var(--accent2)', marginTop: '6px' }}>
                   ⏳ Validating photo...

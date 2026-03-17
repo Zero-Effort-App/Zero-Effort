@@ -282,23 +282,70 @@ export async function uploadFile(file, bucket, applicantId) {
   const bucketName = bucket === 'resumes' ? 'Resumes' : 
                      bucket === 'portfolios' ? 'Portfolios' : bucket
   
+  // File size validation (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  if (file.size > maxSize) {
+    throw new Error('File too large. Maximum size is 5MB.');
+  }
+  
   const fileExt = file.name.split('.').pop();
-  const fileName = `${applicantId}-${Date.now()}.${fileExt}`; 
+  const fileName = `${applicantId}-${Date.now()}.${fileExt}`;
   
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: true
-    })
+  // Retry logic for failed uploads
+  let retries = 3;
+  let uploadSuccess = false;
+  let lastError = null;
   
-  if (error) throw error
+  while (retries > 0 && !uploadSuccess) {
+    try {
+      // Upload with timeout configuration
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          // Note: Supabase JS client doesn't directly support timeout option
+          // We'll handle timeout at the fetch level if needed
+        })
+      
+      if (error) {
+        // Check for timeout errors
+        if (error.message.includes('timeout') || error.message.includes('timed out')) {
+          throw new Error('Upload timed out. Please check your connection and try again.');
+        }
+        throw error;
+      }
+      
+      uploadSuccess = true;
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+      
+      return urlData.publicUrl;
+      
+    } catch (err) {
+      lastError = err;
+      retries--;
+      
+      if (retries > 0) {
+        // Wait before retry (exponential backoff: 1s, 2s, 4s)
+        const waitTime = Math.pow(2, 3 - retries) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+  }
   
-  const { data: urlData } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(fileName);
+  // All retries failed
+  if (lastError) {
+    if (lastError.message.includes('timeout') || lastError.message.includes('timed out')) {
+      throw new Error('Upload failed due to timeout. Please check your internet connection and try again.');
+    }
+    throw lastError;
+  }
   
-  return urlData.publicUrl
+  throw new Error('Upload failed after multiple attempts. Please try again.');
 }
 
 export async function uploadCompanyLogo(file, companyId) {
