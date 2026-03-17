@@ -1,142 +1,192 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime } from '../../lib/db';
+import { getCompanyJobs, getCompanyApplications } from '../../lib/db';
 import CompanyLogo from '../../components/CompanyLogo';
+import { Briefcase, Users, Clock, CheckCircle, Plus, ChevronRight } from 'lucide-react';
 
 export default function CompanyDashboard() {
   const { company } = useOutletContext();
-  const [stats, setStats] = useState({ active: 0, total: 0, pending: 0, accepted: 0 });
-  const [activity, setActivity] = useState([]);
   const navigate = useNavigate();
+  const [stats, setStats] = useState({ listings: 0, applicants: 0, pending: 0, accepted: 0 });
 
   useEffect(() => {
+    if (!company) return;
     async function load() {
-      if (!company) return;
       try {
-        const [jobs, apps, act] = await Promise.all([
+        const [jobs, apps] = await Promise.all([
           getCompanyJobs(company.id),
-          getCompanyApplications(company.id),
-          getCompanyActivityLog(company.id),
+          getCompanyApplications(company.id)
         ]);
         setStats({
-          active: jobs.filter(j => j.status === 'active').length,
-          total: apps.length,
+          listings: jobs.filter(j => j.status === 'active').length,
+          applicants: apps.length,
           pending: apps.filter(a => a.status === 'pending').length,
           accepted: apps.filter(a => a.status === 'accepted').length,
         });
-        setActivity(act.slice(0, 5).map(a => ({
-          type: a.type,
-          icon: a.icon,
-          text: a.message,
-          time: formatTime(a.created_at),
-        })));
       } catch (err) {
-        console.error('Error loading dashboard:', err);
+        console.error(err);
       }
     }
     load();
   }, [company]);
 
-  if (!company) return null;
-
-  const actMap = {
-    'new-app': 'act-icon new-app',
-    'accepted': 'act-icon accepted',
-    'declined': 'act-icon declined',
-    'posted': 'act-icon posted',
-  };
+  const statCards = [
+    { icon: <Briefcase size={20} />, label: 'Active Listings', value: stats.listings, color: 'var(--accent)' },
+    { icon: <Users size={20} />, label: 'Total Applicants', value: stats.applicants, color: 'var(--teal)' },
+    { icon: <Clock size={20} />, label: 'Pending Review', value: stats.pending, color: '#f59e0b' },
+    { icon: <CheckCircle size={20} />, label: 'Accepted', value: stats.accepted, color: '#22c55e' },
+  ];
 
   return (
-    <div className="pw">
-      <div className="hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        <div style={{ flex: 1 }}>
-          <div className="hero-badge">Company Dashboard</div>
-          <div className="hero-h1">
-            Welcome back,<br /><span className="gc">{company.name?.split(' ')[0]}.</span>
-          </div>
-          <div className="hero-p">Here's a snapshot of your hiring activity inside Zero Effort.</div>
-          <div className="hero-btns">
-            <button className="btn-acc" onClick={() => navigate('/company/listings')}>+ Post a job</button>
-            <button className="btn-ghost" onClick={() => navigate('/company/applicants')}>Review applicants →</button>
-          </div>
-        </div>
+    <div style={{ padding: '16px', paddingBottom: '80px', maxWidth: '900px', margin: '0 auto' }}>
 
-        {/* Company Logo Right Side */}
+      {/* Hero Card */}
+      <div style={{
+        background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
+        borderRadius: '20px',
+        padding: '24px',
+        marginBottom: '20px',
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Background decoration */}
         <div style={{
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
+          position: 'absolute', top: '-30px', right: '-30px',
+          width: '150px', height: '150px', borderRadius: '50%',
+          background: 'rgba(255,255,255,0.08)'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-40px', right: '60px',
+          width: '100px', height: '100px', borderRadius: '50%',
+          background: 'rgba(255,255,255,0.05)'
+        }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '13px', opacity: 0.85, marginBottom: '6px', fontWeight: 500 }}>
+              Company Portal
+            </p>
+            <h1 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>
+              Welcome back,<br />
+              <span style={{ opacity: 0.95 }}>{company?.name || 'Company'}.</span>
+            </h1>
+            <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '20px' }}>
+              Here's your hiring activity inside Zero Effort.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => navigate('/company/listings')}
+                style={{
+                  padding: '10px 18px', borderRadius: '12px',
+                  background: 'white', color: 'var(--accent)',
+                  border: 'none', fontWeight: 700, fontSize: '13px',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <Plus size={15} /> Post a job
+              </button>
+              <button
+                onClick={() => navigate('/company/applicants')}
+                style={{
+                  padding: '10px 18px', borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.2)', color: 'white',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  fontWeight: 700, fontSize: '13px',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                Review applicants <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+
+          {/* Company Logo */}
           <div style={{
-            width: '100px',
-            height: '100px',
-            borderRadius: '20px',
-            background: company.color || 'var(--accent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '3px solid rgba(255,255,255,0.15)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-            overflow: 'hidden'
+            flexShrink: 0,
+            width: 'clamp(64px, 15vw, 90px)',
+            height: 'clamp(64px, 15vw, 90px)',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2px solid rgba(255,255,255,0.3)'
           }}>
-            {company.logo_url ? (
+            {company?.logo_url ? (
               <img
                 src={company.logo_url}
                 alt={company.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '17px' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
-              <span style={{
-                fontSize: '2rem',
-                fontWeight: 800,
-                color: 'white',
-                letterSpacing: '-1px'
-              }}>
-                {company.logo_initials || company.name?.[0]}
+              <span style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, color: 'white' }}>
+                {company?.name?.[0] || 'C'}
               </span>
             )}
           </div>
-          <span style={{
-            fontSize: '12px',
-            fontWeight: 600,
-            color: 'var(--text2)',
-            textAlign: 'center',
-            maxWidth: '120px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-          }}>
-            {company.name}
-          </span>
         </div>
       </div>
 
-      <div className="stat-row stagger">
-        <div className="scard"><div className="scard-label">Active Listings</div><div className="scard-val">{stats.active}</div></div>
-        <div className="scard"><div className="scard-label">Total Applicants</div><div className="scard-val">{stats.total}</div></div>
-        <div className="scard"><div className="scard-label">Pending Review</div><div className="scard-val"><span className={stats.pending > 0 ? 'red' : ''}>{stats.pending}</span></div></div>
-        <div className="scard"><div className="scard-label">Accepted</div><div className="scard-val"><span className="grn">{stats.accepted}</span></div></div>
-      </div>
-
-      <div className="sh">
-        <span className="sh-title"><span className="sh-dot" />Recent Activity</span>
-      </div>
-      <div className="act-list stagger">
-        {activity.map((a, i) => (
-          <div key={i} className="act-row">
-            <div className={actMap[a.type] || 'act-icon company'}>{a.icon}</div>
-            <div className="act-info">
-              <div className="act-main">{a.text}</div>
-              <div className="act-sub">{company.name}</div>
-            </div>
-            <div className="act-time">{a.time}</div>
+      {/* Stat Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '12px',
+        marginBottom: '20px'
+      }}>
+        {statCards.map((s, i) => (
+          <div key={i} style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '16px',
+            padding: '16px',
+            display: 'flex', flexDirection: 'column', gap: '8px'
+          }}>
+            <div style={{ color: s.color }}>{s.icon}</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: '12px', color: 'var(--text2)', fontWeight: 500 }}>{s.label}</div>
           </div>
         ))}
-        {activity.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text3)', fontSize: '.8rem' }}>No recent activity.</div>
-        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700 }}>Quick Actions</h3>
+        </div>
+        {[
+          { label: 'Post a new job', sub: 'Create a new job listing', path: '/company/listings', icon: <Briefcase size={18} /> },
+          { label: 'Review applicants', sub: 'Check new applications', path: '/company/applicants', icon: <Users size={18} /> },
+          { label: 'Messages', sub: 'View your inbox', path: '/company/inbox', icon: <Clock size={18} /> },
+          { label: 'Company Profile', sub: 'Update your information', path: '/company/profile', icon: <CheckCircle size={18} /> },
+        ].map((item, i) => (
+          <div
+            key={i}
+            onClick={() => navigate(item.path)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '14px',
+              padding: '14px 16px', cursor: 'pointer',
+              borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+              transition: 'background 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <div style={{
+              width: '38px', height: '38px', borderRadius: '10px',
+              background: 'var(--bg2)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              color: 'var(--accent)', flexShrink: 0
+            }}>
+              {item.icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 600 }}>{item.label}</div>
+              <div style={{ fontSize: '12px', color: 'var(--text2)' }}>{item.sub}</div>
+            </div>
+            <ChevronRight size={16} style={{ color: 'var(--text2)' }} />
+          </div>
+        ))}
       </div>
     </div>
   );
