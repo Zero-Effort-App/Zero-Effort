@@ -13,6 +13,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   const [isMobile, setIsMobile] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadApplications, setUnreadApplications] = useState(0);
+  const [unreadStatusUpdates, setUnreadStatusUpdates] = useState(0);
   const profileDropdownRef = useRef(null);
 
   useEffect(() => {
@@ -62,9 +64,44 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     setUnreadCount(count || 0);
   };
 
+  // Fetch unread applications for company portal (last 24 hours pending apps)
+  const fetchUnreadApplications = async () => {
+    if (!profile?.company_id) return;
+    
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    const { count, error } = await supabase
+      .from('applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', profile.company_id)
+      .eq('status', 'pending')
+      .gte('applied_at', twentyFourHoursAgo);
+      
+    if (!error) setUnreadApplications(count || 0);
+  };
+
+  // Fetch unread status updates for applicant portal (accepted/rejected not viewed)
+  const fetchUnreadStatusUpdates = async () => {
+    if (!profile?.id) return;
+    
+    const { data: applications, error } = await supabase
+      .from('applications')
+      .select('id, status')
+      .eq('applicant_id', profile.id)
+      .in('status', ['accepted', 'rejected']);
+      
+    if (!error && applications) {
+      const viewedStatuses = JSON.parse(localStorage.getItem(`viewedStatuses_${profile.id}`) || '{}');
+      const unreadCount = applications.filter(app => !viewedStatuses[app.id]).length;
+      setUnreadStatusUpdates(unreadCount);
+    }
+  };
+
   // Fetch unread count on component mount and when dependencies change
   useEffect(() => {
     fetchUnreadCount();
+    fetchUnreadApplications();
+    fetchUnreadStatusUpdates();
   }, [location.pathname, user, profile]);
 
   // Separate useEffect for real-time subscription - only runs once
@@ -98,6 +135,36 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         
         if (isApplicant || isCompany) {
           fetchUnreadCount();
+        }
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'applications',
+      }, () => {
+        // Refetch counts when new application is submitted
+        const isApplicant = window.location.pathname.includes('/applicant/');
+        const isCompany = window.location.pathname.includes('/company/');
+        
+        if (isCompany) {
+          fetchUnreadApplications();
+        } else if (isApplicant) {
+          fetchUnreadStatusUpdates();
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'applications',
+      }, (payload) => {
+        // Refetch counts when application status changes
+        const isApplicant = window.location.pathname.includes('/applicant/');
+        const isCompany = window.location.pathname.includes('/company/');
+        
+        if (isCompany) {
+          fetchUnreadApplications();
+        } else if (isApplicant && ['accepted', 'rejected'].includes(payload.new.status)) {
+          fetchUnreadStatusUpdates();
         }
       })
       .subscribe((status) => {
@@ -134,7 +201,32 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       case 'Home': return <Home {...iconProps} />;
       case 'Browse Jobs': return <Briefcase {...iconProps} />;
       case 'Companies': return <Building2 {...iconProps} />;
-      case 'My Applications': return <FileText {...iconProps} />;
+      case 'My Applications': 
+        return (
+          <div style={{ position: 'relative' }}>
+            <FileText {...iconProps} />
+            {unreadStatusUpdates > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: '9999px',
+                width: '18px',
+                height: '18px',
+                fontSize: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '600',
+                boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)'
+              }}>
+                {unreadStatusUpdates}
+              </span>
+            )}
+          </div>
+        );
       case 'My Profile': return <User {...iconProps} />;
       case 'Inbox': return <MessageCircle {...iconProps} />;
       case 'Events': return <CalendarDays {...iconProps} />;
@@ -142,8 +234,32 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       // Company Portal Icons
       case 'Dashboard': return <Home {...iconProps} />;
       case 'My Listings': return <Briefcase {...iconProps} />;
-      case 'Applicants': return <User {...iconProps} />;
-      case 'Company Profile': return <Building2 {...iconProps} />;
+      case 'Applicants': 
+        return (
+          <div style={{ position: 'relative' }}>
+            <User {...iconProps} />
+            {unreadApplications > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: '9999px',
+                width: '18px',
+                height: '18px',
+                fontSize: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '600',
+                boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)'
+              }}>
+                {unreadApplications}
+              </span>
+            )}
+          </div>
+        );
       case 'Profile': return <Building2 {...iconProps} />;
       
       default: return null;
