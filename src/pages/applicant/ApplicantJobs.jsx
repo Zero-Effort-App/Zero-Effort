@@ -103,8 +103,10 @@ export default function ApplicantJobs() {
             .from('applicants')
             .select('gender')
             .eq('id', profile.id)
-            .single();
-          setApplicationGender(applicantData?.gender || '');
+            .maybeSingle();
+          if (applicantData) {
+            setApplicationGender(applicantData.gender || '');
+          }
         } catch (err) {
           console.error('Error loading applicant gender:', err);
         }

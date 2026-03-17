@@ -27,7 +27,7 @@ export default function ApplicantProfile() {
         .from('applicants')
         .select('*')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (data) {
         setFormData({

@@ -22,7 +22,7 @@ export default function ApplicantLayout() {
       .from('applicants')
       .select('first_name, last_name, photo_url')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (data) {
       setUserPhoto(data.photo_url || '')
