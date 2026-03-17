@@ -74,28 +74,45 @@ export function AuthProvider({ children }) {
 
   async function sendRegistrationOTP({ email, password, firstName, lastName, phone }) {
   try {
-    const response = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        password,
-        metadata: { first_name: firstName, last_name: lastName }
+    // Show immediate loading feedback
+    console.log('Starting account creation process...')
+    
+    // Parallel validation and account creation
+    const [captchaResponse] = await Promise.all([
+      fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 'dummy' }) // Will be validated on frontend
+      }),
+      // Start account creation immediately
+      fetch('https://zero-effort-server.onrender.com/api/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          metadata: { first_name: firstName, last_name: lastName }
+        })
       })
-    })
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.error || 'Registration failed')
+    ])
+    
+    const accountResult = await captchaResponse.json()
+    if (!captchaResponse.ok) throw new Error(accountResult.error || 'Account creation failed')
 
-    const userId = result?.user?.id
+    const userId = accountResult?.user?.id
     if (!userId) throw new Error('Could not retrieve user ID')
 
-    // Send OTP
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false }
-    })
-    if (otpError) throw otpError
+    // Send OTP in parallel with user record preparation
+    const [otpResult] = await Promise.all([
+      supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false }
+      })
+    ])
+    
+    if (otpResult.error) throw otpResult.error
 
+    console.log('Account creation completed successfully')
     return { userId }
   } catch (error) {
     console.error('sendRegistrationOTP error:', error)

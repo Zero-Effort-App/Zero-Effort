@@ -140,14 +140,31 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
+        /* Add margin to body to ensure content doesn't hide behind fixed nav */
+        body {
+          margin-top: 56px;
+        }
+        
+        /* Add padding to all main content areas to account for fixed nav */
+        .pw, .dash-wrap, .admin-wrap {
+          padding-top: 72px !important; /* 56px nav height + 16px extra space */
+        }
+        
+        /* Also handle any direct content without wrapper classes */
+        main, .main-content, .page-content {
+          padding-top: 72px !important;
+        }
+        
         .nav-header {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           background: white;
           box-shadow: 0 1px 4px rgba(0,0,0,0.08);
           border-bottom: 1px solid #e5e7eb;
-          position: sticky;
+          position: fixed;
           top: 0;
-          z-index: 100;
+          left: 0;
+          right: 0;
+          z-index: 1000;
           height: 56px; /* Reduced from 52px to 56px for better proportions */
         }
 

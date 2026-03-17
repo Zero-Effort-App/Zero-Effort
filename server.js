@@ -22,6 +22,28 @@ const supabaseAdmin = createClient(
 app.post('/api/create-account', async (req, res) => {
   const { email, password, metadata } = req.body
   console.log('Create account request:', { email, passwordLength: password?.length, metadata })
+  
+  // Backend password validation
+  if (!password || password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long' })
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 uppercase letter' })
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 lowercase letter' })
+  }
+  
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 number' })
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 special character' })
+  }
+  
   try {
     // Check if this is an applicant account (based on metadata structure)
     const isApplicant = metadata && (metadata.first_name || metadata.last_name)
@@ -91,6 +113,28 @@ app.post('/api/get-user-by-email', async (req, res) => {
 app.post('/api/reset-password', async (req, res) => {
   const { email, newPassword } = req.body
   console.log('Reset password request:', { email, passwordLength: newPassword?.length })
+  
+  // Backend password validation for reset
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long' })
+  }
+  
+  if (!/[A-Z]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 uppercase letter' })
+  }
+  
+  if (!/[a-z]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 lowercase letter' })
+  }
+  
+  if (!/[0-9]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 number' })
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain at least 1 special character' })
+  }
+  
   try {
     // Find user by email
     const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers()

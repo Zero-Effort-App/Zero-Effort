@@ -188,82 +188,105 @@ export default function ApplicantJobs() {
   const selectedCo = selectedJob ? co(selectedJob.cid) : {};
 
   async function handleApply(jobId) {
-    if (!profile) { showToast('Please login to apply'); return; }
+    if (!profile) { 
+      showToast('Please login to apply'); 
+      return; 
+    }
     
     const selectedJobData = selected ? jobs.find(j => j.id === selected) : null;
-    if (!selectedJobData) { showToast('Please select a job first'); return; }
+    if (!selectedJobData) { 
+      showToast('Please select a job first'); 
+      return; 
+    }
     
-    // Check if already applied
-    const { data: existing } = await supabase
-      .from('applications')
-      .select('id')
-      .eq('job_id', selectedJobData.id)
-      .eq('applicant_id', profile.id)
-      .maybeSingle()
+    setModal({ type: 'apply', data: selectedJobData });
+  }
 
-    if (existing) {
-      showToast('You have already applied for this position!', 'error')
-      setModal({ type: null, data: null })
-      return
-    }
+  async function handleSubmitApplication(e) {
+    e.preventDefault();
     
-    // Validate file size
-    if (resumeFile && resumeFile.size > 5 * 1024 * 1024) {
-      showToast('Resume file must be under 5MB', 'error');
-      return;
-    }
-    if (portfolioFile && portfolioFile.size > 5 * 1024 * 1024) {
-      showToast('Portfolio file must be under 5MB', 'error');
+    // Frontend validation: Resume is required
+    if (!resumeFile) {
+      showToast('Please upload your resume before submitting your application.', 'error');
       return;
     }
     
-    // Validate photo is uploaded and validated
-    if (!photoFile) {
-      showToast('Please upload a 1x1 ID photo', 'error');
+    if (!profile?.id) {
+      showToast('Please complete your profile first.', 'error');
       return;
     }
-
+    
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
+      const jobId = modal.data.id;
+      const selectedJobData = jobs.find(j => j.id === jobId);
+      
+      // Validate file size
+      if (resumeFile && resumeFile.size > 5 * 1024 * 1024) {
+        showToast('Resume file must be under 5MB', 'error');
+        return;
+      }
+      if (portfolioFile && portfolioFile.size > 5 * 1024 * 1024) {
+        showToast('Portfolio file must be under 5MB', 'error');
+        return;
+      }
+      if (photoFile && photoFile.size > 2 * 1024 * 1024) {
+        showToast('Photo file must be under 2MB', 'error');
+        return;
+      }
+      
+      // Validate file types
+      const allowedResumeTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (resumeFile && !allowedResumeTypes.includes(resumeFile.type)) {
+        showToast('Resume must be a PDF or Word document', 'error');
+        return;
+      }
+      
+      const allowedPortfolioTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+      if (portfolioFile && !allowedPortfolioTypes.includes(portfolioFile.type)) {
+        showToast('Portfolio must be a PDF, Word document, or ZIP file', 'error');
+        return;
+      }
       
       let resumeUrl = null;
       let portfolioUrl = null;
       let photoUrl = null;
 
-      // Upload resume if file selected
+      // Upload resume if file selected (REQUIRED)
       if (resumeFile) {
+        showToast('Uploading resume...', 'info');
         resumeUrl = await uploadFile(resumeFile, 'resumes', profile.id);
+        if (!resumeUrl) {
+          throw new Error('Failed to upload resume');
+        }
       }
 
       // Upload portfolio if file selected
       if (portfolioFile) {
-        portfolioUrl = await uploadFile(portfolioFile, 'Portfolios', profile.id);
+        showToast('Uploading portfolio...', 'info');
+        portfolioUrl = await uploadFile(portfolioFile, 'portfolios', profile.id);
       }
 
-      // Upload photo to Supabase storage
+      // Upload photo if file selected
       if (photoFile) {
+        showToast('Uploading photo...', 'info');
         photoUrl = await uploadFile(photoFile, 'photos', profile.id);
       }
 
-      // Submit application with file URLs
+      // Submit application with file URLs - resume is now required
+      showToast('Submitting application...', 'info');
       await submitApplication({
         job_id: jobId,
         applicant_id: profile.id,
         cover_letter: coverLetter,
-        resume_url: resumeUrl,
+        resume_url: resumeUrl, // This will always be non-null now
         portfolio_url: portfolioUrl,
         photo_url: photoUrl,
         status: 'pending'
       });
-
-      // Update gender in applicants table if provided
-      if (applicationGender) {
-        await supabase
-          .from('applicants')
-          .update({ gender: applicationGender })
-          .eq('id', profile.id);
-      }
-
+      
+      showToast('Application submitted successfully!', 'success');
       setModal({ type: 'success', data: { title: selectedJobData?.title, co: selectedJobData?.co } });
       
       // Reset form
@@ -271,16 +294,11 @@ export default function ApplicantJobs() {
       setPortfolioFile(null);
       setPhotoFile(null);
       setPhotoError('');
-      setPhotoValidating(false);
       setCoverLetter('');
       setApplicationGender('');
-
     } catch (err) {
-      if (err.message?.includes('duplicate')) {
-        setModal({ type: 'success', data: { title: selectedJobData?.title, co: selectedJobData?.co } });
-      } else {
-        showToast('Error submitting application: ' + err.message);
-      }
+      console.error('Submit application error:', err);
+      showToast('Failed to submit application. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }

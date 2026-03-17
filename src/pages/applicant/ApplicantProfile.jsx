@@ -47,45 +47,131 @@ export default function ApplicantProfile() {
     const file = e.target.files[0]
     if (!file) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Photo must be less than 2MB', 'error')
+    // Enhanced file validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const maxSize = 2 * 1024 * 1024 // 2MB
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Please upload a valid image file (JPG, PNG, GIF, or WebP)', 'error')
+      e.target.value = '' // Clear input
       return
     }
 
+    // Check file size
+    if (file.size > maxSize) {
+      showToast('Photo must be less than 2MB', 'error')
+      e.target.value = '' // Clear input
+      return
+    }
+
+    // Check file dimensions (optional but helpful)
+    const img = new Image()
+    img.onload = function() {
+      URL.revokeObjectURL(this.src) // Clean up
+      if (this.width < 100 || this.height < 100) {
+        showToast('Image is too small. Please upload at least 100x100 pixels.', 'error')
+        e.target.value = '' // Clear input
+        return
+      }
+      // Continue with upload if dimensions are OK
+      performUpload(file)
+    }
+    
+    img.onerror = function() {
+      URL.revokeObjectURL(this.src) // Clean up
+      showToast('Invalid image file. Please upload a valid image.', 'error')
+      e.target.value = '' // Clear input
+    }
+    
+    img.src = URL.createObjectURL(file)
+  }
+
+  async function performUpload(file) {
     try {
       setUploadingPhoto(true)
+      showToast('Uploading photo...', 'info')
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const fileName = `${user.id}-profile-${Date.now()}.${fileExt}`
 
-      const { error: uploadError } = await supabase.storage
+      // Upload with better error handling
+      const { data, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true })
+        .upload(fileName, file, { 
+          upsert: true,
+          cacheControl: '3600', // 1 hour cache
+          contentType: file.type
+        })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw new Error(`Upload failed: ${uploadError.message}`)
+      }
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName)
 
-      const { data: updateData, error: updateError } = await supabase
-        .from('applicants')
-        .upsert({ 
-          id: user.id,
-          photo_url: publicUrl 
-        }, { 
-          onConflict: 'id',
-          ignoreDuplicates: false 
-        })
-        .select()
+      // Update profile with retry logic
+      let retries = 3
+      let updateError = null
+      
+      while (retries > 0) {
+        const { data: updateData, error: err } = await supabase
+          .from('applicants')
+          .upsert({ 
+            id: user.id,
+            photo_url: publicUrl,
+            updated_at: new Date().toISOString()
+          }, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          })
+          .select()
 
-      if (updateError) throw updateError
+        if (!err) {
+          updateError = null
+          break
+        }
+        
+        updateError = err
+        retries--
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        }
+      }
 
+      if (updateError) {
+        throw new Error(`Failed to update profile: ${updateError.message}`)
+      }
+
+      // Update local state
       setPhotoUrl(publicUrl)
-      showToast('Profile photo updated! ', 'success')
+      setFormData(prev => ({ ...prev, photo_url: publicUrl }))
+      
+      showToast('Profile photo updated successfully!', 'success')
+      
+      // Clear input for potential re-upload
+      const fileInput = document.querySelector('input[type="file"]')
+      if (fileInput) fileInput.value = ''
+      
     } catch (err) {
       console.error('Photo upload error:', err)
-      showToast('Failed to upload photo. Please try again.', 'error')
+      
+      // Provide specific error messages
+      let errorMessage = 'Failed to upload photo. Please try again.'
+      
+      if (err.message.includes('Storage')) {
+        errorMessage = 'Storage error. Please check your internet connection and try again.'
+      } else if (err.message.includes('duplicate')) {
+        errorMessage = 'File already exists. Please rename your photo and try again.'
+      } else if (err.message.includes('size')) {
+        errorMessage = 'File is too large. Please compress your photo and try again.'
+      }
+      
+      showToast(errorMessage, 'error')
     } finally {
       setUploadingPhoto(false)
     }

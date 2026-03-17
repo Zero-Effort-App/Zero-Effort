@@ -170,6 +170,16 @@ export async function addActivityLog(type, icon, message, subText, companyId = n
 
 // ── APPLICATIONS ──
 export async function submitApplication(applicationData) {
+  // Backend validation: Resume is required
+  if (!applicationData.resume_url || applicationData.resume_url.trim() === '') {
+    throw new Error('Resume is required to submit an application');
+  }
+  
+  // Validate required fields
+  if (!applicationData.job_id || !applicationData.applicant_id) {
+    throw new Error('Missing required application data');
+  }
+  
   const { data, error } = await supabase.from('applications').insert([applicationData]).select().single();
   if (error) throw error;
   return data;

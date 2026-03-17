@@ -11,6 +11,7 @@ export default function ApplicantApplications() {
   const [apps, setApps] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [statusUpdates, setStatusUpdates] = useState({});
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function ApplicantApplications() {
             coLogo: co.logo_url || null,
             date: new Date(a.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             status: a.status,
+            lastStatus: a.status, // Track status changes
           };
         }));
       } catch (err) {
@@ -46,6 +48,106 @@ export default function ApplicantApplications() {
     }
     load();
   }, [profile]);
+
+  // Real-time status updates
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    // Subscribe to application status changes
+    const channel = supabase
+      .channel(`application-status-${profile.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'applications',
+        filter: `applicant_id=eq.${profile.id}`
+      }, payload => {
+        console.log('Application status changed:', payload.new);
+        
+        const updatedApp = payload.new;
+        const oldStatus = payload.old.status;
+        const newStatus = updatedApp.status;
+        
+        // Only notify if status actually changed
+        if (oldStatus !== newStatus) {
+          // Update the application in the list
+          setApps(prev => prev.map(app => 
+            app.id === updatedApp.id 
+              ? { ...app, status: newStatus, lastStatus: oldStatus }
+              : app
+          ));
+          
+          // Show notification for status change
+          const appData = apps.find(a => a.id === updatedApp.id);
+          if (appData) {
+            handleStatusNotification(appData, oldStatus, newStatus);
+          }
+          
+          // Update status updates tracker
+          setStatusUpdates(prev => ({
+            ...prev,
+            [updatedApp.id]: {
+              previous: oldStatus,
+              current: newStatus,
+              timestamp: new Date()
+            }
+          }));
+          
+          // Show browser notification if tab is not focused
+          if (!document.hasFocus()) {
+            showStatusBrowserNotification(appData, oldStatus, newStatus);
+          }
+        }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [profile?.id, apps]);
+
+  function handleStatusNotification(appData, oldStatus, newStatus) {
+    const statusMessages = {
+      'pending': 'Your application is under review',
+      'reviewed': 'Your application has been reviewed',
+      'accepted': '🎉 Congratulations! Your application has been accepted!',
+      'declined': 'Your application was not selected for this position',
+    };
+
+    const message = statusMessages[newStatus] || `Application status updated to ${newStatus}`;
+    
+    // Show toast notification
+    if (newStatus === 'accepted') {
+      showToast(message, 'success');
+    } else if (newStatus === 'declined') {
+      showToast(message, 'error');
+    } else {
+      showToast(message, 'info');
+    }
+  }
+
+  function showStatusBrowserNotification(appData, oldStatus, newStatus) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const titles = {
+        'accepted': '🎉 Application Accepted!',
+        'declined': 'Application Update',
+        'reviewed': 'Application Update',
+        'pending': 'Application Update'
+      };
+
+      new Notification(titles[newStatus] || 'Application Update', {
+        body: `${appData.title} at ${appData.co} - Status changed to ${newStatus}`,
+        icon: '/favicon.ico',
+        tag: `application-${appData.id}`,
+        requireInteraction: newStatus === 'accepted' || newStatus === 'declined'
+      });
+    }
+  }
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const statusMap = {
     pending: ['s-pending', 'Under Review'],
@@ -105,8 +207,11 @@ export default function ApplicantApplications() {
       <div className="apl-list stagger">
         {apps.length > 0 ? apps.map(a => {
           const [cls, lbl] = statusMap[a.status] || ['s-pending', 'Under Review'];
+          const statusUpdate = statusUpdates[a.id];
+          const hasStatusChange = statusUpdate && statusUpdate.previous !== statusUpdate.current;
+          
           return (
-            <div key={a.id} className="apl-row">
+            <div key={a.id} className={`apl-row ${hasStatusChange ? 'status-updated' : ''}`}>
               <div className="apl-logo" style={{ 
   background: a.coLogo ? 'transparent' : (a.coColor + '20'), 
   color: a.coColor,
@@ -123,9 +228,34 @@ export default function ApplicantApplications() {
                 <div className="apl-title">{a.title}</div>
                 <div className="apl-co">{a.co}</div>
                 <div className="apl-date">{a.date}</div>
+                {hasStatusChange && (
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: 'var(--success)', 
+                    marginTop: '4px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ fontSize: '10px' }}>✨</span>
+                    Status updated!
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <span className={`status ${cls}`}>{lbl}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                  <span className={`status ${cls}`}>{lbl}</span>
+                  {hasStatusChange && (
+                    <span style={{ 
+                      fontSize: '11px', 
+                      color: 'var(--text2)',
+                      fontStyle: 'italic'
+                    }}>
+                      Was: {statusMap[statusUpdate.previous]?.[1] || statusUpdate.previous}
+                    </span>
+                  )}
+                </div>
                 {a.status === 'pending' && (
                   <button 
                     onClick={() => handleWithdraw(a.id)}

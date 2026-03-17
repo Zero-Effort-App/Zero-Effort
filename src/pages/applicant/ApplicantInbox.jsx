@@ -12,6 +12,7 @@ export default function ApplicantInbox() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [unreadCounts, setUnreadCounts] = useState({})
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -20,61 +21,141 @@ export default function ApplicantInbox() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch all conversations (unique companies that messaged this applicant)
+  // Global message listener for new conversations
   useEffect(() => {
     if (!user) return
-    fetchConversations()
-  }, [user])
 
-  async function fetchConversations() {
-    const { data } = await supabase
-      .from('messages')
-      .select('*, companies(id, name, logo_url, logo_initials, color)')
-      .eq('applicant_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100)
-
-    if (data) {
-      // Group by company
-      const grouped = {}
-      data.forEach(msg => {
-        const companyId = msg.company_id
-        if (!grouped[companyId]) {
-          grouped[companyId] = {
-            company: msg.companies,
-            lastMessage: msg,
-            unreadCount: 0
-          }
-        }
-        if (!msg.is_read && msg.sender_type === 'company') {
-          grouped[companyId].unreadCount++
+    // Subscribe to all new messages for this applicant
+    const globalChannel = supabase
+      .channel(`global-messages-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `applicant_id=eq.${user.id}`
+      }, payload => {
+        console.log('New message received:', payload.new)
+        
+        // Update conversations list to show new message
+        fetchConversations()
+        
+        // Update unread count for the company
+        const companyId = payload.new.company_id
+        setUnreadCounts(prev => ({
+          ...prev,
+          [companyId]: (prev[companyId] || 0) + 1
+        }))
+        
+        // Show browser notification if tab is not focused
+        if (!document.hasFocus()) {
+          showBrowserNotification(payload.new)
         }
       })
-      setConversations(Object.values(grouped))
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `applicant_id=eq.${user.id}`
+      }, payload => {
+        // Handle message read status updates
+        if (payload.new.is_read && !payload.old.is_read) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [payload.new.company_id]: Math.max(0, (prev[payload.new.company_id] || 0) - 1)
+          }))
+        }
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(globalChannel)
+  }, [user])
+
+  // Browser notification function
+  function showBrowserNotification(message) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('New message from Zero Effort', {
+        body: `You have a new message from ${message.companies?.name || 'a company'}`,
+        icon: '/favicon.ico',
+        tag: `message-${message.id}`,
+        requireInteraction: true
+      })
     }
-    setLoading(false)
+  }
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
+  // Fetch all conversations (unique companies that messaged this applicant)
+  async function fetchConversations() {
+    if (!user) return
+    
+    try {
+      setLoading(true)
+      const { data } = await supabase
+        .from('messages')
+        .select('*, companies(id, name, logo_url, logo_initials, color)')
+        .eq('applicant_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (data) {
+        // Group by company and calculate unread counts
+        const grouped = {}
+        const newUnreadCounts = {}
+        
+        data.forEach(msg => {
+          const companyId = msg.company_id
+          if (!grouped[companyId]) {
+            grouped[companyId] = {
+              company: msg.companies,
+              lastMessage: msg,
+              unreadCount: 0
+            }
+          }
+          
+          // Count unread messages from companies
+          if (!msg.is_read && msg.sender_type === 'company') {
+            grouped[companyId].unreadCount++
+            newUnreadCounts[companyId] = (newUnreadCounts[companyId] || 0) + 1
+          }
+        })
+        
+        setConversations(Object.values(grouped))
+        setUnreadCounts(newUnreadCounts)
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Fetch messages for selected conversation
   useEffect(() => {
     if (!selectedConvo) return
+    
     const run = async () => {
       await fetchMessages()
       await markAsRead()
     };
     run();
 
-    // Subscribe to realtime
+    // Subscribe to realtime updates for this specific conversation
     const channel = supabase
       .channel(`messages-${user.id}-${selectedConvo.company.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-        filter: `applicant_id=eq.${user.id}` 
+        filter: `applicant_id=eq.${user.id}&company_id=eq.${selectedConvo.company.id}`
       }, payload => {
         setMessages(prev => [...prev, payload.new])
-        markAsRead();
+        markAsRead()
+        scrollToBottom()
       })
       .subscribe()
 
@@ -82,47 +163,98 @@ export default function ApplicantInbox() {
   }, [selectedConvo])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
   }, [messages])
 
+  function scrollToBottom() {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   async function fetchMessages() {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('applicant_id', user.id)
-      .eq('company_id', selectedConvo.company.id)
-      .order('created_at', { ascending: true })
-      .limit(50)
-    if (data) setMessages(data)
+    if (!selectedConvo || !user) return
+    
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('applicant_id', user.id)
+        .eq('company_id', selectedConvo.company.id)
+        .order('created_at', { ascending: true })
+        .limit(50)
+      
+      if (data) setMessages(data)
+    } catch (error) {
+      console.error('Error fetching messages:', error)
+    }
   }
 
   async function markAsRead() {
-    await supabase
-      .from('messages')
-      .update({ is_read: true })
-      .eq('applicant_id', user.id)
-      .eq('company_id', selectedConvo.company.id)
-      .eq('sender_type', 'company')
+    if (!selectedConvo || !user) return
+    
+    try {
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('applicant_id', user.id)
+        .eq('company_id', selectedConvo.company.id)
+        .eq('sender_type', 'company')
+        .is('is_read', false)
+      
+      // Update unread count
+      setUnreadCounts(prev => ({
+        ...prev,
+        [selectedConvo.company.id]: 0
+      }))
+    } catch (error) {
+      console.error('Error marking messages as read:', error)
+    }
   }
 
-  async function handleSend() {
-    if (!newMessage.trim() || sending) return
-    setSending(true)
-    const { error } = await supabase.from('messages').insert({
-      company_id: selectedConvo.company.id,
-      applicant_id: user.id,
-      sender_type: 'applicant',
-      content: newMessage.trim()
-    })
-    if (!error) {
+  async function sendMessage() {
+    if (!newMessage.trim() || !selectedConvo || !user) return
+    
+    try {
+      setSending(true)
+      
+      const messageData = {
+        applicant_id: user.id,
+        company_id: selectedConvo.company.id,
+        sender_type: 'applicant',
+        content: newMessage.trim(),
+        is_read: false
+      }
+      
+      const { data, error } = await supabase
+        .from('messages')
+        .insert([messageData])
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      // Add message locally for immediate feedback
+      setMessages(prev => [...prev, data])
       setNewMessage('')
-      fetchMessages()
+      scrollToBottom()
+      
+      // Update conversations list
+      fetchConversations()
+      
+    } catch (error) {
+      console.error('Error sending message:', error)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // Initial fetch
+  useEffect(() => {
+    if (user) {
       fetchConversations()
     }
-    setSending(false)
-  }
+  }, [user])
 
-  const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0)
+  const totalUnread = conversations.reduce((sum, c) => sum + (unreadCounts[c.company.id] || 0), 0)
 
   return (
     <div style={{ padding: '24px 24px 80px 24px', maxWidth: '900px', margin: '0 auto' }}>

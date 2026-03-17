@@ -68,16 +68,56 @@ export default function ApplicantLogin() {
   }
 
   function validatePasswords() {
+    const errors = []
+    
     if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match')
+      errors.push('Passwords do not match')
+    }
+    
+    // Password strength requirements
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long')
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least 1 uppercase letter')
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least 1 lowercase letter')
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      errors.push('Password must contain at least 1 number')
+    }
+    
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('Password must contain at least 1 special character')
+    }
+    
+    if (errors.length > 0) {
+      setPasswordError(errors.join('. '))
       return false
     }
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters')
-      return false
-    }
+    
     setPasswordError('')
     return true
+  }
+
+  // Real-time password validation feedback
+  function getPasswordStrength(password) {
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    }
+    
+    const passed = Object.values(checks).filter(Boolean).length
+    const strength = passed / 5
+    
+    return { checks, strength, passed }
   }
 
   // Load reCAPTCHA script dynamically and render widget
@@ -115,33 +155,45 @@ export default function ApplicantLogin() {
   }
 
   async function handleRegister(e) {
-  e.preventDefault()
-  if (!validatePasswords()) {
-    return
-  }
-  if (!captchaToken) {
-    setCaptchaError('Please complete the CAPTCHA verification')
-    return
-  }
-  try {
-    setIsLoading(true)
+    e.preventDefault()
+    if (!validatePasswords()) {
+      return
+    }
+
     setError('')
-    const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: captchaToken })
-    })
-    if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
-    const { userId } = await sendRegistrationOTP({ email, password, firstName, lastName, phone })
-    setPendingRegistration({ email, password, firstName, lastName, phone, userId })
-    setRegisteredEmail(email)
-    setShowOTP(true)
-  } catch (err) {
-    setError(err.message || 'Registration failed')
-  } finally {
-    setIsLoading(false)
+    setLoading(true) // Main loading state
+    setIsLoading(true) // Secondary loading state
+    
+    try {
+      // Show immediate feedback
+      showToast('Creating your account...', 'info')
+      
+      // Validate captcha first
+      const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: captchaToken })
+      })
+      if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
+      
+      // Create account with optimized API call
+      showToast('Setting up your profile...', 'info')
+      const { userId } = await sendRegistrationOTP({ email, password, firstName, lastName, phone })
+      
+      // Success feedback
+      showToast('Account created! Check your email for the verification code.', 'success')
+      setPendingRegistration({ email, password, firstName, lastName, phone, userId })
+      setRegisteredEmail(email)
+      setShowOTP(true)
+    } catch (err) {
+      console.error('Registration error:', err)
+      setError(err.message || 'Registration failed')
+      showToast(err.message || 'Registration failed', 'error')
+    } finally {
+      setLoading(false)
+      setIsLoading(false)
+    }
   }
-}
 
   async function handleVerifyOTP() {
   try {
@@ -474,6 +526,69 @@ export default function ApplicantLogin() {
                         {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                       </button>
                     </div>
+                    {/* Password strength indicator */}
+                    {password && (
+                      <div style={{ marginTop: '8px' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          gap: '4px', 
+                          marginBottom: '4px',
+                          height: '4px'
+                        }}>
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <div
+                              key={level}
+                              style={{
+                                flex: 1,
+                                height: '100%',
+                                borderRadius: '2px',
+                                backgroundColor: getPasswordStrength(password).checks[Object.keys(getPasswordStrength(password).checks)[level - 1]] 
+                                  ? getPasswordStrength(password).strength < 0.4 ? '#ef4444'
+                                  : getPasswordStrength(password).strength < 0.7 ? '#f59e0b'
+                                  : getPasswordStrength(password).strength < 1 ? '#3b82f6'
+                                  : '#10b981'
+                                  : 'var(--border)',
+                                transition: 'background-color 0.3s ease'
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text2)' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            <span style={{ 
+                              color: getPasswordStrength(password).checks.length ? '#10b981' : 'var(--text2)',
+                              textDecoration: getPasswordStrength(password).checks.length ? 'line-through' : 'none'
+                            }}>
+                              ✓ 8+ chars
+                            </span>
+                            <span style={{ 
+                              color: getPasswordStrength(password).checks.uppercase ? '#10b981' : 'var(--text2)',
+                              textDecoration: getPasswordStrength(password).checks.uppercase ? 'line-through' : 'none'
+                            }}>
+                              ✓ Upper
+                            </span>
+                            <span style={{ 
+                              color: getPasswordStrength(password).checks.lowercase ? '#10b981' : 'var(--text2)',
+                              textDecoration: getPasswordStrength(password).checks.lowercase ? 'line-through' : 'none'
+                            }}>
+                              ✓ Lower
+                            </span>
+                            <span style={{ 
+                              color: getPasswordStrength(password).checks.number ? '#10b981' : 'var(--text2)',
+                              textDecoration: getPasswordStrength(password).checks.number ? 'line-through' : 'none'
+                            }}>
+                              ✓ Number
+                            </span>
+                            <span style={{ 
+                              color: getPasswordStrength(password).checks.special ? '#10b981' : 'var(--text2)',
+                              textDecoration: getPasswordStrength(password).checks.special ? 'line-through' : 'none'
+                            }}>
+                              ✓ Special
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Confirm Password field */}
                   <div className="fgroup">
