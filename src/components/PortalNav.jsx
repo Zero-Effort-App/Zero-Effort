@@ -36,8 +36,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch unread count for applicant and company
-  useEffect(() => {
+  // Fetch unread count function - extracted for reuse
+  const fetchUnreadCount = async () => {
     if (!user) return;
 
     const isApplicant = location.pathname.includes('/applicant/');
@@ -45,25 +45,26 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
     if (!isApplicant && !isCompany) return;
 
-    async function fetchUnread() {
-      let query = supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
+    let query = supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_read', false);
 
-      if (isApplicant) {
-        query = query.eq('applicant_id', user.id).eq('sender_type', 'company');
-      } else if (isCompany && profile?.company_id) {
-        query = query.eq('company_id', profile.company_id).eq('sender_type', 'applicant');
-      } else {
-        return;
-      }
-
-      const { count } = await query;
-      setUnreadCount(count || 0);
+    if (isApplicant) {
+      query = query.eq('applicant_id', user.id).eq('sender_type', 'company');
+    } else if (isCompany && profile?.company_id) {
+      query = query.eq('company_id', profile.company_id).eq('sender_type', 'applicant');
+    } else {
+      return;
     }
 
-    fetchUnread();
+    const { count } = await query;
+    setUnreadCount(count || 0);
+  };
+
+  // Fetch unread count on component mount and when dependencies change
+  useEffect(() => {
+    fetchUnreadCount();
   }, [location.pathname, user, profile]);
 
   // Separate useEffect for real-time subscription - only runs once
@@ -77,15 +78,26 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-      }, (payload) => {
-        // Only update badge if message is for this user
+      }, () => {
+        // Refetch unread count when new message arrives
         const isApplicant = window.location.pathname.includes('/applicant/');
         const isCompany = window.location.pathname.includes('/company/');
         
-        if (isApplicant && payload.new.applicant_id === user.id && payload.new.sender_type === 'company') {
-          setUnreadCount(prev => prev + 1);
-        } else if (isCompany && payload.new.sender_type === 'applicant') {
-          setUnreadCount(prev => prev + 1);
+        if (isApplicant || isCompany) {
+          fetchUnreadCount();
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+      }, () => {
+        // Refetch unread count when message is marked as read
+        const isApplicant = window.location.pathname.includes('/applicant/');
+        const isCompany = window.location.pathname.includes('/company/');
+        
+        if (isApplicant || isCompany) {
+          fetchUnreadCount();
         }
       })
       .subscribe((status) => {

@@ -76,6 +76,17 @@ export default function CompanyInbox() {
       }, payload => {
         setMessages(prev => [...prev, payload.new])
       })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `company_id=eq.${company.id}` 
+      }, payload => {
+        // Update existing message when marked as read
+        setMessages(prev => prev.map(msg => 
+          msg.id === payload.new.id ? payload.new : msg
+        ))
+      })
       .subscribe()
 
     return () => supabase.removeChannel(channel)
