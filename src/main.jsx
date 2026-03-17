@@ -2,11 +2,17 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 
-// Unregister all service workers to prevent caching issues
+// Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => registration.unregister())
-  })
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('SW registered:', registration.scope);
+      })
+      .catch(error => {
+        console.error('SW registration failed:', error);
+      });
+  });
 }
 
 createRoot(document.getElementById('root')).render(

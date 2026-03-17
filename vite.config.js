@@ -7,5 +7,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
-  }
+  },
+  publicDir: 'public'  // Add this line only if it's not already there
 })
