@@ -144,8 +144,54 @@ export default function ZeloChatbot() {
   }
 `}</style>
 
-      {/* Chat Button */}
-      {!isInboxPage && (
+      {/* Desktop Permanent Widget */}
+      {!isMobile && !isInboxPage && (
+        <div style={{
+          position: 'fixed',
+          top: '64px',
+          right: '16px',
+          width: '180px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
+          padding: '16px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          textAlign: 'center'
+        }}>
+          <img
+            src="/zelo-avatar.png"
+            alt="Zelo"
+            style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+          />
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>Hi! I'm Zelo</div>
+          <div style={{ fontSize: '11px', color: 'var(--text2)', lineHeight: 1.4 }}>I'm here to help you find the perfect job!</div>
+          <button
+            onClick={() => setOpen(true)}
+            style={{
+              marginTop: '4px',
+              width: '100%',
+              padding: '8px',
+              borderRadius: '10px',
+              background: 'var(--accent)',
+              color: 'white',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            Chat now 💬
+          </button>
+        </div>
+      )}
+
+      {/* Mobile FAB Button */}
+      {isMobile && !isInboxPage && (
       <button 
         className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
         onClick={() => setOpen(!open)}
