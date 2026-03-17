@@ -2,7 +2,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, Home, Briefcase, Building2, FileText, User, MessageCircle, ChevronDown, Settings, LogOut } from 'lucide-react';
+import { Moon, Sun, Home, Briefcase, Building2, FileText, User, MessageCircle, ChevronDown, Settings, LogOut, CalendarDays } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PortalNav({ portalTag, links, userInitials, userName, companyLogo, userPhoto, profile }) {
@@ -124,6 +124,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       case 'My Applications': return <FileText {...iconProps} />;
       case 'My Profile': return <User {...iconProps} />;
       case 'Inbox': return <MessageCircle {...iconProps} />;
+      case 'Events': return <CalendarDays {...iconProps} />;
       default: return null;
     }
   };
@@ -557,42 +558,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 </div>
               </button>
 
-              {/* Mobile - Profile Section */}
-              <div className="mobile-nav" style={{
-                display: isMobile ? 'flex' : 'none',
-                alignItems: 'center',
-                gap: '8px',
-              }}>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    color: '#ef4444',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    transition: 'color 150ms ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = '#dc2626';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = '#ef4444';
-                  }}
-                >
-                  <LogOut size={14} />
-                  Log out
-                </button>
-              </div>
-
-              {/* Desktop - Profile Dropdown */}
-              <div className="desktop-nav" style={{ display: isMobile ? 'none' : 'flex' }} ref={profileDropdownRef}>
+              {/* Profile Dropdown - shown on both mobile and desktop */}
+              <div style={{ display: 'flex', position: 'relative' }} ref={profileDropdownRef}>
                 <button
                   className={`profile-button ${theme === 'dark' ? 'dark' : ''} ${isProfileDropdownOpen ? 'open' : ''}`}
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -615,12 +582,80 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
                 {isProfileDropdownOpen && (
                   <div className={`profile-dropdown ${theme === 'dark' ? 'dark' : ''}`} style={{
-                    minWidth: '140px'
+                    minWidth: '160px'
                   }}>
+                    {/* My Profile */}
+                    <button
+                      onClick={() => {
+                        const profilePath = location.pathname.includes('/applicant') ? '/applicant/profile' : '/company/profile';
+                        navigate(profilePath);
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      style={{
+                        color: theme === 'dark' ? '#f3f4f6' : '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        transition: 'background-color 150ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                      }}
+                    >
+                      <User size={16} />
+                      My Profile
+                    </button>
+
+                    {/* Theme Toggle */}
+                    <button
+                      onClick={() => {
+                        toggleTheme();
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      style={{
+                        color: theme === 'dark' ? '#f3f4f6' : '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        transition: 'background-color 150ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                      }}
+                    >
+                      {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                      {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </button>
+
+                    {/* Logout */}
                     <button
                       onClick={handleLogout}
                       style={{
-                        color: '#ef4444', // Red text color for destructive action
+                        color: '#ef4444',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px',

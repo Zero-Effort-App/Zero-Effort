@@ -53,7 +53,7 @@ export default function ApplicantLayout() {
     { path: '/applicant/companies', label: 'Companies' },
     { path: '/applicant/applications', label: 'My Applications' },
     { path: '/applicant/inbox', label: 'Inbox' },
-    { path: '/applicant/profile', label: 'My Profile' },
+    { path: '/applicant/events', label: 'Events' },
   ];
 
   return (
