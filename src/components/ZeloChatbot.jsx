@@ -9,7 +9,7 @@ export default function ZeloChatbot() {
   const { theme } = useTheme()
   const { user } = useAuth()
   const location = useLocation();
-  const isInboxPage = location.pathname.includes('/inbox');
+  const isHomePage = location.pathname === '/applicant/home';
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
     { role: 'assistant', content: `Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
@@ -145,7 +145,7 @@ export default function ZeloChatbot() {
 `}</style>
 
       {/* Permanent Widget - All Screen Sizes */}
-      {!isInboxPage && (
+      {isHomePage && (
   <button
     className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
     onClick={() => setOpen(!open)}

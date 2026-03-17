@@ -76,8 +76,8 @@ export default function ApplicantHome() {
   }
 
   return (
-    <div className="pw" style={{ paddingBottom: '80px' }}>
-      <div className="hero">
+    <div className="pw" style={{ paddingBottom: '80px', paddingTop: '8px' }}>
+      <div className="hero" style={{ paddingTop: '8px' }}>
         <div className="hero-h1">
           {profile ? (
             <>Welcome, <span className="ac">{profile.first_name}.</span><br />Find your next role here.</>
