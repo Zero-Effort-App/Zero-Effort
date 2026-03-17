@@ -93,10 +93,26 @@ export default function ApplicantHome() {
       </div>
 
       <div className="stat-row stagger">
-        <div className="scard"><Briefcase size={18} style={{ color: 'var(--accent2)', marginBottom: '6px' }} /><div className="scard-label">Open Positions</div><div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.openPositions}</div></div>
-        <div className="scard"><Building2 size={18} style={{ color: 'var(--teal)', marginBottom: '6px' }} /><div className="scard-label">Companies Hiring</div><div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.companiesHiring}</div></div>
-        <div className="scard"><FileText size={18} style={{ color: 'var(--success)', marginBottom: '6px' }} /><div className="scard-label">My Applications</div><div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.myApps}</div></div>
-        <div className="scard"><CalendarDays size={18} style={{ color: 'var(--amber)', marginBottom: '6px' }} /><div className="scard-label">Upcoming Events</div><div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.upcomingEvents}</div></div>
+        <div className="scard" onClick={() => navigate('/applicant/jobs')} style={{ cursor: 'pointer' }}>
+          <Briefcase size={18} style={{ color: 'var(--accent2)', marginBottom: '6px' }} />
+          <div className="scard-label">Open Jobs</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.openPositions}</div>
+        </div>
+        <div className="scard" onClick={() => navigate('/applicant/companies')} style={{ cursor: 'pointer' }}>
+          <Building2 size={18} style={{ color: 'var(--teal)', marginBottom: '6px' }} />
+          <div className="scard-label">Companies Hiring</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.companiesHiring}</div>
+        </div>
+        <div className="scard" onClick={() => navigate('/applicant/applications')} style={{ cursor: 'pointer' }}>
+          <FileText size={18} style={{ color: 'var(--success)', marginBottom: '6px' }} />
+          <div className="scard-label">My Applications</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.myApps}</div>
+        </div>
+        <div className="scard" onClick={() => navigate('/applicant/events')} style={{ cursor: 'pointer' }}>
+          <CalendarDays size={18} style={{ color: 'var(--amber)', marginBottom: '6px' }} />
+          <div className="scard-label">Upcoming Events</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.upcomingEvents}</div>
+        </div>
       </div>
 
       {recentHires.length > 0 && (
