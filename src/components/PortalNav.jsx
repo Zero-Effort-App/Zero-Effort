@@ -348,7 +348,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: linear-gradient(135deg, ${brandColors.primary}, ${brandColors.accent});
+          background: ${companyLogo ? 'transparent' : `linear-gradient(135deg, ${brandColors.primary}, ${brandColors.accent})`};
           overflow: hidden;
           display: flex;
           align-items: center;
