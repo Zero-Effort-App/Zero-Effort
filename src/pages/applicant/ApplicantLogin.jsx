@@ -32,8 +32,6 @@ export default function ApplicantLogin() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const [captchaError, setCaptchaError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -46,7 +44,6 @@ export default function ApplicantLogin() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [pendingRegistration, setPendingRegistration] = useState(null);
-  const captchaRef = useRef(null);
   const { applicantLogin, sendRegistrationOTP, verifyRegistrationOTP } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -120,40 +117,7 @@ export default function ApplicantLogin() {
     return { checks, strength, passed }
   }
 
-  // Load reCAPTCHA script dynamically and render widget
-  useEffect(() => {
-    if (step === 'register') {
-      // Load script if not already loaded
-      if (!window.grecaptcha) {
-        const script = document.createElement('script')
-        script.src = 'https://www.google.com/recaptcha/api.js?render=explicit'
-        script.async = true
-        script.defer = true
-        script.onload = () => renderCaptcha()
-        document.head.appendChild(script)
-      } else {
-        renderCaptcha()
-      }
-    }
-  }, [step])
-
-  function renderCaptcha() {
-    if (captchaRef.current && window.grecaptcha) {
-      // Clear existing widget
-      captchaRef.current.innerHTML = ''
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.render(captchaRef.current, {
-          sitekey: '6LfVkYYsAAAAAHZRTOBbm4mJ1BV8Kn4Dg4s18CZX',
-          callback: (token) => {
-            setCaptchaToken(token)
-            setCaptchaError('')
-          },
-          'expired-callback': () => setCaptchaToken(null)
-        })
-      })
-    }
-  }
-
+  
   async function handleRegister(e) {
     e.preventDefault()
     if (!validatePasswords()) {
@@ -167,14 +131,6 @@ export default function ApplicantLogin() {
     try {
       // Show immediate feedback
       showToast('Creating your account...', 'info')
-      
-      // Validate captcha first
-      const captchaRes = await fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: captchaToken })
-      })
-      if (!captchaRes.ok) throw new Error('CAPTCHA verification failed')
       
       // Create account with optimized API call
       showToast('Setting up your profile...', 'info')
@@ -625,12 +581,6 @@ export default function ApplicantLogin() {
                   {passwordError && (
                     <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '-8px' }}>
                       ⚠️ {passwordError}
-                    </p>
-                  )}
-                  <div ref={captchaRef} style={{ margin: '8px 0' }}></div>
-                  {captchaError && (
-                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px' }}>
-                      ⚠️ {captchaError}
                     </p>
                   )}
                   <button className="btn-primary" type="submit" disabled={loading}>
