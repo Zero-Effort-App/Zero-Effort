@@ -85,7 +85,7 @@ export default function ApplicantHome() {
             <>Your next role is<br />inside the <span className="ac">Park.</span></>
           )}
         </div>
-        <div className="hero-p">Browse all open positions across Zero Effort — curated, focused, and updated in real time.</div>
+        <div className="hero-p">Browse open jobs, connect with companies, and apply all in one place.</div>
         <div className="hero-btns">
           <button className="btn-acc" onClick={() => navigate('/applicant/jobs')}>Browse open roles</button>
           <button className="btn-ghost" onClick={() => navigate('/applicant/companies')}>Explore companies</button>
