@@ -132,6 +132,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       case 'My Listings': return <Briefcase {...iconProps} />;
       case 'Applicants': return <User {...iconProps} />;
       case 'Company Profile': return <Building2 {...iconProps} />;
+      case 'Profile': return <Building2 {...iconProps} />;
       
       default: return null;
     }
