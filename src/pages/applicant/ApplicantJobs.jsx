@@ -39,6 +39,7 @@ export default function ApplicantJobs() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterDept, setFilterDept] = useState('');
   // Add file validation functions
   const validateResumeFile = (file) => {
     const maxSize = 5 * 1024 * 1024; // 5MB
