@@ -87,7 +87,7 @@ export default function ApplicantHome() {
         </div>
         <div className="hero-p">Browse open jobs, connect with companies, and apply all in one place.</div>
         <div className="hero-btns">
-          <button className="btn-acc" onClick={() => navigate('/applicant/jobs')}>Browse open roles</button>
+          <button className="btn-acc" onClick={() => navigate('/applicant/jobs')}>Browse open jobs</button>
           <button className="btn-ghost" onClick={() => navigate('/applicant/companies')}>Explore companies</button>
         </div>
       </div>
