@@ -121,14 +121,10 @@ export default function ApplicantProfile() {
       while (retries > 0) {
         const { data: updateData, error: err } = await supabase
           .from('applicants')
-          .upsert({ 
-            id: user.id,
-            photo_url: publicUrl,
-            updated_at: new Date().toISOString()
-          }, { 
-            onConflict: 'id',
-            ignoreDuplicates: false 
+          .update({ 
+            photo_url: publicUrl
           })
+          .eq('id', user.id)
           .select()
 
         if (!err) {
