@@ -210,6 +210,23 @@ export default function ApplicantInbox() {
     }
   }
 
+  async function handleSend() {
+    if (!newMessage.trim() || sending) return
+    setSending(true)
+    const { error } = await supabase.from('messages').insert({
+      company_id: selectedConvo.company.id,
+      applicant_id: user.id,
+      sender_type: 'applicant',
+      content: newMessage.trim()
+    })
+    if (!error) {
+      setNewMessage('')
+      fetchMessages()
+      fetchConversations()
+    }
+    setSending(false)
+  }
+
   async function sendMessage() {
     if (!newMessage.trim() || !selectedConvo || !user) return
     
