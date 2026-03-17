@@ -73,7 +73,7 @@ export default function CompanyDashboard() {
             <img
               src={company.logo_url}
               alt={company.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px', background: 'transparent' }}
             />
           ) : (
             <div style={{
