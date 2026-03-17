@@ -146,49 +146,30 @@ export default function ZeloChatbot() {
 
       {/* Permanent Widget - All Screen Sizes */}
       {!isInboxPage && (
-        <div style={{
-          position: 'fixed',
-          top: '8px',
-          right: '180px',
-          width: '140px',
-          zIndex: 200,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '16px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
-          textAlign: 'center'
-        }}>
-          <img
-            src="/zelo-avatar.png"
-            alt="Zelo"
-            style={{ width: '64px', height: '64px', objectFit: 'contain' }}
-          />
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>Hi! I'm Zelo</div>
-          <div style={{ fontSize: '11px', color: 'var(--text2)', lineHeight: 1.4 }}>I'm here to help you find the perfect job!</div>
-          <button
-            onClick={() => setOpen(true)}
-            style={{
-              marginTop: '4px',
-              width: '100%',
-              padding: '8px',
-              borderRadius: '10px',
-              background: 'var(--accent)',
-              color: 'white',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            Chat now 💬
-          </button>
-        </div>
-      )}
+  <div
+    onClick={() => setOpen(true)}
+    style={{
+      position: 'fixed',
+      top: '6px',
+      right: '170px',
+      zIndex: 200,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      cursor: 'pointer',
+    }}
+  >
+    <img
+      src="/zelo-avatar.png"
+      alt="Zelo"
+      style={{ width: '44px', height: '44px', objectFit: 'contain' }}
+    />
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>Hi! I'm Zelo</span>
+      <span style={{ fontSize: '10px', color: 'var(--text2)', lineHeight: 1.3 }}>I'm here to help!</span>
+    </div>
+  </div>
+)}
 
       {/* Chat Window */}
       {open && (
