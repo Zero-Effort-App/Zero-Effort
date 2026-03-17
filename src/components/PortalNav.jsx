@@ -345,8 +345,8 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-avatar {
-          width: 28px;
-          height: 28px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           background: linear-gradient(135deg, ${brandColors.primary}, ${brandColors.accent});
           overflow: hidden;
@@ -355,7 +355,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
           justify-content: center;
           color: white;
           font-weight: 700;
-          font-size: 11px;
+          font-size: 12px;
           flex-shrink: 0;
           margin: 0; /* Remove any extra margin */
         }
@@ -558,10 +558,27 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   aria-haspopup="true"
                 >
                   <div className="profile-avatar">
-                    {userPhoto ? (
-                      <img src={userPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {companyLogo ? (
+                      <img
+                        src={companyLogo}
+                        alt="Company"
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : userPhoto ? (
+                      <img
+                        src={userPhoto}
+                        alt="Profile"
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
                     ) : (
-                      userInitials
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white', fontSize: '12px', fontWeight: 700
+                      }}>
+                        {userInitials}
+                      </div>
                     )}
                   </div>
                   <span className="profile-name">{userName}</span>
