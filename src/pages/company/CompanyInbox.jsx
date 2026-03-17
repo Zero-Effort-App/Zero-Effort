@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, ChevronLeft, Video } from 'lucide-react'
+import { sendPushNotification } from '../../lib/pushNotifications';
 
 export default function CompanyInbox() {
   const { company } = useOutletContext()
@@ -118,6 +119,15 @@ export default function CompanyInbox() {
       setNewMessage('')
       fetchMessages()
       fetchConversations()
+      
+      // Notify applicant
+      sendPushNotification(
+        selectedConvo.applicant.id,
+        'applicant',
+        'New Message 💬',
+        `${company?.name || 'A company'} sent you a message`,
+        '/applicant/inbox'
+      );
     }
     setSending(false)
   }

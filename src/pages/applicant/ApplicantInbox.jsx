@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X } from 'lucide-react'
+import { sendPushNotification } from '../../lib/pushNotifications';
 
 export default function ApplicantInbox() {
   const { user } = useAuth()
@@ -226,6 +227,15 @@ export default function ApplicantInbox() {
       setNewMessage('')
       fetchMessages()
       fetchConversations()
+      
+      // Notify company
+      sendPushNotification(
+        selectedConvo.company.id,
+        'company',
+        'New Message 💬',
+        `New message from applicant`,
+        '/company/inbox'
+      );
     }
     setSending(false)
   }
@@ -259,6 +269,15 @@ export default function ApplicantInbox() {
       
       // Update conversations list
       fetchConversations()
+      
+      // Notify company
+      await sendPushNotification(
+        selectedConvo.company.id,
+        'company',
+        'New Message 💬',
+        `${user?.user_metadata?.first_name || 'An applicant'}: ${newMessage.trim()}`,
+        '/company/inbox'
+      );
       
     } catch (error) {
       console.error('Error sending message:', error)

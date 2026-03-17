@@ -7,6 +7,7 @@ import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
 import { useToast } from '../../contexts/ToastContext';
+import { subscribeToPush } from '../../lib/pushNotifications';
 
 export default function CompanyLayout() {
   const { profile, checkSession } = useAuth();
@@ -42,6 +43,10 @@ export default function CompanyLayout() {
       console.error('Error loading company profile:', err);
     }
     setLoading(false);
+    
+    if (p?.id) {
+      subscribeToPush(p.id, 'company');
+    }
   }
 
   if (loading) return <LoadingOverlay show />;

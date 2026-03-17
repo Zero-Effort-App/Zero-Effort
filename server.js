@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import busboy from 'busboy';
 import sharp from 'sharp';
+import webpush from 'web-push';
 dotenv.config()
 
 console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
@@ -16,6 +17,12 @@ app.use(express.json())
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
 )
 
 // Create any auth account (admin or company)
@@ -375,6 +382,53 @@ app.post('/api/validate-photo', async (req, res) => {
   } catch (err) {
     console.error('Validation error:', err);
     return res.status(500).json({ valid: false, error: err.message });
+  }
+});
+
+// Save push subscription
+app.post('/api/push/subscribe', async (req, res) => {
+  const { user_id, user_type, subscription } = req.body;
+  if (!user_id || !user_type || !subscription) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  try {
+    const { error } = await supabaseAdmin
+      .from('push_subscriptions')
+      .upsert({ user_id, user_type, subscription }, { onConflict: 'user_id,user_type' });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Send push notification
+app.post('/api/push/send', async (req, res) => {
+  const { user_id, user_type, title, body, url } = req.body;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('subscription')
+      .eq('user_id', user_id)
+      .eq('user_type', user_type)
+      .maybeSingle();
+    if (error || !data) return res.json({ success: false, reason: 'No subscription found' });
+
+    await webpush.sendNotification(
+      data.subscription,
+      JSON.stringify({ title, body, url })
+    );
+    res.json({ success: true });
+  } catch (err) {
+    if (err.statusCode === 410) {
+      // Subscription expired, delete it
+      await supabaseAdmin
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', user_id)
+        .eq('user_type', user_type);
+    }
+    res.status(500).json({ error: err.message });
   }
 });
 

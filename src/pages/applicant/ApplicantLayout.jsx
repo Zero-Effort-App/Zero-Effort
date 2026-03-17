@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
+import { subscribeToPush } from '../../lib/pushNotifications';
 
 export default function ApplicantLayout() {
   const { profile, checkSession, user } = useAuth();
@@ -38,6 +39,10 @@ export default function ApplicantLayout() {
       await loadApplicantData()
     }
     setLoading(false);
+    
+    if (user?.id) {
+      subscribeToPush(user.id, 'applicant');
+    }
   }
 
   if (loading) return <LoadingOverlay show />;
