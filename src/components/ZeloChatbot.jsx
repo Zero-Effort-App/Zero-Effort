@@ -148,9 +148,9 @@ export default function ZeloChatbot() {
       {!isMobile && !isInboxPage && (
         <div style={{
           position: 'fixed',
-          top: '64px',
-          right: '16px',
-          width: '180px',
+          top: '58px',
+          right: '12px',
+          width: '160px',
           background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: '16px',
