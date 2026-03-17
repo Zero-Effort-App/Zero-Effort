@@ -571,7 +571,7 @@ export default function ApplicantJobs() {
             </div>
 
             {isSubmitting && <p style={{ textAlign: 'center', color: 'var(--text2)', fontSize: '.78rem' }}>Uploading files and submitting application...</p>}
-            <button className="btn-primary" onClick={() => handleApply(modal.data.id)} disabled={isSubmitting || photoValidating}>
+            <button className="btn-primary" onClick={handleSubmitApplication} disabled={isSubmitting || photoValidating}>
               {isSubmitting ? 'Submitting...' : 'Submit application →'}
             </button>
           </div>
