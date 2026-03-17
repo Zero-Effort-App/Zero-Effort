@@ -217,10 +217,14 @@ export default function ZeloChatbot() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bot size={20} />
+              <img 
+                src="/zelo-avatar.png" 
+                alt="Zelo"
+                style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '50%' }}
+              />
               <div>
                 <div>Zelo — Career Assistant</div>
-                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Groq AI</div>
+                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Zero Effort AI</div>
               </div>
             </div>
             {/* Close button */}
@@ -243,17 +247,19 @@ export default function ZeloChatbot() {
           <div style={{
             flex: 1, overflowY: 'auto', padding: '12px',
             display: 'flex', flexDirection: 'column', gap: '8px',
-            backgroundColor: msgBg
+            background: 'var(--bg2)'
           }}>
             {messages.map((msg, i) => (
               <div key={i} style={{
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                background: msg.role === 'user' ? 'var(--accent)' : cardBg,
+                background: msg.role === 'user' ? 'var(--accent)' : (i === 0 ? 'var(--surface)' : cardBg),
+                border: i === 0 ? '1px solid var(--border)' : 'none',
                 color: msg.role === 'user' ? 'white' : textColor,
-                padding: '10px 14px', borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                maxWidth: '85%', fontSize: '13px',
-                whiteSpace: 'pre-wrap', lineHeight: '1.6',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                padding: i === 0 ? '14px 16px' : '10px 14px', 
+                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : (i === 0 ? '16px' : '16px 16px 16px 4px'),
+                maxWidth: '85%', fontSize: i === 0 ? '14px' : '13px',
+                whiteSpace: 'pre-wrap', lineHeight: i === 0 ? '1.7' : '1.6',
+                boxShadow: i === 0 ? '0 2px 8px rgba(0,0,0,0.06)' : '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 {msg.content}
               </div>
@@ -282,12 +288,14 @@ export default function ZeloChatbot() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
               placeholder="Ask Zelo anything..."
               style={{
-                flex: 1, padding: '9px 12px', borderRadius: '10px',
-                border: `1px solid ${borderColor}`,
-                backgroundColor: msgBg,
-                color: textColor, fontSize: '13px', outline: 'none'
+                flex: 1, padding: '12px 16px', borderRadius: '12px',
+                border: '1px solid var(--border)', background: 'var(--surface)',
+                color: 'var(--text)', fontSize: '14px', outline: 'none',
+                fontFamily: 'inherit'
               }}
             />
             <button
@@ -295,7 +303,7 @@ export default function ZeloChatbot() {
               disabled={loading || !input.trim()}
               style={{
                 padding: '9px 14px', borderRadius: '10px',
-                background: loading || !input.trim() ? '#666' : 'var(--accent)',
+                background: loading || !input.trim() ? 'var(--border)' : 'var(--accent)',
                 color: 'white', border: 'none',
                 cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                 fontWeight: 600, fontSize: '13px', transition: 'background 0.2s'
