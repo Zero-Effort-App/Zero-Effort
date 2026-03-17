@@ -144,8 +144,8 @@ export default function ZeloChatbot() {
   }
 `}</style>
 
-      {/* Desktop Permanent Widget */}
-      {!isMobile && !isInboxPage && (
+      {/* Permanent Widget - All Screen Sizes */}
+      {!isInboxPage && (
         <div style={{
           position: 'fixed',
           top: '58px',
@@ -188,41 +188,6 @@ export default function ZeloChatbot() {
             Chat now 💬
           </button>
         </div>
-      )}
-
-      {/* Mobile FAB Button */}
-      {isMobile && !isInboxPage && (
-      <button 
-        className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
-        onClick={() => setOpen(!open)}
-        style={{
-          position: 'fixed',
-          bottom: isMobile ? '80px' : '24px',
-          right: '20px',
-          width: '52px', height: '52px',
-          borderRadius: '50%',
-          background: 'var(--accent)',
-          border: 'none', cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white'
-        }}
-      >
-        {open ? <X size={20} /> : (
-  <img 
-    src="/zelo-avatar.png" 
-    alt="Zelo"
-    style={{ 
-      width: '52px', 
-      height: '52px', 
-      objectFit: 'contain',
-      objectPosition: 'center',
-      borderRadius: '50%'
-    }} 
-  />
-)}
-      </button>
       )}
 
       {/* Chat Window */}
