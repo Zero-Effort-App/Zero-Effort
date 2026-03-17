@@ -334,13 +334,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-button.dark {
-          background: #4b5563; /* Lighter background for better contrast */
-          border-color: #6b7280;
-          color: #f3f4f6;
+          background: var(--surface2); /* Use CSS variable instead of hardcoded gray */
+          border-color: var(--border);
+          color: var(--text);
         }
 
         .profile-button.dark:hover {
-          background: #6b7280; /* Slightly darker on hover */
+          background: var(--surface); /* Use CSS variable for hover */
           border-color: ${brandColors.primary};
         }
 
@@ -363,7 +363,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         .profile-name {
           font-size: 14px;
           font-weight: 600;
-          color: #374151;
+          color: var(--text);
           white-space: nowrap;
           line-height: 1; /* Leading-none to remove extra line-height */
           margin: 0; /* Remove any extra margin */
@@ -372,11 +372,11 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-name.dark {
-          color: white !important; /* Force white text for visibility in dark mode */
+          color: var(--text) !important; /* Use CSS variable for dark mode */
         }
 
         .profile-chevron {
-          color: #9ca3af;
+          color: var(--text2);
           transition: transform 150ms ease;
           display: inline-flex; /* Inline-flex for proper alignment */
           align-items: center; /* Ensure vertical centering */
@@ -384,7 +384,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
         }
 
         .profile-chevron.dark {
-          color: #d1d5db; /* Lighter color for dark mode visibility */
+          color: var(--text2); /* Use CSS variable for dark mode */
         }
 
         .profile-button.open .profile-chevron {
