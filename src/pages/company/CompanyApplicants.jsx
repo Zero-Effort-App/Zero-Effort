@@ -155,7 +155,15 @@ export default function CompanyApplicants() {
   }
 
   async function handleSendMessage() {
-    if (!messageContent.trim() || sendingMessage) return
+    if (sendingMessage) return
+    if (!messageContent.trim() && !useHiringMessage) {
+      showToast('Please enter a message.', 'error')
+      return
+    }
+    if (!meetingDate || !meetingTime || !meetingLink.trim()) {
+      showToast('Please complete all Schedule Meeting fields — date, time, and meeting link are required.', 'error')
+      return
+    }
     setSendingMessage(true)
     try {
       // Prepare message content with meeting details if provided
@@ -783,12 +791,12 @@ export default function CompanyApplicants() {
               </button>
               <button
                 onClick={handleSendMessage}
-                disabled={sendingMessage || (!messageContent.trim() && !useHiringMessage)}
+                disabled={sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim()}
                 style={{
                   flex: 2, padding: '12px', borderRadius: '12px',
                   border: 'none',
-                  background: sendingMessage || (!messageContent.trim() && !useHiringMessage) ? 'var(--border)' : 'var(--accent)',
-                  cursor: sendingMessage || (!messageContent.trim() && !useHiringMessage) ? 'not-allowed' : 'pointer',
+                  background: sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim() ? 'var(--border)' : 'var(--accent)',
+                  cursor: sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim() ? 'not-allowed' : 'pointer',
                   fontSize: '14px', fontWeight: 700, color: 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   transition: 'background-color 150ms ease, box-shadow 150ms ease'
