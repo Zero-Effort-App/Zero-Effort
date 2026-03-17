@@ -248,7 +248,7 @@ export default function AdminCompanies() {
                   ) : (
                     <button 
                       className="tbl-btn" 
-                      onClick={() => openCreateAccount(c)}
+                      onClick={() => openCreatePortalAccount(c)}
                       style={{ fontSize: '.7rem' }}
                     >
                       Create Account
