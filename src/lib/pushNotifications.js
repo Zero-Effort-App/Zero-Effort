@@ -14,17 +14,16 @@ function urlBase64ToUint8Array(base64String) {
 export async function subscribeToPush(userId, userType) {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.log('Push notifications not supported');
+      alert('Push not supported on this device');
       return false;
     }
 
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.log('Push notification permission denied');
-      return false;
-    }
+    alert('Permission result: ' + permission);
+    if (permission !== 'granted') return false;
 
     const registration = await navigator.serviceWorker.ready;
+    alert('Service worker ready');
     
     let subscription = await registration.pushManager.getSubscription();
     if (!subscription) {
@@ -33,22 +32,17 @@ export async function subscribeToPush(userId, userType) {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
+    alert('Subscribed! Saving to server...');
 
     const response = await fetch('https://zero-effort-server.onrender.com/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: userId,
-        user_type: userType,
-        subscription: subscription.toJSON()
-      })
+      body: JSON.stringify({ user_id: userId, user_type: userType, subscription: subscription.toJSON() })
     });
-
-    if (!response.ok) throw new Error('Failed to save subscription');
-    console.log('Push subscription saved successfully');
-    return true;
+    alert('Server response: ' + response.status);
+    return response.ok;
   } catch (err) {
-    console.error('Push subscription error:', err);
+    alert('Push error: ' + err.message);
     return false;
   }
 }
