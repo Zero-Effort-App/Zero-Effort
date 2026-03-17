@@ -39,8 +39,6 @@ export default function ApplicantInbox() {
         table: 'messages',
         filter: `applicant_id=eq.${user.id}`
       }, payload => {
-        console.log('New message received:', payload.new)
-        
         // Update conversations list to show new message
         fetchConversations()
         

@@ -74,9 +74,6 @@ export function AuthProvider({ children }) {
 
   async function sendRegistrationOTP({ email, password, firstName, lastName, phone }) {
   try {
-    // Show immediate loading feedback
-    console.log('Starting account creation process...')
-    
     // Parallel validation and account creation
     const [captchaResponse] = await Promise.all([
       fetch('https://zero-effort-server.onrender.com/api/verify-captcha', {
@@ -112,7 +109,6 @@ export function AuthProvider({ children }) {
     
     if (otpResult.error) throw otpResult.error
 
-    console.log('Account creation completed successfully')
     return { userId }
   } catch (error) {
     console.error('sendRegistrationOTP error:', error)

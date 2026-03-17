@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zero-effort-v2';
+const CACHE_NAME = 'zero-effort-v4';
 const urlsToCache = [
   '/',
   '/index.html',

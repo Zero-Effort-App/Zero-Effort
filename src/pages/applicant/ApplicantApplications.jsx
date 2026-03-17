@@ -62,7 +62,6 @@ export default function ApplicantApplications() {
         table: 'applications',
         filter: `applicant_id=eq.${profile.id}`
       }, payload => {
-        console.log('Application status changed:', payload.new);
         
         const updatedApp = payload.new;
         const oldStatus = payload.old.status;
