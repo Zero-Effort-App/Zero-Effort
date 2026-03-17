@@ -13,6 +13,11 @@ export default function ApplicantInbox() {
   const [sending, setSending] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [unreadCounts, setUnreadCounts] = useState({})
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [pendingMeetingId, setPendingMeetingId] = useState(null)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [confirmingPassword, setConfirmingPassword] = useState(false)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -307,6 +312,36 @@ export default function ApplicantInbox() {
     }
   }
 
+  async function handlePasswordConfirm() {
+    if (!confirmPassword.trim()) {
+      setPasswordError('Please enter your password.')
+      return
+    }
+    setConfirmingPassword(true)
+    setPasswordError('')
+    try {
+      // Verify password by re-authenticating with Supabase
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: confirmPassword
+      })
+      if (error) {
+        setPasswordError('Incorrect password. Please try again.')
+        setConfirmingPassword(false)
+        return
+      }
+      // Password correct - proceed with acceptance
+      setShowPasswordModal(false)
+      setConfirmPassword('')
+      await handleMeetingResponse(pendingMeetingId, 'accept')
+      setPendingMeetingId(null)
+    } catch (err) {
+      setPasswordError('Verification failed. Please try again.')
+    } finally {
+      setConfirmingPassword(false)
+    }
+  }
+
   // Parse meeting details from message content
   function parseMeetingDetails(content) {
     const meetingDate = content.match(/📅 Meeting Date: ([^\n]+)/)?.[1];
@@ -540,7 +575,12 @@ export default function ApplicantInbox() {
                               ) : meetingDetails.meetingStatus?.includes('Pending') ? (
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                   <button
-                                    onClick={() => handleMeetingResponse(msg.id, 'accept')}
+                                    onClick={() => {
+  setPendingMeetingId(msg.id)
+  setShowPasswordModal(true)
+  setConfirmPassword('')
+  setPasswordError('')
+}}
                                     style={{
                                       flex: 1, display: 'flex', alignItems: 'center', gap: '4px',
                                       background: '#10b981', color: 'white',
@@ -625,6 +665,106 @@ export default function ApplicantInbox() {
           </div>
         )}
       </div>
+
+      {/* Password Confirmation Modal */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2000, padding: '16px', backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: 'var(--surface)', borderRadius: '20px',
+            padding: '28px', width: '100%', maxWidth: '380px',
+            border: '1px solid var(--border)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+          }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                width: '52px', height: '52px', borderRadius: '50%',
+                background: 'rgba(16,185,129,0.1)', border: '2px solid #10b981',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 12px'
+              }}>
+                <CheckCircle size={24} color="#10b981" />
+              </div>
+              <h3 style={{ fontWeight: 700, fontSize: '17px', margin: '0 0 6px' }}>
+                Confirm Acceptance
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text2)', margin: 0 }}>
+                Enter your password to confirm you are accepting this meeting invitation.
+              </p>
+            </div>
+
+            {/* Password Input */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: '6px' }}>
+                Your Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={e => {
+                  setConfirmPassword(e.target.value)
+                  setPasswordError('')
+                }}
+                onKeyDown={e => e.key === 'Enter' && handlePasswordConfirm()}
+                placeholder="Enter your password..."
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '10px',
+                  border: `1px solid ${passwordError ? '#ef4444' : 'var(--border)'}`,
+                  background: 'var(--bg2)', color: 'var(--text)',
+                  fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+                  boxSizing: 'border-box'
+                }}
+                autoFocus
+              />
+              {passwordError && (
+                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>
+                  {passwordError}
+                </p>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false)
+                  setConfirmPassword('')
+                  setPasswordError('')
+                  setPendingMeetingId(null)
+                }}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  border: '1px solid var(--border2)', background: 'var(--surface2)',
+                  cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                  color: 'var(--text)', fontFamily: 'inherit'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordConfirm}
+                disabled={confirmingPassword || !confirmPassword.trim()}
+                style={{
+                  flex: 2, padding: '12px', borderRadius: '12px',
+                  border: 'none',
+                  background: confirmingPassword || !confirmPassword.trim() ? 'var(--border)' : '#10b981',
+                  cursor: confirmingPassword || !confirmPassword.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '14px', fontWeight: 700, color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '8px', fontFamily: 'inherit'
+                }}
+              >
+                <CheckCircle size={15} />
+                {confirmingPassword ? 'Verifying...' : 'Confirm Accept'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
