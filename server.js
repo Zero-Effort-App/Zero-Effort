@@ -398,7 +398,11 @@ app.post('/api/push/subscribe', async (req, res) => {
     if (error) throw error;
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Push subscribe error:', JSON.stringify(err, null, 2));
+    console.error('Push subscribe error message:', err.message);
+    console.error('Push subscribe error details:', err.details);
+    console.error('Push subscribe error hint:', err.hint);
+    res.status(500).json({ error: err.message, details: err.details, hint: err.hint });
   }
 });
 
