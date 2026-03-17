@@ -4,6 +4,7 @@ import { getCompanies, getJobs, getEvents, getMyApplications, getRecentHires, fo
 import { Briefcase, Building2, FileText, CalendarDays, CheckCircle, Clock, MapPin } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../contexts/ToastContext';
 
 function displaySalary(salary) {
   if (!salary) return 'Not specified'
@@ -14,6 +15,7 @@ function displaySalary(salary) {
 
 export default function ApplicantHome() {
   const { profile } = useOutletContext();
+  const { showToast } = useToast();
   const [stats, setStats] = useState({ openPositions: 0, companiesHiring: 0, myApps: 0, upcomingEvents: 0 });
   const [events, setEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
@@ -168,7 +170,7 @@ export default function ApplicantHome() {
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
               Upcoming Hiring Events
             </h2>
-            <button onClick={() => navigate('/applicant/jobs')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => showToast('Events page coming soon!', 'success')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               View all →
             </button>
           </div>
