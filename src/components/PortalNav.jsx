@@ -118,6 +118,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
   const getNavIcon = (label, size = 16) => {
     const iconProps = { size, strokeWidth: 2 };
     switch(label) {
+      // Applicant Portal Icons
       case 'Home': return <Home {...iconProps} />;
       case 'Browse Jobs': return <Briefcase {...iconProps} />;
       case 'Companies': return <Building2 {...iconProps} />;
@@ -125,6 +126,13 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
       case 'My Profile': return <User {...iconProps} />;
       case 'Inbox': return <MessageCircle {...iconProps} />;
       case 'Events': return <CalendarDays {...iconProps} />;
+      
+      // Company Portal Icons
+      case 'Dashboard': return <Home {...iconProps} />;
+      case 'My Listings': return <Briefcase {...iconProps} />;
+      case 'Applicants': return <User {...iconProps} />;
+      case 'Company Profile': return <Building2 {...iconProps} />;
+      
       default: return null;
     }
   };
@@ -259,7 +267,12 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
 
         .nav-link-icon {
           flex-shrink: 0;
-          display: none; /* Force hide on desktop since mobile nav is separate */
+          display: none; /* Hidden by default for applicant portal */
+        }
+
+        /* Show icons for company portal desktop navigation */
+        .desktop-nav .nav-link-icon {
+          display: block;
         }
 
         .nav-badge {
@@ -524,7 +537,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
             <div className="desktop-nav" style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px', // Increased spacing between nav items
+              gap: '6px',
             }}>
               {links.map((link, index) => (
                 <button
@@ -533,18 +546,54 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                   onClick={() => navigate(link.path)}
                   aria-label={`Navigate to ${link.label}`}
                   aria-current={location.pathname === link.path ? 'page' : undefined}
+                  style={{
+                    display: portalType === 'company' ? 'flex' : 'flex',
+                    flexDirection: portalType === 'company' ? 'column' : 'row', // Icon above text for company only
+                    alignItems: 'center',
+                    gap: portalType === 'company' ? '4px' : '8px',
+                    padding: portalType === 'company' ? '8px 12px' : '10px 18px', // Different padding for vertical layout
+                    border: 'none',
+                    background: 'transparent',
+                    color: location.pathname === link.path 
+                      ? (theme === 'dark' ? brandColors.primaryLight : brandColors.primary)
+                      : (theme === 'dark' ? '#9ca3af' : '#6b7280'),
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                    position: 'relative',
+                    minWidth: portalType === 'company' ? '60px' : 'auto', // Consistent width for company portal
+                    whiteSpace: 'nowrap',
+                  }}
                 >
-                  <span className="nav-link-icon">{getNavIcon(link.label)}</span>
-                  <span>{link.label}</span>
-                  {link.label === 'Inbox' && unreadCount > 0 && (
-                    <span style={{
-                      background: '#ef4444', color: 'white',
-                      borderRadius: '50%', width: '18px', height: '18px', // Slightly larger badge
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '10px', fontWeight: 700, marginLeft: '6px', // Better spacing
-                      boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)' // Subtle shadow
-                    }}>{unreadCount}</span>
+                  {(portalType === 'company' || true) && (
+                    <div style={{ position: 'relative' }}>
+                      <span className="nav-link-icon" style={{ 
+                        display: portalType === 'company' ? 'block' : 'none', // Show icons only for company portal
+                        fontSize: '18px'
+                      }}>
+                        {getNavIcon(link.label, 18)}
+                      </span>
+                      {link.label === 'Inbox' && unreadCount > 0 && (
+                        <span style={{
+                          position: 'absolute',
+                          top: portalType === 'company' ? '-2px' : '50%',
+                          right: portalType === 'company' ? '-2px' : 'auto',
+                          left: portalType === 'company' ? 'auto' : '-8px',
+                          transform: portalType === 'company' ? 'none' : 'translateY(-50%)',
+                          background: '#ef4444', color: 'white',
+                          borderRadius: '50%', width: '16px', height: '16px',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '9px', fontWeight: 700,
+                          boxShadow: '0 1px 3px rgba(239, 68, 68, 0.3)'
+                        }}>{unreadCount}</span>
+                      )}
+                    </div>
                   )}
+                  <span style={{
+                    fontSize: portalType === 'company' ? '11px' : '14px',
+                    fontWeight: location.pathname === link.path ? '600' : '500',
+                    textAlign: 'center',
+                    lineHeight: '1.2'
+                  }}>{link.label}</span>
                 </button>
               ))}
             </div>
