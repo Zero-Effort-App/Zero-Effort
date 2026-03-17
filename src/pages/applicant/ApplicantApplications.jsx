@@ -51,16 +51,16 @@ export default function ApplicantApplications() {
 
   // Mark all status updates as viewed when page loads
   useEffect(() => {
-    if (applications && applications.length > 0 && profile?.id) {
+    if (apps && apps.length > 0 && profile?.id) {
       const viewedStatuses = {};
-      applications.forEach(app => {
+      apps.forEach(app => {
         if (['accepted', 'rejected'].includes(app.status)) {
           viewedStatuses[app.id] = true;
         }
       });
       localStorage.setItem(`viewedStatuses_${profile.id}`, JSON.stringify(viewedStatuses));
     }
-  }, [applications, profile?.id]);
+  }, [apps, profile?.id]);
 
   // Real-time status updates
   useEffect(() => {
