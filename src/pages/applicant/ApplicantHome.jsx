@@ -170,7 +170,7 @@ export default function ApplicantHome() {
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
               Upcoming Hiring Events
             </h2>
-            <button onClick={() => showToast('Events page coming soon!', 'success')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => navigate('/applicant/events')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               View all →
             </button>
           </div>

@@ -39,6 +39,7 @@ import ApplicantApplications from './pages/applicant/ApplicantApplications';
 import ApplicantProfile from './pages/applicant/ApplicantProfile';
 import ApplicantResetPassword from './pages/applicant/ApplicantResetPassword';
 import ApplicantInbox from './pages/applicant/ApplicantInbox';
+import ApplicantEvents from './pages/applicant/ApplicantEvents';
 
 export default function App() {
   return (
@@ -89,6 +90,7 @@ export default function App() {
                   <Route path="applications" element={<ApplicantApplications />} />
                   <Route path="profile" element={<ApplicantProfile />} />
                   <Route path="inbox" element={<ApplicantInbox />} />
+                  <Route path="events" element={<ApplicantEvents />} />
                 </Route>
               </Route>
 
