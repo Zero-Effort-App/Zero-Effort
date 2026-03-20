@@ -4,7 +4,7 @@ import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTi
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video, ExternalLink } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
-import GoogleMeetModal from '../../components/VideoCall/GoogleMeetModal';
+import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 
@@ -457,49 +457,12 @@ export default function CompanyApplicants() {
                 Contact Applicant
               </button>
               <button 
-                onClick={async () => {
-                  try {
-                    const applicantEmail = selectedApp.email || 'applicant@example.com';
-                    
-                    // Get current HR user's email from company_users
-                    const { data: hrUser } = await supabase
-                      .from('company_users')
-                      .select('email')
-                      .eq('company_id', company.id)
-                      .limit(1)
-                      .single();
-                    
-                    const hrEmail = hrUser?.email || `hr.${company.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
-                    
-                    console.log('📧 Company HR Email found:', { hrEmail, hrUser, companyId: company.id });
-                    console.log('📧 Company starting video call with emails:', {
-                      applicantEmail,
-                      hrEmail,
-                      companyName: company.name,
-                      applicantName: selectedApp.name
-                    });
-                    
-                    setActiveCall({
-                      interviewId: selectedApp.id,
-                      channelName: `interview_${selectedApp.id}`,
-                      userRole: 'recruiter',
-                      applicantEmail: applicantEmail,
-                      hrEmail: hrEmail
-                    });
-                  } catch (error) {
-                    console.error('Error fetching HR email:', error);
-                    // Fallback to generated email
-                    const applicantEmail = selectedApp.email || 'applicant@example.com';
-                    const hrEmail = `hr.${company.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
-                    
-                    setActiveCall({
-                      interviewId: selectedApp.id,
-                      channelName: `interview_${selectedApp.id}`,
-                      userRole: 'recruiter',
-                      applicantEmail: applicantEmail,
-                      hrEmail: hrEmail
-                    });
-                  }
+                onClick={() => {
+                  setActiveCall({
+                    interviewId: selectedApp.id,
+                    channelName: `interview_${selectedApp.id}`,
+                    userRole: 'recruiter'
+                  });
                 }}
                 style={{ 
                   width: '100%', 
@@ -901,12 +864,10 @@ export default function CompanyApplicants() {
       )}
 
       {activeCall && (
-        <GoogleMeetModal
+        <JitsiMeetModal
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
-          applicantEmail={activeCall.applicantEmail}
-          hrEmail={activeCall.hrEmail}
           onClose={() => setActiveCall(null)}
         />
       )}

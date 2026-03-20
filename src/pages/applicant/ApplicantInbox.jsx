@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X, Filter } from 'lucide-react'
 import { sendPushNotification } from '../../lib/pushNotifications';
-import GoogleMeetModal from '../../components/VideoCall/GoogleMeetModal';
+import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
 import styles from '../../styles/ApplicantInbox.module.css';
 
 export default function ApplicantInbox() {
@@ -586,48 +586,12 @@ export default function ApplicantInbox() {
                               {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink && (
                                 <div className={styles.meetingActions}>
                                   <button 
-                                    onClick={async () => {
-                                      try {
-                                        const applicantEmail = user?.email || 'applicant@example.com';
-                                        
-                                        // Get HR email from company_users table
-                                        const { data: hrUser } = await supabase
-                                          .from('company_users')
-                                          .select('email')
-                                          .eq('company_id', selectedConvo?.company?.id)
-                                          .limit(1)
-                                          .single();
-                                        
-                                        const hrEmail = hrUser?.email || `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
-                                        
-                                        console.log('📧 HR Email found:', { hrEmail, hrUser, companyId: selectedConvo?.company?.id });
-                                        console.log('📧 Starting video call with emails:', {
-                                          applicantEmail,
-                                          hrEmail,
-                                          companyName: selectedConvo?.company?.name
-                                        });
-                                        
-                                        setActiveCall({
-                                          interviewId: msg.id,
-                                          channelName: `interview_${msg.id}`,
-                                          userRole: 'applicant',
-                                          applicantEmail: applicantEmail,
-                                          hrEmail: hrEmail
-                                        });
-                                      } catch (error) {
-                                        console.error('Error fetching HR email:', error);
-                                        // Fallback to generated email
-                                        const applicantEmail = user?.email || 'applicant@example.com';
-                                        const hrEmail = `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
-                                        
-                                        setActiveCall({
-                                          interviewId: msg.id,
-                                          channelName: `interview_${msg.id}`,
-                                          userRole: 'applicant',
-                                          applicantEmail: applicantEmail,
-                                          hrEmail: hrEmail
-                                        });
-                                      }
+                                    onClick={() => {
+                                      setActiveCall({
+                                        interviewId: msg.id,
+                                        channelName: `interview_${msg.id}`,
+                                        userRole: 'applicant'
+                                      });
                                     }}
                                     className={styles.joinVideoBtn}
                                     aria-label="Join video call"
@@ -803,12 +767,10 @@ export default function ApplicantInbox() {
       )}
 
       {activeCall && (
-        <GoogleMeetModal
+        <JitsiMeetModal
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
-          applicantEmail={activeCall.applicantEmail}
-          hrEmail={activeCall.hrEmail}
           onClose={() => setActiveCall(null)}
         />
       )}
