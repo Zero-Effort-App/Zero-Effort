@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X, Filter } from 'lucide-react'
 import { sendPushNotification } from '../../lib/pushNotifications';
-import VideoCallModal from '../../components/VideoCall/VideoCallModal';
+import GoogleMeetModal from '../../components/VideoCall/GoogleMeetModal';
 import styles from '../../styles/ApplicantInbox.module.css';
 
 export default function ApplicantInbox() {
@@ -589,7 +589,9 @@ export default function ApplicantInbox() {
                                     onClick={() => setActiveCall({
                                       interviewId: msg.id,
                                       channelName: `interview_${msg.id}`,
-                                      userRole: 'applicant'
+                                      userRole: 'applicant',
+                                      applicantEmail: user?.email || 'applicant@example.com',
+                                      hrEmail: selectedConvo?.hr_email || 'hr@example.com'
                                     })}
                                     className={styles.joinVideoBtn}
                                     aria-label="Join video call"
@@ -765,10 +767,12 @@ export default function ApplicantInbox() {
       )}
 
       {activeCall && (
-        <VideoCallModal
+        <GoogleMeetModal
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
+          applicantEmail={activeCall.applicantEmail}
+          hrEmail={activeCall.hrEmail}
           onClose={() => setActiveCall(null)}
         />
       )}
