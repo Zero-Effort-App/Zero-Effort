@@ -3,8 +3,19 @@ import { google } from 'googleapis';
 class GoogleMeetService {
   constructor() {
     // Initialize Google Calendar service
+    if (!process.env.GOOGLE_CREDENTIALS_JSON) {
+      throw new Error('GOOGLE_CREDENTIALS_JSON environment variable is not set');
+    }
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+    } catch (error) {
+      throw new Error('Invalid GOOGLE_CREDENTIALS_JSON format: ' + error.message);
+    }
+    
     this.auth = new google.auth.GoogleAuth({
-      keyFile: process.env.GOOGLE_CREDENTIALS_PATH,
+      credentials: credentials,
       scopes: ['https://www.googleapis.com/auth/calendar']
     });
     
