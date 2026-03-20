@@ -12,6 +12,7 @@ dotenv.config()
 // Import new routes and services
 import agoraRoutes from './routes/agoraRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import quotaRoutes from './routes/quotaRoutes.js';
 import interviewNotificationService from './services/interviewNotificationService.js';
 
 console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
@@ -421,9 +422,10 @@ app.post('/api/push/send', async (req, res) => {
   }
 });
 
-// Add new routes for Agora and Notifications
+// Add new routes for Agora, Notifications, and Quota
 app.use('/api/agora', agoraRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/quota', quotaRoutes);
 
 // Start interview reminder scheduler
 interviewNotificationService.setupReminderScheduler();

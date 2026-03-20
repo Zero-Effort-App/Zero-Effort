@@ -20,6 +20,7 @@ import AdminJobs from './pages/admin/AdminJobs';
 import AdminEvents from './pages/admin/AdminEvents';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminActivity from './pages/admin/AdminActivity';
+import AdminQuotaPage from './pages/admin/AdminQuotaPage';
 
 // Company
 import CompanyLanding from './pages/company/CompanyLanding';
@@ -73,6 +74,7 @@ function AppWithServices() {
             <Route path="events" element={<AdminEvents />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="activity" element={<AdminActivity />} />
+            <Route path="quota" element={<AdminQuotaPage />} />
           </Route>
         </Route>
 

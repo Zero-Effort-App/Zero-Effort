@@ -12,6 +12,12 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [tokenError, setTokenError] = useState(null);
+  
+  // 30-minute call limit states
+  const [callTimer, setCallTimer] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+  const MAX_CALL_DURATION = 30 * 60; // 30 minutes in seconds
+  const WARNING_TIME = 25 * 60; // 25 minutes in seconds
 
   const agoraConfig = {
     appId: import.meta.env.VITE_AGORA_APP_ID,
@@ -109,10 +115,80 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
     return () => clearInterval(interval);
   }, [isJoined, callStartTime]);
 
+  // 30-minute call limit timer
+  useEffect(() => {
+    let interval;
+    
+    if (isJoined) {
+      interval = setInterval(() => {
+        setCallTimer(prev => {
+          const newTime = prev + 1;
+          
+          // Warning at 25 mins
+          if (newTime === WARNING_TIME) {
+            setShowWarning(true);
+            console.log('⚠️ 5 minutes remaining in call');
+          }
+          
+          // Auto-end at 30 mins
+          if (newTime >= MAX_CALL_DURATION) {
+            console.log('🕐 Call ended due to 30-minute limit');
+            handleEndCall('30min_limit');
+            return newTime;
+          }
+          
+          return newTime;
+        });
+      }, 1000);
+    }
+    
+    return () => clearInterval(interval);
+  }, [isJoined]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate remaining time
+  const remainingTime = MAX_CALL_DURATION - callTimer;
+
   // Handle end call
-  const handleEndCall = async () => {
+  const handleEndCall = async (reason = 'user_ended') => {
     try {
-      // Log call end to backend
+      // Track call usage
+      if (callStartTime) {
+        const durationMinutes = Math.ceil(callTimer / 60);
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        
+        // Get company ID from user metadata (for now, use a default)
+        const companyId = localStorage.getItem('companyId') || 'default-company';
+        
+        console.log('📊 Tracking call usage:', { 
+          callSessionId: interviewId, 
+          durationMinutes, 
+          reason,
+          companyId 
+        });
+        
+        // Track call end with usage
+        await fetch(`${apiUrl}/quota/track-end`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || 'demo-user'}`,
+          },
+          body: JSON.stringify({
+            callSessionId: interviewId,
+            durationMinutes: durationMinutes,
+            reason: reason
+          })
+        });
+      }
+
+      // Log call end to backend (existing functionality)
       if (callStartTime) {
         const apiUrl = import.meta.env.VITE_API_URL || '/api';
         await fetch(`${apiUrl}/agora/call-end`, {
@@ -128,12 +204,11 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
         });
       }
 
+      // End call
       leaveChannel();
       onClose();
-    } catch (err) {
-      console.error('Error ending call:', err);
-      leaveChannel();
-      onClose();
+    } catch (error) {
+      console.error('Error ending call:', error);
     }
   };
 
@@ -185,6 +260,25 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
             End Call
           </button>
         </div>
+
+        {/* 30-minute Call Timer Display */}
+        {isJoined && (
+          <div style={{ 
+            padding: '10px', 
+            backgroundColor: showWarning ? '#ff9800' : '#4CAF50',
+            color: 'white',
+            borderRadius: '5px',
+            margin: '10px',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            transition: 'background-color 0.3s'
+          }}>
+            {showWarning ? '⚠️ ' : '⏱️ '}
+            {formatTime(remainingTime)} remaining
+            {showWarning && ' - Call will end in 5 minutes'}
+          </div>
+        )}
 
         {/* Video Grid */}
         <div className="video-grid">
