@@ -595,7 +595,7 @@ export default function ApplicantInbox() {
                                           .from('company_users')
                                           .select('email')
                                           .eq('company_id', selectedConvo?.company?.id)
-                                          .eq('role', 'hr')
+                                          .limit(1)
                                           .single();
                                         
                                         const hrEmail = hrUser?.email || `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;

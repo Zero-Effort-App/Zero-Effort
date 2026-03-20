@@ -466,7 +466,6 @@ export default function CompanyApplicants() {
                       .from('company_users')
                       .select('email')
                       .eq('company_id', company.id)
-                      .eq('role', 'hr')
                       .limit(1)
                       .single();
                     
