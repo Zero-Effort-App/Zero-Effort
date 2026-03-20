@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import callUsageService from '../services/callUsageService.js';
+
 const router = express.Router();
-const callUsageService = require('../services/callUsageService');
 
 // Get monthly usage
 router.get('/usage/:companyId', async (req, res) => {
@@ -164,4 +165,4 @@ router.get('/summary/:companyId', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

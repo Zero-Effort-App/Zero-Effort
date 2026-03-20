@@ -157,4 +157,5 @@ class CallUsageService {
   }
 }
 
-module.exports = new CallUsageService();
+const callUsageService = new CallUsageService();
+export default callUsageService;
