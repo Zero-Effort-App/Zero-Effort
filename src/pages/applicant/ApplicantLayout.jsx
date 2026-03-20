@@ -61,17 +61,21 @@ export default function ApplicantLayout() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'call_sessions',
-          filter: `applicant_id=eq.${user.id}` 
+          table: 'call_sessions'
+          // NO filter for now - catch ALL inserts to test
         },
         (payload) => {
-          console.log('📞 INCOMING CALL DETECTED!', payload.new);
-          setIncomingCall({
-            interviewId: payload.new.id,
-            channelName: payload.new.channel_name,
-            hrName: 'HR Representative',
-            companyName: 'Company'
-          });
+          console.log('📞 ANY CALL DETECTED!', payload.new);
+          // Only process if it's for this user
+          if (payload.new.applicant_id === user.id) {
+            console.log('📞 CALL IS FOR ME!', payload.new);
+            setIncomingCall({
+              interviewId: payload.new.id,
+              channelName: payload.new.channel_name,
+              hrName: 'HR Representative',
+              companyName: 'Company'
+            });
+          }
         }
       )
       .subscribe((status) => {
