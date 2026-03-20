@@ -41,8 +41,11 @@ class GoogleMeetService {
       console.log('✅ Emails validated:', { applicantEmail, hrEmail });
 
       const event = {
-        summary: `Interview: ${channelName}`,
-        description: `Video interview on ZERO EFFORT platform`,
+        summary: `Interview: ${channelName} | ${applicantEmail}`,
+        description: `Video interview between HR and applicant
+Applicant: ${applicantEmail}
+HR: ${hrEmail}
+Note: Share this meeting link with both participants`,
         start: {
           dateTime: new Date().toISOString(),
           timeZone: 'Asia/Manila'
@@ -51,10 +54,6 @@ class GoogleMeetService {
           dateTime: new Date(Date.now() + 30 * 60000).toISOString(),
           timeZone: 'Asia/Manila'
         },
-        attendees: [
-          { email: applicantEmail },
-          { email: hrEmail }
-        ],
         conferenceData: {
           createRequest: {
             requestId: `${channelName}-${Date.now()}` 
