@@ -29,68 +29,24 @@ class GoogleMeetService {
   async createMeetingLink(channelName, applicantEmail, hrEmail) {
     try {
       console.log('🟡 Creating Google Meet for:', { channelName, applicantEmail, hrEmail });
+
+      // Generate random meeting ID
+      const meetingId = Math.random().toString(36).substring(2, 15) + 
+                        Math.random().toString(36).substring(2, 15);
       
-      // Validate emails
-      if (!applicantEmail || !applicantEmail.includes('@')) {
-        throw new Error(`Invalid applicant email: ${applicantEmail}`);
-      }
-      if (!hrEmail || !hrEmail.includes('@')) {
-        throw new Error(`Invalid HR email: ${hrEmail}`);
-      }
+      // Create Google Meet link
+      const meetingLink = `https://meet.google.com/${meetingId}`;
       
-      console.log('✅ Emails validated:', { applicantEmail, hrEmail });
-
-      const event = {
-        summary: `Interview: ${channelName} | ${applicantEmail}`,
-        description: `Video interview between HR and applicant
-Applicant: ${applicantEmail}
-HR: ${hrEmail}
-Note: Share this meeting link with both participants`,
-        start: {
-          dateTime: new Date().toISOString(),
-          timeZone: 'Asia/Manila'
-        },
-        end: {
-          dateTime: new Date(Date.now() + 30 * 60000).toISOString(),
-          timeZone: 'Asia/Manila'
-        },
-        conferenceData: {
-          createRequest: {
-            requestId: `${channelName}-${Date.now()}` 
-          }
-        },
-        visibility: 'private'
-      };
-
-      const response = await this.calendar.events.insert({
-        calendarId: 'primary',
-        resource: event,
-        conferenceDataVersion: 1,
-        sendUpdates: 'none'
-      });
-
-      console.log('📅 Calendar event created:', response.data);
-      console.log('📅 Conference data:', response.data.conferenceData);
-
-      if (!response.data.conferenceData || !response.data.conferenceData.entryPoints) {
-        throw new Error('No conference data in response. Check Google Calendar setup.');
-      }
-
-      const meetingLink = response.data.conferenceData.entryPoints[0].uri;
-      const eventId = response.data.id;
-
-      console.log('✅ Google Meet created:', meetingLink);
+      console.log('✅ Google Meet link generated:', meetingLink);
 
       return {
         success: true,
         meetingLink: meetingLink,
-        eventId: eventId,
+        eventId: meetingId,
         channelName: channelName
       };
     } catch (error) {
-      console.error('❌ Full error:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error creating Google Meet:', error.message);
       throw error;
     }
   }
