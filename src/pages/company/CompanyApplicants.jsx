@@ -901,6 +901,7 @@ export default function CompanyApplicants() {
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
+          user={user}
           onClose={() => setActiveCall(null)}
         />
       )}

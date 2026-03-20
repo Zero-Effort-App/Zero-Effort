@@ -144,6 +144,7 @@ export default function ApplicantLayout() {
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole="applicant"
+          user={user}
           onClose={() => setActiveCall(null)}
         />
       )}

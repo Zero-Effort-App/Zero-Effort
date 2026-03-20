@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function JitsiMeetModal({ 
   interviewId, 
   channelName, 
   userRole,
-  onClose 
+  onClose,
+  user
 }) {
+  const { user: authUser } = useAuth();
   const [callTimer, setCallTimer] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
 
   const MAX_CALL_DURATION = 30 * 60; // 30 minutes
   const WARNING_TIME = 25 * 60; // 25 minutes
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Get user display name
+  const currentUser = user || authUser;
+  const displayName = currentUser?.full_name || currentUser?.email || 'User';
+  const encodedDisplayName = encodeURIComponent(displayName);
 
   // Timer for 30-minute limit
   useEffect(() => {
@@ -88,7 +96,7 @@ export default function JitsiMeetModal({
         flexWrap: 'wrap',
         gap: '10px'
       }}>
-        <div>Interview: {channelName}</div>
+        <div>Interview: {channelName} | {displayName}</div>
         <div style={{
           padding: '5px 12px',
           backgroundColor: showWarning ? '#ff9800' : '#4CAF50',
@@ -120,7 +128,7 @@ export default function JitsiMeetModal({
         overflow: 'hidden'
       }}>
         <iframe
-          src={`https://meet.jit.si/${channelName}?userInfo.displayName=${userRole}`}
+          src={`https://meet.jit.si/${channelName}?config.prejoinPageEnabled=false&userInfo.displayName=${encodedDisplayName}`}
           allow="camera; microphone; display-capture"
           style={{
             width: '100%',
