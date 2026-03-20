@@ -41,7 +41,8 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const response = await fetch('/api/agora/generate-token', {
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        const response = await fetch(`${apiUrl}/agora/generate-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -106,7 +107,8 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
     try {
       // Log call end to backend
       if (callStartTime) {
-        await fetch('/api/agora/call-end', {
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        await fetch(`${apiUrl}/agora/call-end`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

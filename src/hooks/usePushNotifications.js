@@ -70,7 +70,8 @@ const usePushNotifications = (userId) => {
       });
 
       // Save subscription to backend
-      const response = await fetch('/api/notifications/subscribe', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/notifications/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +110,8 @@ const usePushNotifications = (userId) => {
       }
 
       // Remove subscription from backend
-      await fetch('/api/notifications/unsubscribe', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      await fetch(`${apiUrl}/notifications/unsubscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +133,8 @@ const usePushNotifications = (userId) => {
   // Get notification preferences
   const getPreferences = useCallback(async () => {
     try {
-      const response = await fetch(`/api/notifications/settings/${userId}`, {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/notifications/settings/${userId}`, {
         headers: {
           'Authorization': `Bearer ${userId}`,
         },
@@ -154,7 +157,8 @@ const usePushNotifications = (userId) => {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/notifications/settings', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/notifications/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +183,8 @@ const usePushNotifications = (userId) => {
   // Test push notification
   const testNotification = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications/test', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/notifications/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
