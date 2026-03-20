@@ -85,26 +85,54 @@ router.post('/test-token', async (req, res) => {
 // Generate RTC Token
 router.post('/generate-token', verifyAuth, async (req, res) => {
   try {
+    console.log('🟡 Token request received');
+    console.log('Body:', req.body);
+    console.log('Headers:', req.headers);
+    
     const { channelName, uid } = req.body;
 
     if (!channelName) {
+      console.log('❌ Missing channelName');
       return res.status(400).json({ 
         success: false,
         error: 'Channel name required' 
       });
     }
 
+    console.log('🟡 Generating token for channel:', channelName, 'uid:', uid);
     const tokenData = agoraTokenService.generateToken(channelName, uid);
+    
+    if (!tokenData) {
+      console.log('❌ Token generation returned null/undefined');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Token generation returned null' 
+      });
+    }
+    
+    const token = tokenData.token || tokenData;
+    
+    if (!token) {
+      console.log('❌ Token is empty/null, tokenData:', tokenData);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Token is empty in response' 
+      });
+    }
+    
+    console.log('✅ Token generated successfully, length:', token.length);
+    console.log('Token type:', typeof token);
     
     // Ensure proper JSON response with token field
     return res.json({
       success: true,
-      token: tokenData.token || tokenData,
+      token: token,
       channelName: channelName,
       uid: uid
     });
   } catch (error) {
-    console.error('Token generation error:', error);
+    console.error('❌ TOKEN ERROR:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({
       success: false,
       error: error.message
