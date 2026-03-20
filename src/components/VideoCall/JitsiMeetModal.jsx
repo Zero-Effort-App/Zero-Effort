@@ -37,9 +37,9 @@ export default function JitsiMeetModal({
 
   // Initialize Jitsi with full config control
   const initJitsi = () => {
-    const domain = '8x8.vc';
+    const domain = 'meet.jit.si';
     const options = {
-      roomName: `vpaas-magic-cookie-free/${channelName}`,
+      roomName: channelName,
       parentNode: document.getElementById('jitsi-container'),
       userInfo: {
         displayName: displayName,
@@ -53,20 +53,10 @@ export default function JitsiMeetModal({
         startWithVideoMuted: false,
         disableDeepLinking: true,
         requireDisplayName: false,
-        enableLobbyChat: false,
-        enableNoisyMicDetection: false,
-        disableModeratorIndicator: true,
-        lobby: {
-          enabled: false,
-          autoKnock: false,
-        },
-        conferences: {
-          enableLobby: false,
-        },
-        moderator: {
-          enabled: false,
-        },
         hideLobby: true,
+        enableLobbyChat: false,
+        enableFeaturesBasedOnToken: false,
+        startAsModerator: true,
       },
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK: false,
