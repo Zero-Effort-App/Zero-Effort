@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X, Filter } from 'lucide-react'
 import { sendPushNotification } from '../../lib/pushNotifications';
 import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
+import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
 import styles from '../../styles/ApplicantInbox.module.css';
 
 export default function ApplicantInbox() {
@@ -22,6 +23,7 @@ export default function ApplicantInbox() {
   const [passwordError, setPasswordError] = useState('')
   const [confirmingPassword, setConfirmingPassword] = useState(false)
   const [activeCall, setActiveCall] = useState(null)
+  const [incomingCall, setIncomingCall] = useState(null)
   const bottomRef = useRef(null)
   
   // New filter states
@@ -82,6 +84,37 @@ export default function ApplicantInbox() {
     return () => supabase.removeChannel(globalChannel)
   }, [user])
 
+  // Listen for incoming calls
+  useEffect(() => {
+    if (!user) return
+
+    // Listen for incoming calls on call_sessions table
+    const callSubscription = supabase
+      .channel('incoming_calls')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'call_sessions',
+          filter: `applicant_id=eq.${user?.id}` 
+        },
+        (payload) => {
+          console.log('📞 Incoming call:', payload.new);
+          // Get HR info from user metadata or company context
+          setIncomingCall({
+            interviewId: payload.new.id,
+            channelName: payload.new.channel_name,
+            hrName: 'HR Representative', // Will be updated with real data
+            companyName: 'Company' // Will be updated with real data
+          });
+        }
+      )
+      .subscribe();
+
+    return () => callSubscription.unsubscribe();
+  }, [user?.id])
+
   // Browser notification function
   function showBrowserNotification(message) {
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -93,6 +126,27 @@ export default function ApplicantInbox() {
       })
     }
   }
+
+  // Handle incoming call acceptance
+  const handleAcceptCall = () => {
+    setActiveCall({
+      interviewId: incomingCall.interviewId,
+      channelName: incomingCall.channelName,
+      userRole: 'applicant'
+    });
+    setIncomingCall(null);
+  };
+
+  // Handle incoming call decline
+  const handleDeclineCall = async () => {
+    // Update call_sessions to mark as declined
+    await supabase
+      .from('call_sessions')
+      .update({ status: 'declined' })
+      .eq('id', incomingCall.interviewId);
+    
+    setIncomingCall(null);
+  };
 
   // Request notification permission
   useEffect(() => {
@@ -764,6 +818,15 @@ export default function ApplicantInbox() {
             </div>
           </div>
         </div>
+      )}
+
+      {incomingCall && (
+        <IncomingCallModal
+          callerName={incomingCall.hrName}
+          companyName={incomingCall.companyName}
+          onAccept={handleAcceptCall}
+          onDecline={handleDeclineCall}
+        />
       )}
 
       {activeCall && (

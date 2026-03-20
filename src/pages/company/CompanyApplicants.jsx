@@ -6,6 +6,7 @@ import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
 import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 // Skeleton card component
@@ -45,6 +46,7 @@ export default function CompanyApplicants() {
   const [meetingStatus, setMeetingStatus] = useState('pending'); // pending, confirmed, rejected
   const [sendingMessage, setSendingMessage] = useState(false);
   const [activeCall, setActiveCall] = useState(null);
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   async function loadData() {
@@ -457,12 +459,35 @@ export default function CompanyApplicants() {
                 Contact Applicant
               </button>
               <button 
-                onClick={() => {
-                  setActiveCall({
-                    interviewId: selectedApp.id,
-                    channelName: `interview_${selectedApp.id}`,
-                    userRole: 'recruiter'
-                  });
+                onClick={async () => {
+                  try {
+                    // Create call_sessions record
+                    const { data, error } = await supabase
+                      .from('call_sessions')
+                      .insert({
+                        interview_id: selectedApp.interview_id || selectedApp.id,
+                        channel_name: `interview_${selectedApp.id}`,
+                        applicant_id: selectedApp.id,
+                        recruiter_id: user?.id,
+                        status: 'ringing'
+                      })
+                      .select()
+                      .single();
+
+                    if (error) throw error;
+
+                    console.log('📞 Call initiated:', data);
+
+                    // Open video call on HR side
+                    setActiveCall({
+                      interviewId: data.id,
+                      channelName: data.channel_name,
+                      userRole: 'hr'
+                    });
+                  } catch (error) {
+                    console.error('Error starting video call:', error);
+                    showToast('Failed to start video call', 'error');
+                  }
                 }}
                 style={{ 
                   width: '100%', 
