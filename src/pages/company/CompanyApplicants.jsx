@@ -464,11 +464,14 @@ export default function CompanyApplicants() {
                     // Create call_sessions record with only existing columns
                     const channelName = `interview_${selectedApp.id}_${Date.now()}`;
                     
+                    console.log('📞 Inserting call for applicant_id:', selectedApp.applicant_id);
+                    console.log('📞 Full selectedApp object:', selectedApp);
+                    
                     const { data, error } = await supabase
                       .from('call_sessions')
                       .insert({
                         channel_name: channelName,
-                        applicant_id: selectedApp.applicant_id || selectedApp.id,
+                        applicant_id: selectedApp.applicant_id,
                         recruiter_id: user?.id,
                         status: 'ringing'
                       })

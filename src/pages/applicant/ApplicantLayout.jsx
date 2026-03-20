@@ -5,12 +5,16 @@ import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
+import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
+import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
 import { subscribeToPush } from '../../lib/pushNotifications';
 
 export default function ApplicantLayout() {
   const { profile, checkSession, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userPhoto, setUserPhoto] = useState('');
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [activeCall, setActiveCall] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +49,56 @@ export default function ApplicantLayout() {
     }
   }
 
+  // Global incoming call listener
+  useEffect(() => {
+    if (!user?.id) return;
+    console.log('🔔 Global listener active for user:', user.id);
+
+    const subscription = supabase
+      .channel('incoming_calls_' + user.id)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'call_sessions',
+          filter: `applicant_id=eq.${user.id}` 
+        },
+        (payload) => {
+          console.log('📞 INCOMING CALL DETECTED!', payload.new);
+          setIncomingCall({
+            interviewId: payload.new.id,
+            channelName: payload.new.channel_name,
+            hrName: 'HR Representative',
+            companyName: 'Company'
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log('🔔 Global realtime status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user?.id]);
+
+  // Call handlers
+  const handleAcceptCall = () => {
+    setActiveCall(incomingCall);
+    setIncomingCall(null);
+  };
+
+  const handleDeclineCall = async () => {
+    if (incomingCall?.interviewId) {
+      await supabase
+        .from('call_sessions')
+        .update({ status: 'declined' })
+        .eq('id', incomingCall.interviewId);
+    }
+    setIncomingCall(null);
+  };
+
   if (loading) return <LoadingOverlay show />;
 
   const initials = profile
@@ -71,6 +125,25 @@ export default function ApplicantLayout() {
         companyLogo={null}
         userPhoto={userPhoto}
       />
+      
+      {incomingCall && (
+        <IncomingCallModal
+          callerName={incomingCall.hrName}
+          companyName={incomingCall.companyName}
+          onAccept={handleAcceptCall}
+          onDecline={handleDeclineCall}
+        />
+      )}
+
+      {activeCall && !incomingCall && (
+        <JitsiMeetModal
+          interviewId={activeCall.interviewId}
+          channelName={activeCall.channelName}
+          userRole="applicant"
+          onClose={() => setActiveCall(null)}
+        />
+      )}
+      
       <Outlet context={{ profile }} />
       <ZeloChatbot />
     </>
