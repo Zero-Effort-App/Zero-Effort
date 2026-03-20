@@ -49,6 +49,7 @@ export default function AdminLayout() {
         companyLogo={null}
       />
       <Outlet />
+      <ZeloChatbot />
     </>
   );
 }

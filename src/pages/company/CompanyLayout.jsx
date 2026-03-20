@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import ZeloChatbot from '../../components/ZeloChatbot';
 import { useToast } from '../../contexts/ToastContext';
 import { subscribeToPush } from '../../lib/pushNotifications';
 
@@ -68,6 +69,7 @@ export default function CompanyLayout() {
         companyLogo={company?.logo_url || null}
       />
       <Outlet context={{ company, setCompany }} />
+      <ZeloChatbot />
     </>
   );
 }
