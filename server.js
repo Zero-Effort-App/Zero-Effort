@@ -428,9 +428,9 @@ app.use('/api/notifications', notificationRoutes);
 // Start interview reminder scheduler
 interviewNotificationService.setupReminderScheduler();
 
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 3001
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Admin API server running on port ${PORT}`)
+  console.log(`✅ Server running on port ${PORT}`)
   console.log('✅ Agora video call service started')
   console.log('✅ Push notification service started')
   console.log('✅ Interview reminder scheduler started')
