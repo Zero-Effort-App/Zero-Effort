@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X } from 'lucide-react'
+import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X, Filter } from 'lucide-react'
 import { sendPushNotification } from '../../lib/pushNotifications';
 import VideoCallModal from '../../components/VideoCall/VideoCallModal';
+import styles from '../../styles/ApplicantInbox.module.css';
 
 export default function ApplicantInbox() {
   const { user } = useAuth()
@@ -22,6 +23,11 @@ export default function ApplicantInbox() {
   const [confirmingPassword, setConfirmingPassword] = useState(false)
   const [activeCall, setActiveCall] = useState(null)
   const bottomRef = useRef(null)
+  
+  // New filter states
+  const [filter, setFilter] = useState('all')
+  const [upcomingMeetings, setUpcomingMeetings] = useState([])
+  const [pastMeetings, setPastMeetings] = useState([])
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -537,143 +543,78 @@ export default function ApplicantInbox() {
                               {mainMessage}
                             </p>
                             
-                            {/* Meeting details card */}
-                            <div style={{
-                              background: msg.sender_type === 'applicant' ? 'rgba(255,255,255,0.1)' : 'rgba(124, 58, 237, 0.05)',
-                              borderRadius: '8px',
-                              padding: '12px',
-                              border: msg.sender_type === 'applicant' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(124, 58, 237, 0.2)'
-                            }}>
-                              {/* Meeting info header */}
-                              <div style={{ 
-                                display: 'flex', alignItems: 'center', gap: '8px', 
-                                marginBottom: '10px', fontWeight: 600, fontSize: '13px' 
-                              }}>
-                                <Calendar size={14} />
-                                Interview Meeting
-                                {meetingDetails.meetingStatus?.includes('✅') && (
-                                  <span style={{ color: '#10b981', fontSize: '11px' }}>Confirmed</span>
+                            {/* Improved Meeting Card */}
+                            <div className={styles.meetingCard}>
+                              {/* Meeting Header */}
+                              <div className={styles.meetingHeader}>
+                                <div className={styles.companyInfo}>
+                                  <div className={styles.companyName}>
+                                    {selectedConvo?.company_name || 'Company'}
+                                  </div>
+                                  <div className={styles.meetingStatus}>
+                                    {meetingDetails.meetingStatus?.includes('✅') && (
+                                      <span className={styles.statusConfirmed}>✅ Confirmed</span>
+                                    )}
+                                    {meetingDetails.meetingStatus?.includes('❌') && (
+                                      <span className={styles.statusDeclined}>❌ Declined</span>
+                                    )}
+                                    {meetingDetails.meetingStatus?.includes('Pending') && (
+                                      <span className={styles.statusPending}>⏳ Pending</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Meeting Details */}
+                              <div className={styles.meetingDetails}>
+                                {meetingDetails.meetingDate && (
+                                  <div className={styles.meetingDetailRow}>
+                                    <Calendar size={14} />
+                                    <span>{meetingDetails.meetingDate}</span>
+                                  </div>
                                 )}
-                                {meetingDetails.meetingStatus?.includes('❌') && (
-                                  <span style={{ color: '#ef4444', fontSize: '11px' }}>Declined</span>
+                                
+                                {meetingDetails.meetingTime && (
+                                  <div className={styles.meetingDetailRow}>
+                                    <Clock size={14} />
+                                    <span>{meetingDetails.meetingTime}</span>
+                                  </div>
                                 )}
                               </div>
                               
-                              {/* Meeting details */}
-                              {meetingDetails.meetingDate && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '12px' }}>
-                                  <Calendar size={12} style={{ color: 'var(--text2)' }} />
-                                  <span>{meetingDetails.meetingDate}</span>
-                                </div>
-                              )}
-                              
-                              {meetingDetails.meetingTime && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '12px' }}>
-                                  <Clock size={12} style={{ color: 'var(--text2)' }} />
-                                  <span>{meetingDetails.meetingTime}</span>
-                                </div>
-                              )}
-                              
-                              {/* Meeting link or action buttons */}
-                              {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink ? (
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexDirection: window.innerWidth < 480 ? 'column' : 'row' }}>
-                                  <a
-                                    href={meetingDetails.meetingLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                      display: 'flex', alignItems: 'center', gap: '6px',
-                                      background: '#10b981', color: 'white',
-                                      padding: window.innerWidth < 480 ? '12px 16px' : '8px 12px', 
-                                      borderRadius: '6px',
-                                      textDecoration: 'none', fontSize: window.innerWidth < 480 ? '14px' : '12px', fontWeight: 600,
-                                      flex: 1,
-                                      minHeight: '44px',
-                                      minWidth: '44px',
-                                      boxSizing: 'border-box',
-                                      justifyContent: 'center'
-                                    }}
-                                  >
-                                    <Video size={window.innerWidth < 480 ? 14 : 12} />
-                                    Join Meeting
-                                  </a>
+                              {/* Meeting Actions */}
+                              {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink && (
+                                <div className={styles.meetingActions}>
                                   <button 
                                     onClick={() => setActiveCall({
                                       interviewId: msg.id,
                                       channelName: `interview_${msg.id}`,
                                       userRole: 'applicant'
                                     })}
-                                    style={{
-                                      display: 'flex', alignItems: 'center', gap: '6px',
-                                      background: '#3b82f6', color: 'white',
-                                      padding: window.innerWidth < 480 ? '12px 16px' : '8px 12px', 
-                                      borderRadius: '6px',
-                                      border: 'none', fontSize: window.innerWidth < 480 ? '14px' : '12px', fontWeight: 600,
-                                      cursor: 'pointer', flex: 1,
-                                      minHeight: '44px',
-                                      minWidth: '44px',
-                                      boxSizing: 'border-box',
-                                      justifyContent: 'center',
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                    onMouseOver={(e) => {
-                                      e.target.style.background = '#2563eb';
-                                      e.target.style.transform = 'translateY(-1px)';
-                                    }}
-                                    onMouseOut={(e) => {
-                                      e.target.style.background = '#3b82f6';
-                                      e.target.style.transform = 'translateY(0)';
-                                    }}
+                                    className={styles.joinVideoBtn}
+                                    aria-label="Join video call"
+                                    title="Join video interview call"
                                   >
-                                    <Video size={window.innerWidth < 480 ? 14 : 12} />
+                                    <Video size={18} />
                                     🎥 Join Video Call
                                   </button>
-                                </div>
-                              ) : meetingDetails.meetingStatus?.includes('Pending') ? (
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                                  <button
-                                    onClick={() => {
-  setPendingMeetingId(msg.id)
-  setShowPasswordModal(true)
-  setConfirmPassword('')
-  setPasswordError('')
-}}
-                                    style={{
-                                      flex: 1, display: 'flex', alignItems: 'center', gap: '4px',
-                                      background: '#10b981', color: 'white',
-                                      padding: '6px 10px', borderRadius: '6px',
-                                      border: 'none', fontSize: '11px', fontWeight: 600,
-                                      cursor: 'pointer'
-                                    }}
+                                  
+                                  <a
+                                    href={meetingDetails.meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.joinMeetingBtn}
+                                    aria-label="Join meeting link"
+                                    title="Open meeting in new tab"
                                   >
-                                    <CheckCircle size={12} />
-                                    Accept
-                                  </button>
-                                  <button
-                                    onClick={() => handleMeetingResponse(msg.id, 'decline')}
-                                    style={{
-                                      flex: 1, display: 'flex', alignItems: 'center', gap: '4px',
-                                      background: '#ef4444', color: 'white',
-                                      padding: '6px 10px', borderRadius: '6px',
-                                      border: 'none', fontSize: '11px', fontWeight: 600,
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    <X size={12} />
-                                    Decline
-                                  </button>
+                                    <Video size={16} />
+                                    Join Meeting
+                                  </a>
                                 </div>
-                              ) : meetingDetails.meetingStatus?.includes('❌') ? (
-                                <div style={{
-                                  fontSize: '11px', color: '#ef4444',
-                                  marginTop: '8px', fontStyle: 'italic'
-                                }}>
-                                  Meeting declined
-                                </div>
-                              ) : null}
+                              )}
                             </div>
                           </div>
-                        );
+                        )
                       }
                       
                       // Regular message without meeting details

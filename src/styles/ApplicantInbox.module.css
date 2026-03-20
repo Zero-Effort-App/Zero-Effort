@@ -1,0 +1,428 @@
+/* Applicant Inbox Responsive Styles */
+/* Mobile-first approach with breakpoints at 480px, 768px, 1024px */
+
+/* Base styles */
+.meeting-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.meeting-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.company-info {
+  flex: 1;
+}
+
+.company-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.meeting-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-confirmed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-declined {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.meeting-details {
+  margin-bottom: 16px;
+}
+
+.meeting-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.meeting-detail-row svg {
+  flex-shrink: 0;
+}
+
+.meeting-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Join Video Call Button - Primary Action */
+.join-video-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  touch-action: manipulation;
+  position: relative;
+  overflow: hidden;
+}
+
+.join-video-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.join-video-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.join-video-btn:hover::before {
+  opacity: 1;
+}
+
+.join-video-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.join-video-btn svg {
+  flex-shrink: 0;
+}
+
+/* Join Meeting Button - Secondary Action */
+.join-meeting-btn {
+  width: 100%;
+  height: 44px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.join-meeting-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.join-meeting-btn:active {
+  transform: translateY(0);
+}
+
+/* Section Headers */
+.inbox-section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.section-count {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #6b7280;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.empty-state-message {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Filters */
+.inbox-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.filter-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Mobile (< 480px) */
+@media (max-width: 479px) {
+  .meeting-card {
+    padding: 14px;
+    margin: 10px 0;
+  }
+  
+  .company-name {
+    font-size: 15px;
+  }
+  
+  .meeting-status {
+    font-size: 10px;
+  }
+  
+  .meeting-detail-row {
+    font-size: 13px;
+  }
+  
+  .join-video-btn {
+    height: 48px;
+    font-size: 15px;
+  }
+  
+  .join-meeting-btn {
+    height: 40px;
+    font-size: 13px;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+}
+
+/* Tablet (480px - 767px) */
+@media (min-width: 480px) {
+  .meeting-card {
+    padding: 18px;
+  }
+  
+  .meeting-header {
+    align-items: center;
+  }
+  
+  .meeting-actions {
+    flex-direction: row;
+    gap: 12px;
+  }
+  
+  .join-video-btn {
+    width: auto;
+    flex: 2;
+    height: 48px;
+  }
+  
+  .join-meeting-btn {
+    width: auto;
+    flex: 1;
+    height: 48px;
+  }
+  
+  .inbox-filters {
+    justify-content: center;
+  }
+}
+
+/* Tablet/iPad (768px - 1023px) */
+@media (min-width: 768px) {
+  .meeting-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .meeting-header {
+    margin-bottom: 0;
+  }
+  
+  .meeting-details {
+    margin-bottom: 0;
+  }
+  
+  .meeting-actions {
+    flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+  }
+  
+  .join-video-btn {
+    width: 100%;
+    height: 50px;
+  }
+  
+  .join-meeting-btn {
+    width: 100%;
+    height: 44px;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 1024px) {
+  .meeting-card {
+    grid-template-columns: 2fr 1fr auto auto;
+    gap: 24px;
+    padding: 24px;
+  }
+  
+  .meeting-actions {
+    flex-direction: row;
+    gap: 12px;
+    min-width: auto;
+  }
+  
+  .join-video-btn {
+    width: 160px;
+    height: 50px;
+  }
+  
+  .join-meeting-btn {
+    width: 140px;
+    height: 50px;
+  }
+  
+  .inbox-filters {
+    justify-content: flex-end;
+  }
+}
+
+/* Large Desktop (1440px and up) */
+@media (min-width: 1440px) {
+  .meeting-card {
+    max-width: 1200px;
+    margin: 16px auto;
+  }
+  
+  .join-video-btn {
+    width: 180px;
+  }
+  
+  .join-meeting-btn {
+    width: 160px;
+  }
+}
+
+/* Accessibility improvements */
+.join-video-btn:focus,
+.join-meeting-btn:focus,
+.filter-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .meeting-card {
+    border: 2px solid #000;
+  }
+  
+  .join-video-btn {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .meeting-card,
+  .join-video-btn,
+  .join-meeting-btn,
+  .filter-btn {
+    transition: none;
+  }
+  
+  .join-video-btn:hover,
+  .join-meeting-btn:hover {
+    transform: none;
+  }
+}
