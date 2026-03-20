@@ -9,13 +9,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    // Listen for auth changes (but don't auto-logout on token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event);
+      
+      // Only update user state, don't auto-logout unless explicitly signed out
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+      }
+      // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
     });
 
     return () => subscription.unsubscribe();
@@ -213,6 +224,56 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone,
     setProfile(null);
   }
 
+  // Manual session refresh to keep session active
+  async function refreshSession() {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      return data.session;
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      return null;
+    }
+  }
+
+  // Set up periodic session refresh (every 5 minutes)
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshInterval = setInterval(async () => {
+      await refreshSession();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [user]);
+
+  // Set up activity detection to refresh session on user activity
+  useEffect(() => {
+    if (!user) return;
+
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    const handleActivity = async () => {
+      // Refresh session on user activity (throttled to once per minute)
+      const now = Date.now();
+      if (!handleActivity.lastRefresh || now - handleActivity.lastRefresh > 60000) {
+        handleActivity.lastRefresh = now;
+        await refreshSession();
+      }
+    };
+
+    // Add event listeners for activity detection
+    activityEvents.forEach(event => {
+      document.addEventListener(event, handleActivity, true);
+    });
+
+    return () => {
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, handleActivity, true);
+      });
+    };
+  }, [user]);
+
   const value = {
     user,
     profile,
@@ -224,6 +285,7 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone,
     verifyRegistrationOTP,
     checkSession,
     logout,
+    refreshSession,
     setProfile,
   };
 

@@ -1,0 +1,542 @@
+.notification-setup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.quick-subscribe {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.subscribe-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.subscribe-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.subscribe-btn.subscribed {
+  background: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.subscribe-btn.subscribed:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.subscribe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.settings-btn,
+.test-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #6b7280;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.settings-btn:hover,
+.test-btn:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+}
+
+.test-btn {
+  background: #8b5cf6;
+}
+
+.test-btn:hover {
+  background: #7c3aed;
+}
+
+.settings-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  max-height: 80vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.settings-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.settings-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.setting-group {
+  margin-bottom: 24px;
+}
+
+.setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.setting-group h4 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-info {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.setting-info span {
+  display: block;
+  color: #111827;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.setting-info small {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.toggle-btn {
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  border: none;
+  background: #d1d5db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 3px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  min-width: 48px;
+  min-height: 28px;
+}
+
+.toggle-btn.active {
+  background: #3b82f6;
+  justify-content: flex-end;
+}
+
+.toggle-btn svg {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active svg {
+  color: #3b82f6;
+}
+
+.permission-status {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status.granted {
+  color: #059669;
+}
+
+.status.denied {
+  color: #dc2626;
+}
+
+.status.default {
+  color: #d97706;
+}
+
+.test-notification-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.test-notification-btn:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.test-notification-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  padding: 12px 20px;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.unsupported {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unsupported .message {
+  color: #6b7280;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .notification-setup {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+  }
+
+  .quick-subscribe {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .subscribe-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  .settings-btn,
+  .test-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .settings-panel {
+    width: 100%;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border-radius: 12px 12px 0 0;
+    max-height: 90vh;
+  }
+
+  .settings-content {
+    padding: 16px;
+    max-height: calc(90vh - 60px);
+    overflow-y: auto;
+  }
+
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .setting-info span {
+    font-size: 16px;
+  }
+
+  .setting-info small {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .toggle-btn {
+    align-self: flex-end;
+    width: 52px;
+    height: 28px;
+    min-width: 52px;
+    min-height: 28px;
+  }
+
+  .toggle-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .test-notification-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 390px) {
+  .notification-setup {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .quick-subscribe {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .subscribe-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+  }
+
+  .settings-btn,
+  .test-btn {
+    width: 100%;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .settings-header h3 {
+    font-size: 18px;
+  }
+
+  .setting-group h4 {
+    font-size: 14px;
+  }
+
+  .setting-info span {
+    font-size: 15px;
+  }
+
+  .setting-info small {
+    font-size: 13px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .settings-panel {
+    width: 90%;
+    max-width: 500px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    border-radius: 12px;
+    max-height: 80vh;
+  }
+
+  .settings-content {
+    padding: 20px;
+  }
+
+  .toggle-btn {
+    width: 56px;
+    height: 30px;
+    min-width: 56px;
+    min-height: 30px;
+  }
+}
+
+/* Animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.settings-panel {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Focus States */
+.subscribe-btn:focus,
+.settings-btn:focus,
+.test-btn:focus,
+.close-btn:focus,
+.toggle-btn:focus,
+.test-notification-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .settings-panel {
+    background: #1f2937;
+    color: white;
+  }
+
+  .settings-header {
+    background: #111827;
+    border-bottom-color: #374151;
+  }
+
+  .settings-header h3 {
+    color: white;
+  }
+
+  .close-btn {
+    background: #374151;
+    color: #9ca3af;
+  }
+
+  .close-btn:hover {
+    background: #4b5563;
+    color: white;
+  }
+
+  .setting-group h4 {
+    color: #9ca3af;
+  }
+
+  .setting-item {
+    border-bottom-color: #374151;
+  }
+
+  .setting-info span {
+    color: white;
+  }
+
+  .setting-info small {
+    color: #9ca3af;
+  }
+
+  .toggle-btn {
+    background: #4b5563;
+  }
+
+  .toggle-btn svg {
+    color: #9ca3af;
+  }
+
+  .toggle-btn.active svg {
+    color: #3b82f6;
+  }
+
+  .permission-status {
+    background: #374151;
+  }
+
+  .error-message {
+    background: #7f1d1d;
+    border-top-color: #991b1b;
+    color: #fecaca;
+  }
+
+  .unsupported {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .unsupported .message {
+    color: #9ca3af;
+  }
+}

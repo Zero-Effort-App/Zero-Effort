@@ -1,7 +1,10 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { useAuth } from './contexts/AuthContext';
+import NotificationSetup from './components/NotificationSetup/NotificationSetup';
 import './styles/theme.css';
 
 // Home
@@ -41,64 +44,91 @@ import ApplicantResetPassword from './pages/applicant/ApplicantResetPassword';
 import ApplicantInbox from './pages/applicant/ApplicantInbox';
 import ApplicantEvents from './pages/applicant/ApplicantEvents';
 
+function AppWithServices() {
+  const { user } = useAuth();
+
+  // Register Service Worker on component mount
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered'))
+        .catch(err => console.log('Service Worker registration failed:', err));
+    }
+  }, []);
+
+  return (
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+
+        {/* Admin Portal */}
+        <Route path="/admin">
+          <Route index element={<AdminLanding />} />
+          <Route path="login" element={<AdminLogin />} />
+          <Route element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminOverview />} />
+            <Route path="companies" element={<AdminCompanies />} />
+            <Route path="jobs" element={<AdminJobs />} />
+            <Route path="events" element={<AdminEvents />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="activity" element={<AdminActivity />} />
+          </Route>
+        </Route>
+
+        {/* Company Portal */}
+        <Route path="/company">
+          <Route index element={<CompanyLanding />} />
+          <Route path="login" element={<CompanyLogin />} />
+          <Route element={<CompanyLayout />}>
+            <Route path="dashboard" element={<CompanyDashboard />} />
+            <Route path="listings" element={<CompanyListings />} />
+            <Route path="applicants" element={<CompanyApplicants />} />
+            <Route path="inbox" element={<CompanyInbox />} />
+            <Route path="profile" element={<CompanyProfile />} />
+          </Route>
+        </Route>
+
+        {/* Applicant Portal */}
+        <Route path="/applicant">
+          <Route index element={<ApplicantLanding />} />
+          <Route path="login" element={<ApplicantLogin />} />
+          <Route path="reset-password" element={<ApplicantResetPassword />} />
+          <Route element={<ApplicantLayout />}>
+            <Route path="home" element={<ApplicantHome />} />
+            <Route path="jobs" element={<ApplicantJobs />} />
+            <Route path="companies" element={<ApplicantCompanies />} />
+            <Route path="applications" element={<ApplicantApplications />} />
+            <Route path="profile" element={<ApplicantProfile />} />
+            <Route path="inbox" element={<ApplicantInbox />} />
+            <Route path="events" element={<ApplicantEvents />} />
+          </Route>
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/applicant" replace />} />
+      </Routes>
+
+      {/* Notification Setup Component */}
+      {user && (
+        <NotificationSetup 
+          userId={user.id} 
+          userRole={user.user_metadata?.role || 'applicant'}
+        />
+      )}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <Routes>
-              {/* Portal Selector */}
-              <Route path="/" element={<Home />} />
-
-              {/* Admin Portal */}
-              <Route path="/admin">
-                <Route index element={<AdminLanding />} />
-                <Route path="login" element={<AdminLogin />} />
-                <Route element={<AdminLayout />}>
-                  <Route path="dashboard" element={<AdminOverview />} />
-                  <Route path="companies" element={<AdminCompanies />} />
-                  <Route path="jobs" element={<AdminJobs />} />
-                  <Route path="events" element={<AdminEvents />} />
-                  <Route path="settings" element={<AdminSettings />} />
-                  <Route path="activity" element={<AdminActivity />} />
-                </Route>
-              </Route>
-
-              {/* Company Portal */}
-              <Route path="/company">
-                <Route index element={<CompanyLanding />} />
-                <Route path="login" element={<CompanyLogin />} />
-                <Route element={<CompanyLayout />}>
-                  <Route path="dashboard" element={<CompanyDashboard />} />
-                  <Route path="listings" element={<CompanyListings />} />
-                  <Route path="applicants" element={<CompanyApplicants />} />
-                  <Route path="inbox" element={<CompanyInbox />} />
-                  <Route path="profile" element={<CompanyProfile />} />
-                </Route>
-              </Route>
-
-              {/* Applicant Portal */}
-              <Route path="/applicant">
-                <Route index element={<ApplicantLanding />} />
-                <Route path="login" element={<ApplicantLogin />} />
-                <Route path="reset-password" element={<ApplicantResetPassword />} />
-                <Route element={<ApplicantLayout />}>
-                  <Route path="home" element={<ApplicantHome />} />
-                  <Route path="jobs" element={<ApplicantJobs />} />
-                  <Route path="companies" element={<ApplicantCompanies />} />
-                  <Route path="applications" element={<ApplicantApplications />} />
-                  <Route path="profile" element={<ApplicantProfile />} />
-                  <Route path="inbox" element={<ApplicantInbox />} />
-                  <Route path="events" element={<ApplicantEvents />} />
-                </Route>
-              </Route>
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/applicant" replace />} />
-            </Routes>
-          </ToastProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AppWithServices />
+          </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

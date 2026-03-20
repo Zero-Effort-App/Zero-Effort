@@ -4,6 +4,7 @@ import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTi
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video, ExternalLink } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
+import VideoCallModal from '../../components/VideoCall/VideoCallModal';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 
@@ -43,6 +44,7 @@ export default function CompanyApplicants() {
   const [useHiringMessage, setUseHiringMessage] = useState(true);
   const [meetingStatus, setMeetingStatus] = useState('pending'); // pending, confirmed, rejected
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [activeCall, setActiveCall] = useState(null);
   const { showToast } = useToast();
 
   async function loadData() {
@@ -454,6 +456,43 @@ export default function CompanyApplicants() {
                 <Mail size={16} />
                 Contact Applicant
               </button>
+              <button 
+                onClick={() => setActiveCall({
+                  interviewId: selectedApp.id,
+                  channelName: `interview_${selectedApp.id}`,
+                  userRole: 'recruiter'
+                })}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px 16px', 
+                  borderRadius: '10px', 
+                  border: '1px solid #3b82f6', 
+                  background: '#3b82f6', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '8px', 
+                  fontSize: '14px', 
+                  fontWeight: 600, 
+                  color: 'white',
+                  minHeight: '44px',
+                  minWidth: '44px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#2563eb';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#3b82f6';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <Video size={16} />
+                🎥 Start Video Call
+              </button>
 
               {/* Meeting Status Section */}
               <div style={{ marginTop: '16px' }}>
@@ -820,6 +859,15 @@ export default function CompanyApplicants() {
             </div>
           </div>
         </div>
+      )}
+
+      {activeCall && (
+        <VideoCallModal
+          interviewId={activeCall.interviewId}
+          channelName={activeCall.channelName}
+          userRole={activeCall.userRole}
+          onClose={() => setActiveCall(null)}
+        />
       )}
     </div>
   );

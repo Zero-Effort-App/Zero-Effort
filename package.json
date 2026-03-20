@@ -13,17 +13,25 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
+    "agora-access-token": "^2.0.4",
+    "agora-rtc-sdk-ng": "^4.24.3",
+    "agora-token": "^2.0.5",
+    "axios": "^1.13.6",
     "busboy": "^1.6.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "lucide-react": "^0.577.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
     "sharp": "^0.34.5",
-    "web-push": "^3.6.7"
+    "twilio": "^5.13.0",
+    "web-push": "^3.6.7",
+    "workbox-window": "^7.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

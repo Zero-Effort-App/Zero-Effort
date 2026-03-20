@@ -41,36 +41,76 @@ self.addEventListener('fetch', event => {
 });
 
 // Handle push notifications
-self.addEventListener('push', event => {
-  const data = event.data?.json() || {};
-  const title = data.title || 'Zero Effort';
-  const options = {
-    body: data.body || 'You have a new message',
-    icon: '/pwa-icon-192.png',
-    badge: '/pwa-icon-192.png',
-    vibrate: [200, 100, 200],
-    data: { url: data.url || '/' },
-    actions: [
-      { action: 'open', title: 'Open' },
-      { action: 'close', title: 'Dismiss' }
-    ]
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
+self.addEventListener('push', function(event) {
+  console.log('Push notification received:', event);
+
+  if (!event.data) {
+    console.log('No data in push notification');
+    return;
+  }
+
+  try {
+    const data = event.data.json();
+    
+    const options = {
+      body: data.body,
+      icon: '/logo-192x192.png',
+      badge: '/badge-72x72.png',
+      tag: data.tag || 'notification',
+      requireInteraction: data.requireInteraction || false,
+      data: {
+        interviewId: data.interviewId,
+        applicantId: data.applicantId,
+        companyId: data.companyId,
+        notificationType: data.notificationType,
+        url: data.url || '/dashboard'
+      },
+      vibrate: [200, 100, 200]
+    };
+
+    if (data.image) {
+      options.image = data.image;
+    }
+
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  } catch (error) {
+    console.error('Error handling push notification:', error);
+    // Fallback to basic notification
+    const title = data.title || 'Zero Effort';
+    const options = {
+      body: data.body || 'You have a new message',
+      icon: '/pwa-icon-192.png',
+      badge: '/pwa-icon-192.png',
+      vibrate: [200, 100, 200],
+      data: { url: data.url || '/' }
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  }
 });
 
 // Handle notification click
-self.addEventListener('notificationclick', event => {
+self.addEventListener('notificationclick', function(event) {
+  console.log('Notification clicked:', event.notification);
+
   event.notification.close();
-  if (event.action === 'close') return;
-  const url = event.notification.data?.url || '/';
+
+  const urlToOpen = event.notification.data.url;
+
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-      for (const client of clientList) {
-        if (client.url.includes(url) && 'focus' in client) {
-          return client.focus();
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(
+      function(windowClients) {
+        for (let i = 0; i < windowClients.length; i++) {
+          const client = windowClients[i];
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
         }
       }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
+    )
   );
 });

@@ -5,7 +5,14 @@ import dotenv from 'dotenv'
 import busboy from 'busboy';
 import sharp from 'sharp';
 import webpush from 'web-push';
+
+// Load environment variables first
 dotenv.config()
+
+// Import new routes and services
+import agoraRoutes from './routes/agoraRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import interviewNotificationService from './services/interviewNotificationService.js';
 
 console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
 console.log('Service role key loaded:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'YES' : 'NO - CHECK .env FILE')
@@ -414,7 +421,17 @@ app.post('/api/push/send', async (req, res) => {
   }
 });
 
+// Add new routes for Agora and Notifications
+app.use('/api/agora', agoraRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Start interview reminder scheduler
+interviewNotificationService.setupReminderScheduler();
+
 const PORT = process.env.PORT || 3002
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Admin API server running on port ${PORT}`)
+  console.log('✅ Agora video call service started')
+  console.log('✅ Push notification service started')
+  console.log('✅ Interview reminder scheduler started')
 })
