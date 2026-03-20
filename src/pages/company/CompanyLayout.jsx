@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
@@ -7,6 +7,7 @@ import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
 import { useToast } from '../../contexts/ToastContext';
 import { subscribeToPush } from '../../lib/pushNotifications';
+import { getCompanyProfile } from '../../lib/db';
 
 export default function CompanyLayout() {
   const { profile, checkSession, user } = useAuth();
