@@ -462,12 +462,15 @@ export default function CompanyApplicants() {
                 onClick={async () => {
                   try {
                     // Create call_sessions record
+                    // Generate a UUID for the interview_id since we don't have interviews table records
+                    const interviewUuid = crypto.randomUUID();
+                    
                     const { data, error } = await supabase
                       .from('call_sessions')
                       .insert({
-                        interview_id: selectedApp.interview_id || selectedApp.id,
+                        interview_id: interviewUuid,
                         channel_name: `interview_${selectedApp.id}`,
-                        applicant_id: selectedApp.id,
+                        applicant_id: selectedApp.applicant_id || selectedApp.id,
                         recruiter_id: user?.id,
                         status: 'ringing'
                       })
