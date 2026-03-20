@@ -242,7 +242,7 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone,
 
     const refreshInterval = setInterval(async () => {
       await refreshSession();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 30 * 60 * 1000); // 30 minutes
 
     return () => clearInterval(refreshInterval);
   }, [user]);
@@ -254,9 +254,9 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone,
     const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     const handleActivity = async () => {
-      // Refresh session on user activity (throttled to once per minute)
+      // Refresh session on user activity (throttled to once per 10 minutes)
       const now = Date.now();
-      if (!handleActivity.lastRefresh || now - handleActivity.lastRefresh > 60000) {
+      if (!handleActivity.lastRefresh || now - handleActivity.lastRefresh > 10 * 60 * 1000) {
         handleActivity.lastRefresh = now;
         await refreshSession();
       }
