@@ -30,19 +30,20 @@ class GoogleMeetService {
     try {
       console.log('🟡 Creating Google Meet for:', { channelName, applicantEmail, hrEmail });
 
-      // Generate random meeting ID
-      const meetingId = Math.random().toString(36).substring(2, 15) + 
-                        Math.random().toString(36).substring(2, 15);
+      // Generate meeting code: interview_timestamp_random
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      const meetingCode = `interview-${timestamp}-${random}`;
       
-      // Create Google Meet link
-      const meetingLink = `https://meet.google.com/${meetingId}`;
+      // Proper Google Meet link format
+      const meetingLink = `https://meet.google.com/${meetingCode}`;
       
       console.log('✅ Google Meet link generated:', meetingLink);
 
       return {
         success: true,
         meetingLink: meetingLink,
-        eventId: meetingId,
+        eventId: meetingCode,
         channelName: channelName
       };
     } catch (error) {
