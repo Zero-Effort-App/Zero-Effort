@@ -29,6 +29,16 @@ class GoogleMeetService {
   async createMeetingLink(channelName, applicantEmail, hrEmail) {
     try {
       console.log('🟡 Creating Google Meet for:', { channelName, applicantEmail, hrEmail });
+      
+      // Validate emails
+      if (!applicantEmail || !applicantEmail.includes('@')) {
+        throw new Error(`Invalid applicant email: ${applicantEmail}`);
+      }
+      if (!hrEmail || !hrEmail.includes('@')) {
+        throw new Error(`Invalid HR email: ${hrEmail}`);
+      }
+      
+      console.log('✅ Emails validated:', { applicantEmail, hrEmail });
 
       const event = {
         summary: `Interview: ${channelName}`,

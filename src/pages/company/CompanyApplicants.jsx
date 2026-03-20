@@ -457,13 +457,25 @@ export default function CompanyApplicants() {
                 Contact Applicant
               </button>
               <button 
-                onClick={() => setActiveCall({
-                  interviewId: selectedApp.id,
-                  channelName: `interview_${selectedApp.id}`,
-                  userRole: 'recruiter',
-                  applicantEmail: selectedApp.email || 'applicant@example.com',
-                  hrEmail: 'hr@' + (company.name?.replace(/\s+/g, '').toLowerCase() || 'company') + '.com'
-                })}
+                onClick={() => {
+                  const applicantEmail = selectedApp.email || 'applicant@example.com';
+                  const hrEmail = `hr.${company.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
+                  
+                  console.log('📧 Company starting video call with emails:', {
+                    applicantEmail,
+                    hrEmail,
+                    companyName: company.name,
+                    applicantName: selectedApp.name
+                  });
+                  
+                  setActiveCall({
+                    interviewId: selectedApp.id,
+                    channelName: `interview_${selectedApp.id}`,
+                    userRole: 'recruiter',
+                    applicantEmail: applicantEmail,
+                    hrEmail: hrEmail
+                  });
+                }}
                 style={{ 
                   width: '100%', 
                   padding: '14px 16px', 

@@ -586,13 +586,24 @@ export default function ApplicantInbox() {
                               {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink && (
                                 <div className={styles.meetingActions}>
                                   <button 
-                                    onClick={() => setActiveCall({
-                                      interviewId: msg.id,
-                                      channelName: `interview_${msg.id}`,
-                                      userRole: 'applicant',
-                                      applicantEmail: user?.email || 'applicant@example.com',
-                                      hrEmail: 'hr@' + (selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company') + '.com'
-                                    })}
+                                    onClick={() => {
+                                      const applicantEmail = user?.email || 'applicant@example.com';
+                                      const hrEmail = `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
+                                      
+                                      console.log('📧 Starting video call with emails:', {
+                                        applicantEmail,
+                                        hrEmail,
+                                        companyName: selectedConvo?.company?.name
+                                      });
+                                      
+                                      setActiveCall({
+                                        interviewId: msg.id,
+                                        channelName: `interview_${msg.id}`,
+                                        userRole: 'applicant',
+                                        applicantEmail: applicantEmail,
+                                        hrEmail: hrEmail
+                                      });
+                                    }}
                                     className={styles.joinVideoBtn}
                                     aria-label="Join video call"
                                     title="Join video interview call"
