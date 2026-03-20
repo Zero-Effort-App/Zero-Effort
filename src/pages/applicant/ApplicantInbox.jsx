@@ -586,23 +586,48 @@ export default function ApplicantInbox() {
                               {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink && (
                                 <div className={styles.meetingActions}>
                                   <button 
-                                    onClick={() => {
-                                      const applicantEmail = user?.email || 'applicant@example.com';
-                                      const hrEmail = `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
-                                      
-                                      console.log('📧 Starting video call with emails:', {
-                                        applicantEmail,
-                                        hrEmail,
-                                        companyName: selectedConvo?.company?.name
-                                      });
-                                      
-                                      setActiveCall({
-                                        interviewId: msg.id,
-                                        channelName: `interview_${msg.id}`,
-                                        userRole: 'applicant',
-                                        applicantEmail: applicantEmail,
-                                        hrEmail: hrEmail
-                                      });
+                                    onClick={async () => {
+                                      try {
+                                        const applicantEmail = user?.email || 'applicant@example.com';
+                                        
+                                        // Get HR email from company_users table
+                                        const { data: hrUser } = await supabase
+                                          .from('company_users')
+                                          .select('email')
+                                          .eq('company_id', selectedConvo?.company?.id)
+                                          .eq('role', 'hr')
+                                          .single();
+                                        
+                                        const hrEmail = hrUser?.email || `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
+                                        
+                                        console.log('📧 HR Email found:', { hrEmail, hrUser, companyId: selectedConvo?.company?.id });
+                                        console.log('📧 Starting video call with emails:', {
+                                          applicantEmail,
+                                          hrEmail,
+                                          companyName: selectedConvo?.company?.name
+                                        });
+                                        
+                                        setActiveCall({
+                                          interviewId: msg.id,
+                                          channelName: `interview_${msg.id}`,
+                                          userRole: 'applicant',
+                                          applicantEmail: applicantEmail,
+                                          hrEmail: hrEmail
+                                        });
+                                      } catch (error) {
+                                        console.error('Error fetching HR email:', error);
+                                        // Fallback to generated email
+                                        const applicantEmail = user?.email || 'applicant@example.com';
+                                        const hrEmail = `hr.${selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company'}@zeroeffort.com`;
+                                        
+                                        setActiveCall({
+                                          interviewId: msg.id,
+                                          channelName: `interview_${msg.id}`,
+                                          userRole: 'applicant',
+                                          applicantEmail: applicantEmail,
+                                          hrEmail: hrEmail
+                                        });
+                                      }
                                     }}
                                     className={styles.joinVideoBtn}
                                     aria-label="Join video call"
