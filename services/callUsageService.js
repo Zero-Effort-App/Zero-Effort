@@ -1,4 +1,4 @@
-const { supabase } = require('../lib/supabaseClient');
+import { supabase } from '../lib/supabaseClient.js';
 
 class CallUsageService {
   // Track call start
