@@ -57,7 +57,7 @@ class GoogleMeetService {
         calendarId: 'primary',
         resource: event,
         conferenceDataVersion: 1,
-        sendUpdates: 'eventCreators'
+        sendUpdates: 'none'
       });
 
       const meetingLink = response.data.conferenceData.entryPoints[0].uri;
