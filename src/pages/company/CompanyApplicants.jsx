@@ -4,7 +4,7 @@ import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTi
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video, ExternalLink } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
-import VideoCallModal from '../../components/VideoCall/VideoCallModal';
+import GoogleMeetModal from '../../components/VideoCall/GoogleMeetModal';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 
@@ -460,7 +460,9 @@ export default function CompanyApplicants() {
                 onClick={() => setActiveCall({
                   interviewId: selectedApp.id,
                   channelName: `interview_${selectedApp.id}`,
-                  userRole: 'recruiter'
+                  userRole: 'recruiter',
+                  applicantEmail: selectedApp.email || 'applicant@example.com',
+                  hrEmail: 'hr@' + (company.name?.replace(/\s+/g, '').toLowerCase() || 'company') + '.com'
                 })}
                 style={{ 
                   width: '100%', 
@@ -862,10 +864,12 @@ export default function CompanyApplicants() {
       )}
 
       {activeCall && (
-        <VideoCallModal
+        <GoogleMeetModal
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
+          applicantEmail={activeCall.applicantEmail}
+          hrEmail={activeCall.hrEmail}
           onClose={() => setActiveCall(null)}
         />
       )}
