@@ -236,43 +236,9 @@ async function verifyRegistrationOTP({ email, token, firstName, lastName, phone,
     }
   }
 
-  // Set up periodic session refresh (every 5 minutes)
-  useEffect(() => {
-    if (!user) return;
-
-    const refreshInterval = setInterval(async () => {
-      await refreshSession();
-    }, 30 * 60 * 1000); // 30 minutes
-
-    return () => clearInterval(refreshInterval);
-  }, [user]);
-
-  // Set up activity detection to refresh session on user activity
-  useEffect(() => {
-    if (!user) return;
-
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    const handleActivity = async () => {
-      // Refresh session on user activity (throttled to once per 10 minutes)
-      const now = Date.now();
-      if (!handleActivity.lastRefresh || now - handleActivity.lastRefresh > 10 * 60 * 1000) {
-        handleActivity.lastRefresh = now;
-        await refreshSession();
-      }
-    };
-
-    // Add event listeners for activity detection
-    activityEvents.forEach(event => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
-    return () => {
-      activityEvents.forEach(event => {
-        document.removeEventListener(event, handleActivity, true);
-      });
-    };
-  }, [user]);
+  // Auto session refresh disabled to prevent Supabase rate limiting
+  // Session will only refresh on explicit auth events (login/logout)
+  // This prevents 429 "Request rate limit reached" errors on FREE tier
 
   const value = {
     user,
