@@ -70,6 +70,13 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
           throw new Error('No token in response');
         }
 
+        console.log('🟢 RESPONSE RECEIVED FROM BACKEND');
+        console.log('Response status:', response.status);
+        console.log('Token received from backend:', data);
+        console.log('Token value:', data.token);
+        console.log('Token length:', data.token ? data.token.length : 'N/A');
+        console.log('Token type:', typeof data.token);
+
         setToken(data.token);
         setIsLoading(false);
       } catch (err) {

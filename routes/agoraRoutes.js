@@ -123,6 +123,15 @@ router.post('/generate-token', verifyAuth, async (req, res) => {
     console.log('✅ Token generated successfully, length:', token.length);
     console.log('Token type:', typeof token);
     
+    console.log('🟢 SENDING RESPONSE TO FRONTEND');
+    console.log('Token to send:', token);
+    console.log('Response object:', { 
+      success: true, 
+      token: token,
+      channelName: channelName,
+      uid: uid 
+    });
+    
     // Ensure proper JSON response with token field
     return res.json({
       success: true,
