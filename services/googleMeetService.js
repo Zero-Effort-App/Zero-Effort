@@ -69,6 +69,13 @@ Note: Share this meeting link with both participants`,
         sendUpdates: 'none'
       });
 
+      console.log('📅 Calendar event created:', response.data);
+      console.log('📅 Conference data:', response.data.conferenceData);
+
+      if (!response.data.conferenceData || !response.data.conferenceData.entryPoints) {
+        throw new Error('No conference data in response. Check Google Calendar setup.');
+      }
+
       const meetingLink = response.data.conferenceData.entryPoints[0].uri;
       const eventId = response.data.id;
 
@@ -81,7 +88,9 @@ Note: Share this meeting link with both participants`,
         channelName: channelName
       };
     } catch (error) {
-      console.error('❌ Error creating Google Meet:', error.message);
+      console.error('❌ Full error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response:', error.response?.data);
       throw error;
     }
   }
