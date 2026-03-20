@@ -32,6 +32,56 @@ const verifyAuth = (req, res, next) => {
   next();
 };
 
+// Test endpoint to debug token generation
+router.post('/test-token', async (req, res) => {
+  try {
+    console.log('=== TOKEN DEBUG INFO ===');
+    console.log('AGORA_APP_ID:', process.env.AGORA_APP_ID);
+    console.log('AGORA_APP_CERTIFICATE:', process.env.AGORA_APP_CERTIFICATE ? 'SET' : 'NOT SET');
+    console.log('Request body:', req.body);
+    
+    const { channelName, uid } = req.body;
+    
+    if (!channelName) {
+      return res.json({
+        success: false,
+        error: 'Channel name required',
+        debug: {
+          appId: process.env.AGORA_APP_ID,
+          certSet: !!process.env.AGORA_APP_CERTIFICATE
+        }
+      });
+    }
+
+    const tokenData = agoraTokenService.generateToken(channelName, uid);
+    
+    console.log('Token generated successfully:', !!tokenData);
+    
+    return res.json({
+      success: true,
+      token: tokenData.token || tokenData,
+      channelName: channelName,
+      uid: uid,
+      debug: {
+        appId: process.env.AGORA_APP_ID,
+        certSet: !!process.env.AGORA_APP_CERTIFICATE,
+        tokenGenerated: !!tokenData
+      }
+    });
+  } catch (error) {
+    console.error('Token generation error:', error);
+    return res.json({
+      success: false,
+      error: error.message,
+      debug: {
+        appId: process.env.AGORA_APP_ID,
+        certSet: !!process.env.AGORA_APP_CERTIFICATE,
+        stack: error.stack
+      }
+    });
+  }
+});
+
 // Generate RTC Token
 router.post('/generate-token', verifyAuth, async (req, res) => {
   try {
