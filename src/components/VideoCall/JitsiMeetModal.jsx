@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function JitsiMeetModal({ 
@@ -11,6 +11,7 @@ export default function JitsiMeetModal({
   const { user: authUser } = useAuth();
   const [callTimer, setCallTimer] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
+  const apiRef = useRef(null);
 
   const MAX_CALL_DURATION = 30 * 60; // 30 minutes
   const WARNING_TIME = 25 * 60; // 25 minutes
@@ -19,7 +20,54 @@ export default function JitsiMeetModal({
   // Get user display name
   const currentUser = user || authUser;
   const displayName = currentUser?.full_name || currentUser?.email || 'User';
-  const encodedDisplayName = encodeURIComponent(displayName);
+
+  // Load Jitsi script dynamically
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://meet.jit.si/external_api.js';
+    script.async = true;
+    script.onload = () => initJitsi();
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+      if (apiRef.current) apiRef.current.dispose();
+    };
+  }, []);
+
+  // Initialize Jitsi with full config control
+  const initJitsi = () => {
+    const domain = 'meet.jit.si';
+    const options = {
+      roomName: channelName,
+      parentNode: document.getElementById('jitsi-container'),
+      userInfo: {
+        displayName: displayName,
+        email: user?.email || ''
+      },
+      configOverwrite: {
+        prejoinPageEnabled: false,
+        prejoinConfig: { enabled: false },
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+        disableDeepLinking: true,
+        enableWelcomePage: false,
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK: false,
+        TOOLBAR_BUTTONS: [
+          'microphone', 'camera', 'hangup',
+          'chat', 'raisehand', 'tileview'
+        ],
+      }
+    };
+    
+    apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
+    
+    apiRef.current.addEventListener('readyToClose', () => {
+      onClose();
+    });
+  };
 
   // Timer for 30-minute limit
   useEffect(() => {
@@ -127,15 +175,7 @@ export default function JitsiMeetModal({
         flex: 1,
         overflow: 'hidden'
       }}>
-        <iframe
-          src={`https://meet.jit.si/${channelName}?config.prejoinPageEnabled=false&userInfo.displayName=${encodedDisplayName}`}
-          allow="camera; microphone; display-capture"
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none'
-          }}
-        ></iframe>
+        <div id="jitsi-container" style={{ width: '100%', height: '100%' }} />
       </div>
     </div>
   );
