@@ -549,7 +549,7 @@ export default function ApplicantInbox() {
                               <div className={styles.meetingHeader}>
                                 <div className={styles.companyInfo}>
                                   <div className={styles.companyName}>
-                                    {selectedConvo?.company_name || 'Company'}
+                                    {selectedConvo?.company?.name || 'Company'}
                                   </div>
                                   <div className={styles.meetingStatus}>
                                     {meetingDetails.meetingStatus?.includes('✅') && (
@@ -591,7 +591,7 @@ export default function ApplicantInbox() {
                                       channelName: `interview_${msg.id}`,
                                       userRole: 'applicant',
                                       applicantEmail: user?.email || 'applicant@example.com',
-                                      hrEmail: selectedConvo?.hr_email || 'hr@example.com'
+                                      hrEmail: 'hr@' + (selectedConvo?.company?.name?.replace(/\s+/g, '').toLowerCase() || 'company') + '.com'
                                     })}
                                     className={styles.joinVideoBtn}
                                     aria-label="Join video call"
