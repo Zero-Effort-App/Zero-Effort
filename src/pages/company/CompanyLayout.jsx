@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCompanyProfile } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import ZeloChatbot from '../../components/ZeloChatbot';
 import { useToast } from '../../contexts/ToastContext';
 import { subscribeToPush } from '../../lib/pushNotifications';
 
@@ -70,7 +68,6 @@ export default function CompanyLayout() {
         companyLogo={company?.logo_url || null}
       />
       <Outlet context={{ company, setCompany }} />
-      <ZeloChatbot />
     </>
   );
 }

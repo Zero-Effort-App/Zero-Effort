@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import PortalNav from '../../components/PortalNav';
@@ -49,7 +49,6 @@ export default function AdminLayout() {
         companyLogo={null}
       />
       <Outlet />
-      <ZeloChatbot />
     </>
   );
 }

@@ -4,7 +4,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
-import NotificationSetup from './components/NotificationSetup/NotificationSetup';
 import './styles/theme.css';
 
 // Home
@@ -110,14 +109,6 @@ function AppWithServices() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/applicant" replace />} />
       </Routes>
-
-      {/* Notification Setup Component */}
-      {user && (
-        <NotificationSetup 
-          userId={user.id} 
-          userRole={user.user_metadata?.role || 'applicant'}
-        />
-      )}
     </>
   );
 }
