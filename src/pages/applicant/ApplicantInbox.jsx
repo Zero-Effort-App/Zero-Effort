@@ -86,34 +86,38 @@ export default function ApplicantInbox() {
 
   // Listen for incoming calls
   useEffect(() => {
-    if (!user) return
+    if (!user?.id) return;
+    
+    console.log('🔔 Setting up incoming call listener for user:', user.id);
 
-    // Listen for incoming calls on call_sessions table
-    const callSubscription = supabase
-      .channel('incoming_calls')
+    const subscription = supabase
+      .channel('incoming_calls_' + user.id)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'call_sessions',
-          filter: `applicant_id=eq.${user?.id}` 
+          filter: `applicant_id=eq.${user.id}` 
         },
         (payload) => {
-          console.log('📞 Incoming call:', payload.new);
-          // Get HR info from user metadata or company context
+          console.log('📞 INCOMING CALL DETECTED!', payload.new);
           setIncomingCall({
             interviewId: payload.new.id,
             channelName: payload.new.channel_name,
-            hrName: 'HR Representative', // Will be updated with real data
-            companyName: 'Company' // Will be updated with real data
+            hrName: 'HR Representative',
+            companyName: 'Company'
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔔 Realtime status:', status);
+      });
 
-    return () => callSubscription.unsubscribe();
-  }, [user?.id])
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user?.id]);
 
   // Browser notification function
   function showBrowserNotification(message) {
@@ -829,7 +833,7 @@ export default function ApplicantInbox() {
         />
       )}
 
-      {activeCall && (
+      {activeCall && !incomingCall && (
         <JitsiMeetModal
           interviewId={activeCall.interviewId}
           channelName={activeCall.channelName}

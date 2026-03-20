@@ -461,15 +461,13 @@ export default function CompanyApplicants() {
               <button 
                 onClick={async () => {
                   try {
-                    // Create call_sessions record
-                    // Generate a UUID for the interview_id since we don't have interviews table records
-                    const interviewUuid = crypto.randomUUID();
+                    // Create call_sessions record with only existing columns
+                    const channelName = `interview_${selectedApp.id}_${Date.now()}`;
                     
                     const { data, error } = await supabase
                       .from('call_sessions')
                       .insert({
-                        interview_id: interviewUuid,
-                        channel_name: `interview_${selectedApp.id}`,
+                        channel_name: channelName,
                         applicant_id: selectedApp.applicant_id || selectedApp.id,
                         recruiter_id: user?.id,
                         status: 'ringing'
@@ -477,11 +475,15 @@ export default function CompanyApplicants() {
                       .select()
                       .single();
 
-                    if (error) throw error;
+                    if (error) {
+                      console.error('❌ call_sessions insert failed:', error);
+                      showToast('Failed to start call: ' + error.message, 'error');
+                      return;
+                    }
 
-                    console.log('📞 Call initiated:', data);
+                    console.log('✅ Call session created:', data);
 
-                    // Open video call on HR side
+                    // HR joins immediately
                     setActiveCall({
                       interviewId: data.id,
                       channelName: data.channel_name,
