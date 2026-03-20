@@ -11,6 +11,7 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
   const [showChat, setShowChat] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [tokenError, setTokenError] = useState(null);
 
   const agoraConfig = {
     appId: import.meta.env.VITE_AGORA_APP_ID,
@@ -52,16 +53,27 @@ const VideoCallModal = ({ interviewId, channelName, userRole, onClose }) => {
           }),
         });
 
+        // Check if response is ok
         if (!response.ok) {
-          throw new Error('Failed to fetch token');
+          throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
         }
 
-        const tokenData = await response.json();
-        setToken(tokenData.token);
+        // Check if response has content
+        const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from token endpoint');
+        }
+
+        const data = JSON.parse(text);
+        if (!data.token) {
+          throw new Error('No token in response');
+        }
+
+        setToken(data.token);
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching token:', err);
-        setError(err.message);
+        setTokenError(err.message);
         setIsLoading(false);
       }
     };
