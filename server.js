@@ -441,13 +441,26 @@ app.post('/api/agora/token', async (req, res) => {
       return res.status(500).json({ error: 'Agora credentials not configured' });
     }
 
-    // Debug agora-token exports
-    const agoraToken = require('agora-token');
-    console.log('Agora token module exports:', Object.keys(agoraToken));
-    console.log('RtcTokenBuilder type:', typeof agoraToken.RtcTokenBuilder);
-    console.log('RtcRole type:', typeof agoraToken.RtcRole);
+    // Try different import methods for agora-token
+    let RtcTokenBuilder, RtcRole;
     
-    const { RtcTokenBuilder, RtcRole } = agoraToken;
+    try {
+      // Method 1: Named import
+      const agoraToken1 = await import('agora-token');
+      console.log('agora-token exports (named import):', Object.keys(agoraToken1));
+      RtcTokenBuilder = agoraToken1.RtcTokenBuilder;
+      RtcRole = agoraToken1.RtcRole;
+    } catch (importError) {
+      console.error('Named import failed:', importError);
+      return res.status(500).json({ 
+        error: 'Failed to import agora-token',
+        debug: { importError: importError.message }
+      });
+    }
+    
+    // Verify imports
+    console.log('RtcTokenBuilder:', typeof RtcTokenBuilder);
+    console.log('RtcRole:', typeof RtcRole);
     
     if (!RtcTokenBuilder || !RtcRole) {
       console.error('❌ Missing exports from agora-token:', {
@@ -457,9 +470,10 @@ app.post('/api/agora/token', async (req, res) => {
       return res.status(500).json({ 
         error: 'Invalid agora-token package exports',
         debug: {
-          availableExports: Object.keys(agoraToken),
-          hasRtcTokenBuilder: !!RtcTokenBuilder,
-          hasRtcRole: !!RtcRole
+          RtcTokenBuilder: !!RtcTokenBuilder,
+          RtcRole: !!RtcRole,
+          tokenBuilderType: typeof RtcTokenBuilder,
+          roleType: typeof RtcRole
         }
       });
     }
