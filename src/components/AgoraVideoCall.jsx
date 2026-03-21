@@ -63,7 +63,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       clientRef.current = client;
 
       // Get token from backend
-      const response = await fetch('/api/agora/token', {
+      const response = await fetch('https://zero-effort-server.onrender.com/api/agora/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -73,7 +73,11 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
         })
       });
       
-      const { token, appId: fetchedAppId } = await response.json();
+      // Add error handling for response
+      const text = await response.text();
+      console.log('Token response:', text);
+      if (!text) throw new Error('Empty response from backend');
+      const { token, appId: fetchedAppId } = JSON.parse(text);
 
       // Handle remote users
       client.on('user-published', async (remoteUser, mediaType) => {
