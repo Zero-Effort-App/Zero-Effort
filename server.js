@@ -432,77 +432,18 @@ app.use('/api/google-meet', googleMeetRoutes);
 // Simple Agora token endpoint (no auth required for demo)
 app.post('/api/agora/token', async (req, res) => {
   try {
-    const { channelName, uid, role } = req.body;
-    
-    const appId = process.env.AGORA_APP_ID;
-    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
-    
-    if (!appId || !appCertificate) {
-      return res.status(500).json({ error: 'Agora credentials not configured' });
+    const agoraToken = await import('agora-token');
+    console.log('All exports:', JSON.stringify(Object.keys(agoraToken)));
+    console.log('Default export:', typeof agoraToken.default);
+    if (agoraToken.default) {
+      console.log('Default keys:', JSON.stringify(Object.keys(agoraToken.default)));
     }
-
-    // Try different import methods for agora-token
-    let RtcTokenBuilder, RtcRole;
-    
-    try {
-      // Method 1: Named import
-      const agoraToken1 = await import('agora-token');
-      console.log('agora-token exports (named import):', Object.keys(agoraToken1));
-      RtcTokenBuilder = agoraToken1.RtcTokenBuilder;
-      RtcRole = agoraToken1.RtcRole;
-    } catch (importError) {
-      console.error('Named import failed:', importError);
-      return res.status(500).json({ 
-        error: 'Failed to import agora-token',
-        debug: { importError: importError.message }
-      });
-    }
-    
-    // Verify imports
-    console.log('RtcTokenBuilder:', typeof RtcTokenBuilder);
-    console.log('RtcRole:', typeof RtcRole);
-    
-    if (!RtcTokenBuilder || !RtcRole) {
-      console.error('❌ Missing exports from agora-token:', {
-        RtcTokenBuilder: !!RtcTokenBuilder,
-        RtcRole: !!RtcRole
-      });
-      return res.status(500).json({ 
-        error: 'Invalid agora-token package exports',
-        debug: {
-          RtcTokenBuilder: !!RtcTokenBuilder,
-          RtcRole: !!RtcRole,
-          tokenBuilderType: typeof RtcTokenBuilder,
-          roleType: typeof RtcRole
-        }
-      });
-    }
-    
-    const agoraRole = role === 'hr' 
-      ? RtcRole.PUBLISHER 
-      : RtcRole.PUBLISHER;
-    
-    // Token valid for 24 hours
-    const expirationTimeInSeconds = 86400;
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-    
-    const token = RtcTokenBuilder.buildTokenWithUid(
-      appId,
-      appCertificate,
-      channelName,
-      uid || 0,
-      agoraRole,
-      privilegeExpiredTs,
-      privilegeExpiredTs
-    );
-    
-    console.log('✅ Agora token generated for channel:', channelName);
-    res.json({ token, appId, channelName });
-    
-  } catch (error) {
-    console.error('❌ Agora token error:', error);
-    res.status(500).json({ error: error.message });
+    res.json({ 
+      exports: Object.keys(agoraToken),
+      defaultExports: agoraToken.default ? Object.keys(agoraToken.default) : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
