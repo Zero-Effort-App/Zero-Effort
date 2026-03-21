@@ -17,6 +17,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const clientRef = useRef(null);
   const remoteTracksRef = useRef({});
+  const localVideoRef = useRef(null);
   const appId = import.meta.env.VITE_AGORA_APP_ID;
 
   // Timer for call duration
@@ -26,6 +27,25 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Play local video when tracks are ready
+  useEffect(() => {
+    if (localTracks.length > 0 && localTracks[1]) {
+      const videoTrack = localTracks[1];
+      // Try multiple times to ensure DOM is ready
+      const playVideo = () => {
+        const el = document.getElementById('local-video');
+        if (el) {
+          videoTrack.play('local-video');
+          console.log('✅ Local video played successfully');
+        } else {
+          console.warn('⚠️ local-video element not found, retrying...');
+          setTimeout(playVideo, 200);
+        }
+      };
+      setTimeout(playVideo, 100);
+    }
+  }, [localTracks]);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -158,16 +178,13 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       setLocalTracks([audioTrack, videoTrack]);
       await client.publish([audioTrack, videoTrack]);
 
-      // Play local video with delay for mobile
-      setTimeout(() => {
-        const localEl = document.getElementById('local-video');
-        if (localEl) {
-          videoTrack.play('local-video');
-          console.log('✅ Local video playing');
-        } else {
-          console.warn('❌ local-video element not found');
-        }
-      }, 300);
+      // Force video play on mobile
+      if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        setTimeout(() => {
+          localTracks[1]?.play('local-video');
+          console.log('📱 Mobile local video forced play');
+        }, 800);
+      }
 
       setIsConnected(true);
       console.log('✅ Agora connected, uid:', uid);
@@ -335,7 +352,11 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       zIndex: 10,
       background: '#1a1b27'
     }}>
-      <div id="local-video" style={{ width: '100%', height: '100%' }} />
+      <div 
+        ref={localVideoRef}
+        id="local-video" 
+        style={{ width: '100%', height: '100%' }} 
+      />
       <div style={{
         position: 'absolute', bottom: '6px', left: '6px',
         background: 'rgba(14,15,20,0.8)',
