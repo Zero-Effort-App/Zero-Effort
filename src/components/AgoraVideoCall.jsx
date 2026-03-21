@@ -16,6 +16,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
   const [error, setError] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const clientRef = useRef(null);
+  const remoteTracksRef = useRef({});
   const appId = import.meta.env.VITE_AGORA_APP_ID;
 
   // Timer for call duration
@@ -89,6 +90,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
         await client.subscribe(remoteUser, mediaType);
         
         if (mediaType === 'video') {
+          remoteTracksRef.current[remoteUser.uid] = remoteUser.videoTrack;
           setRemoteUsers(prev => {
             const exists = prev.find(u => u.uid === remoteUser.uid);
             if (!exists) return [...prev, remoteUser];
@@ -112,8 +114,11 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
         }
       });
 
-      client.on('user-unpublished', (remoteUser) => {
-        setRemoteUsers(prev => prev.filter(u => u.uid !== remoteUser.uid));
+      client.on('user-unpublished', (remoteUser, mediaType) => {
+        if (mediaType === 'video') {
+          delete remoteTracksRef.current[remoteUser.uid];
+          setRemoteUsers(prev => prev.filter(u => u.uid !== remoteUser.uid));
+        }
       });
 
       client.on('user-left', (remoteUser) => {
@@ -216,19 +221,19 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = async () => {
     const audioTrack = localTracks[0];
     if (audioTrack) {
-      audioTrack.setMuted(!isAudioMuted);
-      setIsAudioMuted(!isAudioMuted);
+      await audioTrack.setMuted(!isAudioMuted);
+      setIsAudioMuted(prev => !prev);
     }
   };
 
-  const toggleVideo = () => {
+  const toggleVideo = async () => {
     const videoTrack = localTracks[1];
     if (videoTrack) {
-      videoTrack.setMuted(!isVideoMuted);
-      setIsVideoMuted(!isVideoMuted);
+      await videoTrack.setMuted(!isVideoMuted);
+      setIsVideoMuted(prev => !prev);
     }
   };
 
@@ -260,61 +265,64 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
     flexDirection: 'column',
     fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
   }}>
-    {/* Remote video - full screen background */}
-    <div style={{ position: 'absolute', inset: 0, background: '#0e0f14' }}>
-      {remoteUsers.length > 0 ? (
-        remoteUsers.map(u => (
-          <div
-            key={u.uid}
-            id={`remote-video-${u.uid}`}
-            style={{ width: '100%', height: '100%' }}
-          />
-        ))
-      ) : (
-        <div style={{
-          width: '100%', height: '100%',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          gap: '20px'
-        }}>
-          {/* Animated avatar */}
-          <div style={{ position: 'relative' }}>
-            <div style={{
-              position: 'absolute', inset: '-16px',
-              borderRadius: '50%',
-              background: 'rgba(99,102,241,0.15)',
-              animation: 'pulse 2s infinite'
-            }} />
-            <div style={{
-              position: 'absolute', inset: '-8px',
-              borderRadius: '50%',
-              background: 'rgba(99,102,241,0.1)',
-            }} />
-            <div style={{
-              width: '88px', height: '88px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'center', position: 'relative',
-              boxShadow: '0 0 30px rgba(99,102,241,0.4)'
-            }}>
-              <span style={{ fontSize: '36px' }}>👤</span>
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{
-              color: '#f0f0f5', fontSize: '18px',
-              fontWeight: '600', margin: '0 0 8px'
-            }}>
-              Waiting for participant...
-            </p>
-            <p style={{ color: '#9394a5', fontSize: '14px', margin: 0 }}>
-              The other person will appear here shortly
-            </p>
-          </div>
-        </div>
-      )}
+    {/* Remote video containers - always in DOM */}
+{remoteUsers.map(u => (
+  <div
+    key={u.uid}
+    id={`remote-video-${u.uid}`}
+    style={{ 
+      position: 'absolute', inset: 0,
+      width: '100%', height: '100%',
+      display: remoteUsers.length > 0 ? 'block' : 'none'
+    }}
+  />
+))}
+
+{/* Waiting screen - shows when no remote users */}
+{remoteUsers.length === 0 && (
+  <div style={{
+    position: 'absolute', inset: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    gap: '20px'
+  }}>
+    {/* Animated avatar */}
+    <div style={{ position: 'relative' }}>
+      <div style={{
+        position: 'absolute', inset: '-16px',
+        borderRadius: '50%',
+        background: 'rgba(99,102,241,0.15)',
+        animation: 'pulse 2s infinite'
+      }} />
+      <div style={{
+        position: 'absolute', inset: '-8px',
+        borderRadius: '50%',
+        background: 'rgba(99,102,241,0.1)',
+      }} />
+      <div style={{
+        width: '88px', height: '88px',
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', position: 'relative',
+        boxShadow: '0 0 30px rgba(99,102,241,0.4)'
+      }}>
+        <span style={{ fontSize: '36px' }}>👤</span>
+      </div>
     </div>
+    <div style={{ textAlign: 'center' }}>
+      <p style={{
+        color: '#f0f0f5', fontSize: '18px',
+        fontWeight: '600', margin: '0 0 8px'
+      }}>
+        Waiting for participant...
+      </p>
+      <p style={{ color: '#9394a5', fontSize: '14px', margin: 0 }}>
+        The other person will appear here shortly
+      </p>
+    </div>
+  </div>
+)}
 
     {/* Local video - picture in picture */}
     <div style={{
