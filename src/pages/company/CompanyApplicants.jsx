@@ -4,7 +4,7 @@ import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTi
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video, ExternalLink } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
-import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
+import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -897,8 +897,7 @@ export default function CompanyApplicants() {
       )}
 
       {activeCall && (
-        <JitsiMeetModal
-          interviewId={activeCall.interviewId}
+        <AgoraVideoCall
           channelName={activeCall.channelName}
           userRole={activeCall.userRole}
           user={user}

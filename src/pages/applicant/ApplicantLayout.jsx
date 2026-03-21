@@ -6,7 +6,7 @@ import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import ZeloChatbot from '../../components/ZeloChatbot';
 import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
-import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
+import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { subscribeToPush } from '../../lib/pushNotifications';
 
 export default function ApplicantLayout() {
@@ -140,8 +140,7 @@ export default function ApplicantLayout() {
       )}
 
       {activeCall && !incomingCall && (
-        <JitsiMeetModal
-          interviewId={activeCall.interviewId}
+        <AgoraVideoCall
           channelName={activeCall.channelName}
           userRole="applicant"
           user={user}

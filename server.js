@@ -429,6 +429,48 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/quota', quotaRoutes);
 app.use('/api/google-meet', googleMeetRoutes);
 
+// Simple Agora token endpoint (no auth required for demo)
+app.post('/api/agora/token', async (req, res) => {
+  try {
+    const { channelName, uid, role } = req.body;
+    
+    const appId = process.env.AGORA_APP_ID;
+    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+    
+    if (!appId || !appCertificate) {
+      return res.status(500).json({ error: 'Agora credentials not configured' });
+    }
+
+    const { RtcTokenBuilder, RtcRole } = await import('agora-token');
+    
+    const agoraRole = role === 'hr' 
+      ? RtcRole.PUBLISHER 
+      : RtcRole.PUBLISHER;
+    
+    // Token valid for 24 hours
+    const expirationTimeInSeconds = 86400;
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+    
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      appId,
+      appCertificate,
+      channelName,
+      uid || 0,
+      agoraRole,
+      privilegeExpiredTs,
+      privilegeExpiredTs
+    );
+    
+    console.log('✅ Agora token generated for channel:', channelName);
+    res.json({ token, appId, channelName });
+    
+  } catch (error) {
+    console.error('❌ Agora token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start interview reminder scheduler
 interviewNotificationService.setupReminderScheduler();
 
