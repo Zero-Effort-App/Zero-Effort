@@ -127,16 +127,42 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
         null
       );
 
-      // Create local tracks
-      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-      setLocalTracks([audioTrack, videoTrack]);
+      // Create local tracks with mobile-friendly constraints
+      let audioTrack, videoTrack;
+      try {
+        [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+          {
+            encoderConfig: 'music_standard'
+          },
+          {
+            encoderConfig: {
+              width: { min: 320, ideal: 640, max: 1280 },
+              height: { min: 240, ideal: 480, max: 720 },
+              frameRate: { min: 15, ideal: 24, max: 30 }
+            },
+            facingMode: 'user' // Use front camera on mobile
+          }
+        );
+      } catch (camErr) {
+        console.warn('Camera with constraints failed, trying basic:', camErr);
+        // Fallback: try without constraints
+        [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+      }
 
-      // Publish local tracks
+      setLocalTracks([audioTrack, videoTrack]);
       await client.publish([audioTrack, videoTrack]);
-      
-      // Play local video
-      videoTrack.play('local-video');
-      
+
+      // Play local video with delay for mobile
+      setTimeout(() => {
+        const localEl = document.getElementById('local-video');
+        if (localEl) {
+          videoTrack.play('local-video');
+          console.log('✅ Local video playing');
+        } else {
+          console.warn('❌ local-video element not found');
+        }
+      }, 300);
+
       setIsConnected(true);
       console.log('✅ Agora connected, uid:', uid);
 
