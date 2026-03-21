@@ -55,6 +55,14 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
 
   const initAgora = async () => {
     try {
+      // Sanitize channel name for Agora
+      const sanitizedChannel = channelName
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .substring(0, 64);
+      
+      console.log('Original channel:', channelName);
+      console.log('Sanitized channel:', sanitizedChannel);
+
       // Create Agora client
       const client = AgoraRTC.createClient({ 
         mode: 'rtc', 
@@ -63,14 +71,13 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       clientRef.current = client;
 
       // Get token from backend
-      const response = await fetch('https://zero-effort-server.onrender.com/api/agora/token', {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL 
+        || 'https://zero-effort-server.onrender.com';
+
+      const response = await fetch(`${backendUrl}/api/agora/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channelName,
-          uid: 0,
-          role: userRole
-        })
+        body: JSON.stringify({ channelName: sanitizedChannel, uid: 0, role: userRole })
       });
       
       // Add error handling for response
@@ -106,7 +113,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       // Join channel
       const uid = await client.join(
         fetchedAppId || appId, 
-        channelName, 
+        sanitizedChannel, 
         token, 
         null
       );
