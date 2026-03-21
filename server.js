@@ -432,18 +432,41 @@ app.use('/api/google-meet', googleMeetRoutes);
 // Simple Agora token endpoint (no auth required for demo)
 app.post('/api/agora/token', async (req, res) => {
   try {
+    const { channelName, uid, role } = req.body;
+    
     const agoraToken = await import('agora-token');
-    console.log('All exports:', JSON.stringify(Object.keys(agoraToken)));
-    console.log('Default export:', typeof agoraToken.default);
-    if (agoraToken.default) {
-      console.log('Default keys:', JSON.stringify(Object.keys(agoraToken.default)));
+    const { RtcTokenBuilder, RtcRole } = agoraToken.default;
+    
+    console.log('✅ RtcTokenBuilder:', typeof RtcTokenBuilder);
+    console.log('✅ RtcRole:', typeof RtcRole);
+    
+    const appId = process.env.AGORA_APP_ID;
+    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+    
+    if (!appId || !appCertificate) {
+      return res.status(500).json({ error: 'Agora credentials not configured' });
     }
-    res.json({ 
-      exports: Object.keys(agoraToken),
-      defaultExports: agoraToken.default ? Object.keys(agoraToken.default) : null
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    const expirationTimeInSeconds = 86400;
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+    
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      appId,
+      appCertificate,
+      channelName,
+      uid || 0,
+      RtcRole.PUBLISHER,
+      privilegeExpiredTs,
+      privilegeExpiredTs
+    );
+    
+    console.log('✅ Agora token generated for channel:', channelName);
+    res.json({ token, appId, channelName });
+    
+  } catch (error) {
+    console.error('❌ Agora token error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
