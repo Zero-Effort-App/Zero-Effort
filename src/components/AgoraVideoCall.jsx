@@ -34,11 +34,20 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
   useEffect(() => {
     initAgora();
     return () => {
-      // Cleanup on unmount - stop camera/mic
+      // Stop Agora tracks
       localTracks.forEach(track => {
         track.stop();
         track.close();
       });
+      
+      // Force stop all video elements
+      document.querySelectorAll('video').forEach(video => {
+        if (video.srcObject) {
+          video.srcObject.getTracks().forEach(t => t.stop());
+          video.srcObject = null;
+        }
+      });
+
       if (clientRef.current) {
         clientRef.current.leave();
         clientRef.current = null;
@@ -77,14 +86,26 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
       // Handle remote users
       client.on('user-published', async (remoteUser, mediaType) => {
         await client.subscribe(remoteUser, mediaType);
+        
         if (mediaType === 'video') {
           setRemoteUsers(prev => {
             const exists = prev.find(u => u.uid === remoteUser.uid);
             if (!exists) return [...prev, remoteUser];
             return prev;
           });
-          remoteUser.videoTrack?.play(`remote-video-${remoteUser.uid}`);
+          
+          setTimeout(() => {
+            const element = document.getElementById(`remote-video-${remoteUser.uid}`);
+            if (element) {
+              remoteUser.videoTrack?.play(`remote-video-${remoteUser.uid}`);
+            } else {
+              setTimeout(() => {
+                remoteUser.videoTrack?.play(`remote-video-${remoteUser.uid}`);
+              }, 500);
+            }
+          }, 100);
         }
+        
         if (mediaType === 'audio') {
           remoteUser.audioTrack?.play();
         }
@@ -127,18 +148,40 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
 
   const leaveCall = async () => {
     try {
-      // Stop and close ALL local tracks properly
+      // Stop Agora tracks
       for (const track of localTracks) {
         track.stop();
         track.close();
       }
       setLocalTracks([]);
-      
-      // Leave the Agora channel
+
+      // Force stop ALL media streams on mobile
+      // This is the key fix for mobile camera staying on
+      if (navigator.mediaDevices) {
+        const streams = await navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
+          .catch(() => null);
+        if (streams) {
+          streams.getTracks().forEach(track => {
+            track.stop();
+          });
+        }
+      }
+
+      // Also stop any video elements on the page
+      document.querySelectorAll('video').forEach(video => {
+        if (video.srcObject) {
+          video.srcObject.getTracks().forEach(track => track.stop());
+          video.srcObject = null;
+        }
+      });
+
+      // Leave Agora channel
       if (clientRef.current) {
         await clientRef.current.leave();
         clientRef.current = null;
       }
+
     } catch (err) {
       console.error('Leave error:', err);
     } finally {
