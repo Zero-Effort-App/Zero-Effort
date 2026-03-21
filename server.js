@@ -441,7 +441,28 @@ app.post('/api/agora/token', async (req, res) => {
       return res.status(500).json({ error: 'Agora credentials not configured' });
     }
 
-    const { RtcTokenBuilder, RtcRole } = await import('agora-token');
+    // Debug agora-token exports
+    const agoraToken = require('agora-token');
+    console.log('Agora token module exports:', Object.keys(agoraToken));
+    console.log('RtcTokenBuilder type:', typeof agoraToken.RtcTokenBuilder);
+    console.log('RtcRole type:', typeof agoraToken.RtcRole);
+    
+    const { RtcTokenBuilder, RtcRole } = agoraToken;
+    
+    if (!RtcTokenBuilder || !RtcRole) {
+      console.error('❌ Missing exports from agora-token:', {
+        RtcTokenBuilder: !!RtcTokenBuilder,
+        RtcRole: !!RtcRole
+      });
+      return res.status(500).json({ 
+        error: 'Invalid agora-token package exports',
+        debug: {
+          availableExports: Object.keys(agoraToken),
+          hasRtcTokenBuilder: !!RtcTokenBuilder,
+          hasRtcRole: !!RtcRole
+        }
+      });
+    }
     
     const agoraRole = role === 'hr' 
       ? RtcRole.PUBLISHER 
