@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
 const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
+  // Sanitize channel name at the TOP of component - FIRST LINE
+  const sanitizedChannel = (channelName || '')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .substring(0, 64);
+
   const [localTracks, setLocalTracks] = useState([]);
   const [remoteUsers, setRemoteUsers] = useState([]);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
@@ -55,11 +60,6 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
 
   const initAgora = async () => {
     try {
-      // Sanitize channel name for Agora
-      const sanitizedChannel = channelName
-        .replace(/[^a-zA-Z0-9_-]/g, '_')
-        .substring(0, 64);
-      
       console.log('Original channel:', channelName);
       console.log('Sanitized channel:', sanitizedChannel);
 
