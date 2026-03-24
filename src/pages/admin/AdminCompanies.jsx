@@ -113,6 +113,33 @@ export default function AdminCompanies() {
     }
   };
 
+  // Handle secure document viewing
+  const handleViewDocument = async (documentUrl) => {
+    try {
+      // Extract file path from the URL
+      const filePath = documentUrl.split('/').pop();
+      
+      // Create a signed URL that expires in 1 hour
+      const { data, error } = await supabase.storage
+        .from('verification-docs')
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
+      
+      if (error) {
+        // Fallback to direct URL if signed URL fails
+        window.open(documentUrl, '_blank');
+        return;
+      }
+      
+      // Open the signed URL in a new tab
+      window.open(data.signedUrl, '_blank');
+      
+    } catch (err) {
+      console.error('Error viewing document:', err);
+      // Fallback to direct URL
+      window.open(documentUrl, '_blank');
+    }
+  };
+
   // Handle reject
   const handleReject = async (companyId, requestId, reason) => {
     try {
@@ -362,7 +389,7 @@ export default function AdminCompanies() {
                     <td>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
-                          onClick={() => window.open(req.document_url, '_blank')}
+                          onClick={() => handleViewDocument(req.document_url)}
                           style={{
                             padding: '6px 12px',
                             background: 'var(--surface)',
