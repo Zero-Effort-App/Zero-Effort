@@ -246,8 +246,21 @@ export default function CompanyProfile() {
                 {initials}
               </div>
             )}
-            <div className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {form.name}
+            <div className="profile-name" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              flexWrap: 'nowrap',
+              minWidth: 0
+            }}>
+              <span style={{ 
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {form.name}
+              </span>
               {isVerified && <VerifiedBadge size="sm" />}
             </div>
             <div className="profile-ind">{form.industry}</div>
