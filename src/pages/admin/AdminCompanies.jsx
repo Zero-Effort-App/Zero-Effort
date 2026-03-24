@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanies, addCompany, updateCompany, removeCompany as removeCompanyDb, addActivityLog, checkCompanyAccountExists, uploadCompanyLogo } from '../../lib/db';
+import { getCompanies, addCompany, updateCompany, removeCompany as removeCompanyDb, addActivityLog, checkCompanyAccountExists, uploadCompanyLogo, formatDate } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
