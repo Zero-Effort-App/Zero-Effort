@@ -123,16 +123,15 @@ export default function CompanyProfile() {
       
       if (uploadError) throw uploadError;
       
-      const { data: { publicUrl } } = supabase.storage
-        .from('verification-docs')
-        .getPublicUrl(fileName);
+      // Store only the file path, not public URL
+      const documentPath = fileName;
       
       // Insert verification request
       const { error: reqError } = await supabase
         .from('verification_requests')
         .insert({
           company_id: company.id,
-          document_url: publicUrl,
+          document_url: documentPath,
           document_type: docType,
           document_name: verifyFile.name,
           status: 'pending'
