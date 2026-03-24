@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
 import CompanyLogo from '../../components/CompanyLogo';
+import VerifiedBadge from '../../components/VerifiedBadge';
 
 // Skeleton card component
 function SkeletonCard() {
@@ -31,6 +32,11 @@ export default function AdminCompanies() {
   const [isLoading, setIsLoading] = useState(true);
   const [logoFile, setLogoFile] = useState(null);
   const { showToast } = useToast();
+  
+  // Verification system states
+  const [pendingVerifications, setPendingVerifications] = useState([]);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const loadCompanies = useCallback(async () => {
     setIsLoading(true);
@@ -56,7 +62,89 @@ export default function AdminCompanies() {
   useEffect(() => {
     loadCompanies();
     loadCompaniesWithAccounts();
+    fetchPendingVerifications();
   }, [loadCompanies, loadCompaniesWithAccounts]);
+
+  // Fetch pending verifications
+  const fetchPendingVerifications = async () => {
+    const { data } = await supabase
+      .from('verification_requests')
+      .select(`
+        *,
+        companies (
+          id, name, logo_url, logo_initials, 
+          color, verification_status
+        )
+      `)
+      .eq('status', 'pending')
+      .order('submitted_at', { ascending: true });
+    
+    setPendingVerifications(data || []);
+  };
+
+  // Handle approve
+  const handleApprove = async (companyId, requestId) => {
+    try {
+      // Update verification request
+      await supabase
+        .from('verification_requests')
+        .update({ 
+          status: 'approved',
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+      
+      // Update company
+      await supabase
+        .from('companies')
+        .update({ 
+          is_verified: true,
+          verification_status: 'verified',
+          verification_reviewed_at: new Date().toISOString()
+        })
+        .eq('id', companyId);
+      
+      showToast('✅ Company verified successfully!');
+      fetchPendingVerifications();
+      loadCompanies();
+      
+    } catch (err) {
+      showToast('Error: ' + err.message);
+    }
+  };
+
+  // Handle reject
+  const handleReject = async (companyId, requestId, reason) => {
+    try {
+      await supabase
+        .from('verification_requests')
+        .update({ 
+          status: 'rejected',
+          rejection_reason: reason,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+      
+      await supabase
+        .from('companies')
+        .update({ 
+          is_verified: false,
+          verification_status: 'rejected',
+          verification_notes: reason,
+          verification_reviewed_at: new Date().toISOString()
+        })
+        .eq('id', companyId);
+      
+      showToast('Company verification rejected.');
+      fetchPendingVerifications();
+      loadCompanies();
+      setModal({ type: null, data: null });
+      setRejectionReason('');
+      
+    } catch (err) {
+      showToast('Error: ' + err.message);
+    }
+  };
 
   const filtered = companies.filter(c => {
     const matchQ = c.name.toLowerCase().includes(search.toLowerCase()) || c.industry?.toLowerCase().includes(search.toLowerCase());
@@ -207,6 +295,147 @@ export default function AdminCompanies() {
         <button className="btn-acc" onClick={openAdd}>+ Add Company</button>
       </div>
 
+      {/* Pending Verifications Section */}
+      {pendingVerifications.length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ 
+            background: 'rgba(245,158,11,0.1)', 
+            border: '1px solid rgba(245,158,11,0.2)', 
+            padding: '16px', 
+            borderRadius: '12px',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#f59e0b', 
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              ⏳ Pending Verifications ({pendingVerifications.length})
+            </div>
+            <div style={{ fontSize: '14px', color: 'var(--text2)' }}>
+              Review and approve company verification requests
+            </div>
+          </div>
+
+          <div className="tbl-wrap" style={{ overflowX: 'auto' }}>
+            <table className="listings-table">
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Document Type</th>
+                  <th>Submitted</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingVerifications.map(req => (
+                  <tr key={req.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <CompanyLogo company={req.companies} size={32} />
+                        <div>
+                          <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{req.companies.name}</div>
+                          <div style={{ fontSize: '.72rem', color: 'var(--text2)' }}>{req.companies.industry}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{
+                        fontSize: '.75rem',
+                        textTransform: 'capitalize',
+                        background: 'var(--surface)',
+                        padding: '4px 8px',
+                        borderRadius: '6px'
+                      }}>
+                        {req.document_type}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '.75rem', color: 'var(--text2)' }}>
+                        {formatDate(req.submitted_at)}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => window.open(req.document_url, '_blank')}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            fontSize: '.75rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = 'var(--surface2)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'var(--surface)';
+                          }}
+                        >
+                          View Document
+                        </button>
+                        <button
+                          onClick={() => handleApprove(req.companies.id, req.id)}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'rgba(16,185,129,0.15)',
+                            border: '1px solid rgba(16,185,129,0.3)',
+                            borderRadius: '6px',
+                            fontSize: '.75rem',
+                            color: '#10b981',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = 'rgba(16,185,129,0.25)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'rgba(16,185,129,0.15)';
+                          }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(req);
+                            setModal({ type: 'reject', data: req });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'rgba(244,63,94,0.15)',
+                            border: '1px solid rgba(244,63,94,0.3)',
+                            borderRadius: '6px',
+                            fontSize: '.75rem',
+                            color: '#f43f5e',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = 'rgba(244,63,94,0.25)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'rgba(244,63,94,0.15)';
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div className="fbar">
         <input className="fi fi-grow" placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} />
         <select className="fi" value={filterInd} onChange={e => setFilterInd(e.target.value)}>
@@ -233,7 +462,10 @@ export default function AdminCompanies() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <CompanyLogo company={c} size={32} />
                     <div>
-                      <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{c.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ fontSize: '.875rem', fontWeight: 700 }}>{c.name}</div>
+                        {c.is_verified && <VerifiedBadge size="sm" />}
+                      </div>
                       <div style={{ fontSize: '.72rem', color: 'var(--text2)' }}>{c.industry}</div>
                     </div>
                   </div>
@@ -330,6 +562,54 @@ export default function AdminCompanies() {
       {/* Create Portal Account Modal */}
       <Modal isOpen={modal.type === 'createPortal'} onClose={closeModal}>
         {modal.data && <CreatePortalAccountForm company={modal.data} onSubmit={handleCreatePortalAccount} onClose={closeModal} loading={creatingAccount} />}
+      </Modal>
+
+      {/* Rejection Modal */}
+      <Modal isOpen={modal.type === 'reject'} onClose={() => setModal({ type: null, data: null })}>
+        <div>
+          <div className="m-head">
+            <div>
+              <div className="m-title">Reject Verification</div>
+              <div className="m-sub">{modal.data?.companies?.name}</div>
+            </div>
+            <button className="m-close" onClick={() => setModal({ type: null, data: null })}>✕</button>
+          </div>
+          
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="flabel">Rejection Reason</label>
+            <textarea 
+              className="ftextarea"
+              placeholder="Please provide a reason for rejection..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              style={{ minHeight: '100px' }}
+            />
+          </div>
+
+          <div className="btn-row">
+            <button 
+              className="btn-confirm-danger"
+              onClick={() => {
+                if (rejectionReason.trim() && selectedRequest) {
+                  handleReject(selectedRequest.companies.id, selectedRequest.id, rejectionReason);
+                }
+              }}
+              disabled={!rejectionReason.trim()}
+            >
+              Reject Verification
+            </button>
+            <button 
+              className="btn-cancel"
+              onClick={() => {
+                setModal({ type: null, data: null });
+                setRejectionReason('');
+                setSelectedRequest(null);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

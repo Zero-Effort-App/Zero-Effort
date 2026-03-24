@@ -3,6 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { updateCompany, getCompanyJobs, getCompanyApplications, getCompanies, uploadCompanyLogo } from '../../lib/db';
 import { useToast } from '../../contexts/ToastContext';
 import { CheckCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import VerifiedBadge from '../../components/VerifiedBadge';
 
 export default function CompanyProfile() {
   const { company, setCompany } = useOutletContext();
@@ -36,6 +38,14 @@ export default function CompanyProfile() {
   const [companies, setCompanies] = useState([]);
   const [tags, setTags] = useState([]);
   const [stats, setStats] = useState({ listings: 0, totalApps: 0, accepted: 0 });
+  
+  // Verification system states
+  const [verificationStatus, setVerificationStatus] = useState('unverified');
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationNotes, setVerificationNotes] = useState('');
+  const [docType, setDocType] = useState('');
+  const [verifyFile, setVerifyFile] = useState(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   useEffect(() => {
     if (!company) return;
@@ -69,12 +79,90 @@ export default function CompanyProfile() {
     loadStats();
   }, [company]);
 
+  // Fetch verification status on mount
+  useEffect(() => {
+    const fetchVerificationStatus = async () => {
+      const { data } = await supabase
+        .from('companies')
+        .select('verification_status, is_verified, verification_notes')
+        .eq('id', company.id)
+        .single();
+      
+      if (data) {
+        setVerificationStatus(data.verification_status || 'unverified');
+        setIsVerified(data.is_verified || false);
+        setVerificationNotes(data.verification_notes || '');
+      }
+    };
+    
+    if (company?.id) fetchVerificationStatus();
+  }, [company?.id]);
+
   function handleChange(field, value) { 
     if (field === 'industry') {
       setIndustryInput(value);
     }
     setForm(prev => ({ ...prev, [field]: value })); 
   }
+
+  // Handle verification submission
+  const handleVerificationSubmit = async () => {
+    try {
+      setVerifyLoading(true);
+      
+      // Upload document to verification-docs bucket
+      const fileExt = verifyFile.name.split('.').pop();
+      const fileName = `${company.id}_${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('verification-docs')
+        .upload(fileName, verifyFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('verification-docs')
+        .getPublicUrl(fileName);
+      
+      // Insert verification request
+      const { error: reqError } = await supabase
+        .from('verification_requests')
+        .insert({
+          company_id: company.id,
+          document_url: publicUrl,
+          document_type: docType,
+          document_name: verifyFile.name,
+          status: 'pending'
+        });
+      
+      if (reqError) throw reqError;
+      
+      // Update company verification_status
+      const { error: compError } = await supabase
+        .from('companies')
+        .update({ 
+          verification_status: 'pending',
+          verification_submitted_at: new Date().toISOString()
+        })
+        .eq('id', company.id);
+      
+      if (compError) throw compError;
+      
+      showToast('✅ Verification documents submitted successfully!');
+      setVerificationStatus('pending');
+      setDocType('');
+      setVerifyFile(null);
+      
+    } catch (err) {
+      console.error('Verification error:', err);
+      showToast('Failed to submit: ' + err.message);
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
 
   // Get existing industries from companies in database
   const existingIndustries = [...new Set(companies.map(c => c.industry).filter(Boolean))];
@@ -159,7 +247,10 @@ export default function CompanyProfile() {
                 {initials}
               </div>
             )}
-            <div className="profile-name">{form.name}</div>
+            <div className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {form.name}
+              {isVerified && <VerifiedBadge size="sm" />}
+            </div>
             <div className="profile-ind">{form.industry}</div>
             <div className="profile-stat"><span className="profile-stat-label">Status</span><span className="profile-stat-val" style={{ color: 'var(--success)' }}>● Active Tenant</span></div>
             <div className="profile-stat"><span className="profile-stat-label">Active Listings</span><span className="profile-stat-val">{stats.listings}</span></div>
@@ -227,6 +318,184 @@ export default function CompanyProfile() {
             <button className="btn-outline" onClick={cancelProfile}>Cancel</button>
           </div>
         </div>
+      </div>
+
+      {/* Verification Section */}
+      <div className="profile-form-card" style={{ marginTop: '1.5rem' }}>
+        <div className="section-title">Business Verification</div>
+        
+        {/* Verification Status Badge */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          {verificationStatus === 'unverified' && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(107,114,128,0.15)',
+              border: '1px solid rgba(107,114,128,0.3)',
+              color: '#9ca3af',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: '600',
+              fontFamily: "'Plus Jakarta Sans', sans-serif"
+            }}>
+              Not Verified
+            </span>
+          )}
+          {verificationStatus === 'pending' && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(245,158,11,0.15)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              color: '#f59e0b',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: '600',
+              fontFamily: "'Plus Jakarta Sans', sans-serif"
+            }}>
+              ⏳ Verification Pending
+            </span>
+          )}
+          {verificationStatus === 'verified' && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(16,185,129,0.15)',
+              border: '1px solid rgba(16,185,129,0.3)',
+              color: '#10b981',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: '600',
+              fontFamily: "'Plus Jakarta Sans', sans-serif"
+            }}>
+              ✅ Verified Business
+            </span>
+          )}
+          {verificationStatus === 'rejected' && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(244,63,94,0.15)',
+              border: '1px solid rgba(244,63,94,0.3)',
+              color: '#f43f5e',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: '600',
+              fontFamily: "'Plus Jakarta Sans', sans-serif"
+            }}>
+              ❌ Verification Rejected
+            </span>
+          )}
+        </div>
+
+        {/* Verification Content Based on Status */}
+        {(verificationStatus === 'unverified' || verificationStatus === 'rejected') && (
+          <div>
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
+                Get Verified
+              </h4>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text2)', lineHeight: '1.5' }}>
+                Upload your business documents to get a verified badge on your profile and job listings
+              </p>
+            </div>
+
+            {verificationStatus === 'rejected' && verificationNotes && (
+              <div style={{
+                background: 'rgba(244,63,94,0.1)',
+                border: '1px solid rgba(244,63,94,0.2)',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                fontSize: '13px',
+                color: '#f43f5e'
+              }}>
+                <strong>Rejection Reason:</strong> {verificationNotes}
+              </div>
+            )}
+
+            <div className="frow">
+              <div className="fgroup">
+                <label className="flabel">Document Type</label>
+                <select 
+                  className="finput"
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                >
+                  <option value="">Select document type...</option>
+                  <option value="dti">DTI Registration</option>
+                  <option value="sec">SEC Registration</option>
+                  <option value="bir">BIR Certificate</option>
+                  <option value="mayor">Mayor's Permit</option>
+                  <option value="other">Other Business Document</option>
+                </select>
+              </div>
+              <div className="fgroup">
+                <label className="flabel">Document File</label>
+                <input 
+                  type="file"
+                  className="finput"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setVerifyFile(e.target.files[0])}
+                />
+                <div style={{ fontSize: '.68rem', color: 'var(--text3)', marginTop: 4 }}>
+                  PDF, JPG, PNG (max 5MB)
+                </div>
+              </div>
+            </div>
+
+            <button 
+              className="btn-acc"
+              onClick={handleVerificationSubmit}
+              disabled={!docType || !verifyFile || verifyLoading}
+              style={{ marginTop: '1rem' }}
+            >
+              {verifyLoading ? 'Submitting...' : 'Submit for Verification'}
+            </button>
+          </div>
+        )}
+
+        {verificationStatus === 'pending' && (
+          <div style={{
+            background: 'rgba(245,158,11,0.1)',
+            border: '1px solid rgba(245,158,11,0.2)',
+            padding: '16px',
+            borderRadius: '12px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#f59e0b', marginBottom: '8px' }}>
+              Your documents are under review
+            </div>
+            <div style={{ fontSize: '14px', color: 'var(--text2)' }}>
+              We'll notify you once reviewed (1-3 business days)
+            </div>
+          </div>
+        )}
+
+        {verificationStatus === 'verified' && (
+          <div style={{
+            background: 'rgba(16,185,129,0.1)',
+            border: '1px solid rgba(16,185,129,0.2)',
+            padding: '16px',
+            borderRadius: '12px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#10b981', marginBottom: '8px' }}>
+              ✅ Your business is verified!
+            </div>
+            <div style={{ fontSize: '14px', color: 'var(--text2)' }}>
+              Your verified badge is now visible on your profile and job listings
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

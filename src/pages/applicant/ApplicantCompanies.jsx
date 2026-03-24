@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCompanies, getJobs } from '../../lib/db';
 import CompanyLogo from '../../components/CompanyLogo';
+import VerifiedBadge from '../../components/VerifiedBadge';
 
 export default function ApplicantCompanies() {
   const [companies, setCompanies] = useState([]);
@@ -87,7 +88,10 @@ export default function ApplicantCompanies() {
           filtered.map(c => (
             <div key={c.id} className="co-card" onClick={() => viewJobs(c.id)}>
               <CompanyLogo company={c} size={48} />
-              <div className="co-name">{c.name}</div>
+              <div className="co-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {c.name}
+                {c.is_verified && <VerifiedBadge size="sm" />}
+              </div>
               <div className="co-ind">{c.industry}</div>
               <div className="co-desc">{c.description?.slice(0, 120)}{c.description?.length > 120 ? '…' : ''}</div>
               {c.tags && c.tags.length > 0 && (

@@ -6,6 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 import Modal from '../../components/Modal';
 import CompanyLogo from '../../components/CompanyLogo';
+import VerifiedBadge from '../../components/VerifiedBadge';
 
 function displaySalary(salary) {
   if (!salary) return 'Not specified'
@@ -481,7 +482,10 @@ export default function ApplicantJobs() {
                 <CompanyLogo company={selectedCo} size={52} />
                 <div>
                   <div className="dp-title">{selectedJob.title}</div>
-                  <div className="dp-co">{selectedJob.co} · Zero Effort</div>
+                  <div className="dp-co" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {selectedJob.co} · Zero Effort
+                    {selectedCo?.is_verified && <VerifiedBadge size="sm" />}
+                  </div>
                 </div>
               </div>
               <div className="dp-chips">
