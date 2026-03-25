@@ -13,7 +13,26 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Store session in localStorage for PWA persistence
+      if (session) {
+        localStorage.setItem('supabase_session', JSON.stringify(session));
+      }
     });
+
+    // Try to restore session from localStorage first (PWA persistence)
+    try {
+      const storedSession = localStorage.getItem('supabase_session');
+      if (storedSession) {
+        const session = JSON.parse(storedSession);
+        setUser(session.user ?? null);
+        setProfile(profile || null);
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.log('No stored session found, using fresh session');
+    }
 
     // Listen for auth changes (but don't auto-logout on token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -22,15 +41,39 @@ export function AuthProvider({ children }) {
       // Only update user state, don't auto-logout unless explicitly signed out
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setUser(session?.user ?? null);
+        setProfile(profile => profile || null);
+        
+        // Store session in localStorage for PWA persistence
+        if (session) {
+          localStorage.setItem('supabase_session', JSON.stringify(session));
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
+        localStorage.removeItem('supabase_session');
       }
       // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Restore session from localStorage on app load (PWA persistence)
+    const handleStorageChange = (e) => {
+      if (e.key === 'supabase_session' && e.newValue) {
+        const session = JSON.parse(e.newValue);
+        setUser(session.user ?? null);
+        setProfile(profile || null);
+      } else if (e.key === 'supabase_session' && !e.newValue) {
+        setUser(null);
+        setProfile(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [profile]);
 
   async function adminLogin(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
