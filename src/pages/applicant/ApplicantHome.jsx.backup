@@ -161,23 +161,20 @@ export default function ApplicantHome() {
         <div className="scard" onClick={() => navigate('/applicant/jobs')} style={{ cursor: 'pointer' }}>
           <Briefcase size={18} style={{ color: 'var(--accent2)', marginBottom: '6px' }} />
           <div className="scard-label">Open Jobs</div>
-          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.openPositions}</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.openPositions}</div></div>
         </div>
         <div className="scard" onClick={() => navigate('/applicant/companies')} style={{ cursor: 'pointer' }}>
           <Building2 size={18} style={{ color: 'var(--teal)', marginBottom: '6px' }} />
           <div className="scard-label">Companies Hiring</div>
-          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.companiesHiring}</div>
-        </div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.companiesHiring}</div></div>
         <div className="scard" onClick={() => navigate('/applicant/applications')} style={{ cursor: 'pointer' }}>
           <FileText size={18} style={{ color: 'var(--success)', marginBottom: '6px' }} />
           <div className="scard-label">My Applications</div>
-          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.myApps}</div>
-        </div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.myApps}</div></div>
         <div className="scard" onClick={() => navigate('/applicant/events')} style={{ cursor: 'pointer' }}>
           <CalendarDays size={18} style={{ color: 'var(--amber)', marginBottom: '6px' }} />
           <div className="scard-label">Upcoming Events</div>
-          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.upcomingEvents}</div>
-        </div>
+          <div style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1, marginTop: '8px' }}>{stats.upcomingEvents}</div></div>
       </div>
 
       {recentHires.length > 0 && (
@@ -188,6 +185,7 @@ export default function ApplicantHome() {
               fontSize: '11px', 
               background: 'rgba(34,197,94,0.15)', 
               color: '#22c55e',
+              padding: '2px 8px',
               borderRadius: '20px',
               fontWeight: 700
             }}>LIVE</span>
@@ -211,6 +209,7 @@ export default function ApplicantHome() {
                   border: '1px solid var(--border)',
                   borderRadius: '12px',
                 }}>
+                  {/* Avatar */}
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -224,6 +223,7 @@ export default function ApplicantHome() {
                   }}>
                     <CheckCircle size={20} style={{ color: '#22c55e' }} />
                   </div>
+                  {/* Info */}
                   <div style={{ flex: 1 }}>
                     <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
                       <span style={{ color: '#22c55e' }}>{firstName} {lastInitial}.</span>
@@ -269,6 +269,7 @@ export default function ApplicantHome() {
                 scrollSnapAlign: 'start', flexShrink: 0,
                 display: 'flex', flexDirection: 'column', gap: '10px'
               }}>
+                {/* Date and Type badge */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 600 }}>
                     {formatDate(e.date)}
@@ -282,11 +283,13 @@ export default function ApplicantHome() {
                   </span>
                 </div>
 
+                {/* Title and Organizer */}
                 <div>
                   <p style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{e.title}</p>
                   <p style={{ fontSize: '12px', color: 'var(--text2)' }}>{e.organizer || '—'}</p>
                 </div>
 
+                {/* Details */}
                 {e.details && e.details.length > 0 && (
                   <div style={{
                     background: 'var(--bg2)', borderRadius: '8px',
@@ -297,6 +300,7 @@ export default function ApplicantHome() {
                   </div>
                 )}
 
+                {/* Location */}
                 {e.location && (
                   <p style={{ fontSize: '12px', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     📍 {e.location}
@@ -308,89 +312,94 @@ export default function ApplicantHome() {
         </>
       )}
 
-      {featuredJobs.length > 0 && (
-        <div style={{ marginTop: '32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} />
-              Featured Openings
-            </h2>
-            <button onClick={() => navigate('/applicant/jobs')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              View all →
-            </button>
+      {/* Featured Openings Section */}
+{featuredJobs.length > 0 && (
+  <div style={{ marginTop: '32px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} />
+        Featured Openings
+      </h2>
+      <button onClick={() => navigate('/applicant/jobs')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        View all →
+      </button>
+    </div>
+
+    {/* Horizontal swipeable cards */}
+    <div style={{
+      display: 'flex', gap: '14px',
+      overflowX: 'auto', paddingBottom: '8px',
+      scrollSnapType: 'x mandatory',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+    }}>
+      {featuredJobs.map(job => (
+        <div
+          key={job.id}
+          onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: job.id } })}
+          style={{
+            minWidth: '240px', maxWidth: '240px',
+            background: 'var(--surface)', borderRadius: '16px',
+            border: '1px solid var(--border)', padding: '18px',
+            scrollSnapAlign: 'start', flexShrink: 0,
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          {/* Company Logo + Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '10px',
+              background: job.companies?.logo_url ? 'transparent' : (job.companies?.color || '#6366f1'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', flexShrink: 0
+            }}>
+              {job.companies?.logo_url ? (
+                <img src={job.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
+              ) : (
+                <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
+                  {job.companies?.logo_initials || job.companies?.name?.[0]}
+                </span>
+              )}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '11px', color: 'var(--text2)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {job.companies?.name}
+              </p>
+            </div>
           </div>
 
-          <div style={{
-            display: 'flex', gap: '14px',
-            overflowX: 'auto', paddingBottom: '8px',
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}>
-            {featuredJobs.map(job => (
-              <div
-                key={job.id}
-                onClick={() => navigate('/applicant/jobs', { state: { selectedJobId: job.id } })}
-                style={{
-                  minWidth: '240px', maxWidth: '240px',
-                  background: 'var(--surface)', borderRadius: '16px',
-                  border: '1px solid var(--border)', padding: '18px',
-                  scrollSnapAlign: 'start', flexShrink: 0,
-                  display: 'flex', flexDirection: 'column', gap: '12px',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: job.companies?.logo_url ? 'transparent' : (job.companies?.color || '#6366f1'),
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', flexShrink: 0
-                  }}>
-                    {job.companies?.logo_url ? (
-                      <img src={job.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
-                    ) : (
-                      <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
-                        {job.companies?.logo_initials || job.companies?.name?.[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: '11px', color: 'var(--text2)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {job.companies?.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px', lineHeight: '1.3' }}>{job.title}</p>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <span style={{
-                      fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
-                      background: 'var(--bg2)', color: 'var(--text2)'
-                    }}>{job.type}</span>
-                    <span style={{
-                      fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
-                      background: 'var(--bg2)', color: 'var(--text2)'
-                    }}>{job.department}</span>
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
-                  {(() => {
-                    if (!job.salary) return 'Salary not specified';
-                    const clean = job.salary.toString().replace(/[^0-9]/g, '');
-                    if (!clean || clean === '0') return 'Salary not specified';
-                    return `₱${parseInt(clean).toLocaleString()}`;
-                  })()}
-                </p>
-              </div>
-            ))}
+          {/* Job Title */}
+          <div>
+            <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px', lineHeight: '1.3' }}>{job.title}</p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{
+                fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                background: 'var(--bg2)', color: 'var(--text2)'
+              }}>{job.type}</span>
+              <span style={{
+                fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                background: 'var(--bg2)', color: 'var(--text2)'
+              }}>{job.department}</span>
+            </div>
           </div>
+
+          {/* Salary */}
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
+            {(() => {
+              if (!job.salary) return 'Salary not specified';
+              const clean = job.salary.toString().replace(/[^0-9]/g, '');
+              if (!clean || clean === '0') return 'Salary not specified';
+              return `₱${parseInt(clean).toLocaleString()}`;
+            })()}
+          </p>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
       </div>
+  )}
     </>
   );
 }
