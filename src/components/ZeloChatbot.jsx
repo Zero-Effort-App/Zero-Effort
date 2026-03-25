@@ -12,10 +12,12 @@ export default function ZeloChatbot() {
   const isHomePage = location.pathname === '/applicant/home';
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: `Hi! I'm Zelo, your Zero Effort career assistant!\n\nI can help you:\n• Find the right job for your skills\n• Learn about companies hiring\n• Guide you through the application process\n• Answer any career questions\n\nWhat are you looking for today?` }
+    { role: 'assistant', content: `Hi! I'm Zelo, your personalized Zero Effort career assistant!\n\nI can help you:\n• Track your applications and provide status updates\n• Find jobs matching your background\n• Learn about hiring companies\n• Get application tips & interview prep\n• Help with account and technical issues\n• Guide you through platform features\n\nHow can I assist you today?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [userProfile, setUserProfile] = useState(null)
+  const [userApplications, setUserApplications] = useState([])
   const bottomRef = useRef(null)
   const dataCache = useRef(null)
 
@@ -46,6 +48,41 @@ export default function ZeloChatbot() {
     return result
   }
 
+  async function fetchUserProfile() {
+    if (!user?.id) return null
+    
+    try {
+      const { data } = await supabase
+        .from('applicants')
+        .select('first_name, last_name, phone, gender, photo_url')
+        .eq('id', user.id)
+        .single()
+      
+      return data
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      return null
+    }
+  }
+
+  async function fetchUserApplications() {
+    if (!user?.id) return []
+    
+    try {
+      const { data } = await supabase
+        .from('applications')
+        .select('*, jobs(title, department, salary, companies(name))')
+        .eq('applicant_id', user.id)
+        .order('applied_at', { ascending: false })
+        .limit(10)
+      
+      return data || []
+    } catch (error) {
+      console.error('Error fetching user applications:', error)
+      return []
+    }
+  }
+
   async function handleSend() {
     if (!input.trim() || loading) return
     const userMessage = input.trim()
@@ -57,6 +94,24 @@ export default function ZeloChatbot() {
 
     try {
       const { jobs, companies } = await fetchJobsAndCompanies()
+      const profile = await fetchUserProfile()
+      const applications = await fetchUserApplications()
+      
+      // Update state for future use
+      setUserProfile(profile)
+      setUserApplications(applications)
+
+      // Format applications for prompt
+      const applicationsList = applications.length > 0
+        ? applications.map(app => {
+            const appliedDate = new Date(app.applied_at).toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric' 
+            })
+            return `• ${app.jobs?.title} at ${app.jobs?.companies?.name} - Status: ${app.status} (Applied: ${appliedDate})`
+          }).join('\n')
+        : 'No applications yet - I can help you find and apply!'
 
       const jobsList = jobs.length > 0
         ? jobs.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary} — Requirements: ${j.requirements?.join(', ')}`).join('\n')
@@ -66,7 +121,52 @@ export default function ZeloChatbot() {
         ? companies.map(c => `- ${c.name} (${c.industry}) — ${c.description || 'No description'} — Tags: ${c.tags?.join(', ') || 'None'}`).join('\n')
         : 'No companies available'
 
-      const systemPrompt = `You are Zelo, a helpful career assistant for Zero Effort job portal. Current data:\n\nAVAILABLE JOBS:\n${jobsList}\n\nAVAILABLE COMPANIES:\n${companiesList}\n\nGuidelines:\n- Be friendly and professional\n- Help users find relevant jobs\n- Provide company information\n- Guide through application process\n- Keep responses concise but helpful\n- If you don't know something, say so honestly\n- Never make up job listings or company information`
+      const systemPrompt = `You are Zelo, a helpful career assistant for Zero Effort job portal.
+
+USER CONTEXT:
+- User's name: ${profile?.first_name || 'User'}
+- Phone: ${profile?.phone || 'Not provided'}
+- Email: ${user?.email || 'Not available'}
+
+APPLICATION STATUS:
+${applicationsList}
+
+AVAILABLE JOBS:
+${jobsList}
+
+AVAILABLE COMPANIES:
+${companiesList}
+
+🎯 I CAN HELP YOU WITH:
+
+CAREER & JOBS:
+- Find jobs matching your background
+- Learn about hiring companies
+- Get application tips & advice
+- Prepare for interviews
+- Improve your resume
+
+ACCOUNT & SUPPORT:
+- Reset password or update profile
+- Explain how application process works
+- Help with technical issues
+- Questions about features
+- Guide through video interviews
+
+APPLICATION TRACKING:
+- Check status of your applications
+- Understand what companies want
+- Tips for specific positions
+- Follow-up advice
+
+BEHAVIOR GUIDELINES:
+- Be friendly and encouraging
+- Provide specific, actionable advice
+- If user mentions an applied job, give targeted tips
+- If user has technical issues, offer step-by-step solutions
+- If asked about account, prioritize troubleshooting
+- Keep responses helpful but concise
+- Never make up information`
 
       const conversationHistory = newMessages.map(msg => ({
         role: msg.role,
