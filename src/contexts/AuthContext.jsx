@@ -17,67 +17,116 @@ const isPWA = () => {
 // Cookie-based storage for iOS force close scenarios
 const storeSessionInCookie = (session) => {
   try {
-    console.log('🍪 Attempting to store session in cookie:', session);
+    console.log('🍪 [COOKIE STORE] Attempting to store session in cookie:', session);
     const sessionData = JSON.stringify(session);
     const encodedData = btoa(sessionData); // Base64 encode
     const expires = new Date();
     expires.setDate(expires.getDate() + 30); // 30 days
     
     document.cookie = `supabase_session=${encodedData}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-    console.log('✅ Session stored in cookie successfully');
+    console.log('✅ [COOKIE STORE] Session stored in cookie successfully');
     
     // Verify cookie was set
     const testCookie = document.cookie.includes('supabase_session');
-    console.log('🔍 Cookie verification:', testCookie);
+    console.log('🔍 [COOKIE STORE] Cookie verification:', testCookie);
+    
+    // Also store in localStorage as backup
+    try {
+      localStorage.setItem('supabase_session_backup', JSON.stringify(session));
+      console.log('✅ [BACKUP STORE] Session also stored in localStorage backup');
+    } catch (backupError) {
+      console.log('❌ [BACKUP STORE] Failed to store in localStorage:', backupError);
+    }
   } catch (error) {
-    console.log('❌ Cookie storage failed:', error);
+    console.log('❌ [COOKIE STORE] Cookie storage failed:', error);
   }
 };
 
 const getSessionFromCookie = () => {
   try {
-    console.log('🍪 Attempting to retrieve session from cookie');
-    console.log('🔍 All cookies:', document.cookie);
+    console.log('🍪 [COOKIE READ] Attempting to retrieve session from cookie');
+    console.log('🔍 [COOKIE READ] All cookies:', document.cookie);
     
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
       if (name === 'supabase_session') {
-        console.log('🔍 Found supabase_session cookie');
+        console.log('🔍 [COOKIE READ] Found supabase_session cookie, value length:', value.length);
         const decodedData = atob(value); // Base64 decode
         const session = JSON.parse(decodedData);
-        console.log('✅ Session restored from cookie:', session);
+        console.log('✅ [COOKIE READ] Session restored from cookie:', session);
         
         // Validate session has required fields
         if (!session || !session.access_token) {
-          console.log('❌ Invalid session: missing access_token');
+          console.log('❌ [COOKIE READ] Invalid session: missing access_token');
           return null;
         }
         
         // Check if session is expired (simple check)
         if (session.expires_at && new Date(session.expires_at) < new Date()) {
-          console.log('❌ Session expired');
+          console.log('❌ [COOKIE READ] Session expired');
           return null;
         }
         
-        console.log('✅ Session appears valid');
+        console.log('✅ [COOKIE READ] Session appears valid');
         return session;
       }
     }
-    console.log('❌ No supabase_session cookie found');
+    console.log('❌ [COOKIE READ] No supabase_session cookie found');
   } catch (error) {
-    console.log('❌ Cookie retrieval failed:', error);
+    console.log('❌ [COOKIE READ] Cookie retrieval failed:', error);
+  }
+  return null;
+};
+
+// Backup session retrieval from localStorage
+const getSessionFromLocalStorage = () => {
+  try {
+    console.log('📦 [BACKUP READ] Attempting to retrieve session from localStorage backup');
+    const backupSession = localStorage.getItem('supabase_session_backup');
+    if (backupSession) {
+      console.log('🔍 [BACKUP READ] Found localStorage backup, parsing...');
+      const session = JSON.parse(backupSession);
+      console.log('✅ [BACKUP READ] Session restored from localStorage backup:', session);
+      
+      // Validate session has required fields
+      if (!session || !session.access_token) {
+        console.log('❌ [BACKUP READ] Invalid backup session: missing access_token');
+        return null;
+      }
+      
+      // Check if session is expired
+      if (session.expires_at && new Date(session.expires_at) < new Date()) {
+        console.log('❌ [BACKUP READ] Backup session expired');
+        return null;
+      }
+      
+      console.log('✅ [BACKUP READ] Backup session appears valid');
+      return session;
+    } else {
+      console.log('❌ [BACKUP READ] No localStorage backup found');
+    }
+  } catch (error) {
+    console.log('❌ [BACKUP READ] localStorage backup retrieval failed:', error);
   }
   return null;
 };
 
 const clearSessionFromCookie = () => {
   try {
-    console.log('🍪 Clearing session from cookie');
+    console.log('🍪 [COOKIE CLEAR] Clearing session from cookie');
     document.cookie = 'supabase_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';
-    console.log('✅ Session cleared from cookie');
+    console.log('✅ [COOKIE CLEAR] Session cleared from cookie');
+    
+    // Also clear localStorage backup
+    try {
+      localStorage.removeItem('supabase_session_backup');
+      console.log('✅ [BACKUP CLEAR] Session cleared from localStorage backup');
+    } catch (backupError) {
+      console.log('❌ [BACKUP CLEAR] Failed to clear localStorage backup:', backupError);
+    }
   } catch (error) {
-    console.log('❌ Cookie clearing failed:', error);
+    console.log('❌ [COOKIE CLEAR] Cookie clearing failed:', error);
   }
 };
 
@@ -213,31 +262,69 @@ export function AuthProvider({ children }) {
       
       // 1. Try cookie first (most persistent for iOS force close)
       if (iosSafari && pwa) {
-        console.log('🍪 Trying cookie restoration first...');
+        console.log('🍪 [RESTORE] Trying cookie restoration first...');
         const cookieSession = getSessionFromCookie();
-        if (cookieSession) {
-          console.log('✅ Cookie session found, validating with Supabase...');
+        
+        let sessionToRestore = cookieSession;
+        let sessionSource = 'cookie';
+        
+        // If cookie fails, try localStorage backup
+        if (!cookieSession) {
+          console.log('🍪 [RESTORE] Cookie failed, trying localStorage backup...');
+          const backupSession = getSessionFromLocalStorage();
+          if (backupSession) {
+            sessionToRestore = backupSession;
+            sessionSource = 'localStorage backup';
+            console.log('📦 [RESTORE] Using localStorage backup session');
+          }
+        }
+        
+        if (sessionToRestore) {
+          console.log(`✅ [RESTORE] ${sessionSource} session found, validating with Supabase...`);
+          console.log('🔍 [RESTORE] Session data:', {
+            hasAccessToken: !!sessionToRestore.access_token,
+            hasRefreshToken: !!sessionToRestore.refresh_token,
+            expiresAt: sessionToRestore.expires_at,
+            userId: sessionToRestore.user?.id
+          });
           
           // Validate session with Supabase
           try {
-            const { data: { session: validSession }, error } = await supabase.auth.setSession(cookieSession.access_token, cookieSession.refresh_token);
+            console.log('🔄 [SETSESSION] Calling supabase.auth.setSession()...');
+            const startTime = Date.now();
+            
+            const { data: { session: validSession }, error } = await supabase.auth.setSession(
+              sessionToRestore.access_token, 
+              sessionToRestore.refresh_token
+            );
+            
+            const endTime = Date.now();
+            console.log(`⏱️ [SETSESSION] setSession() completed in ${endTime - startTime}ms`);
             
             if (error) {
-              console.log('❌ Supabase session validation failed:', error);
+              console.log('❌ [SETSESSION] Supabase session validation failed:', error);
               debugInfo.cookie = false;
-              debugInfo.finalResult = 'Cookie session invalid';
+              debugInfo.finalResult = `${sessionSource} session validation failed: ${error.message}`;
             } else if (validSession) {
-              console.log('✅ Supabase session validation successful');
+              console.log('✅ [SETSESSION] Supabase session validation successful');
+              console.log('🔍 [SETSESSION] Valid session data:', {
+                hasUser: !!validSession.user,
+                userId: validSession.user?.id,
+                hasAccessToken: !!validSession.access_token,
+                expiresAt: validSession.expires_at
+              });
+              
               debugInfo.cookie = true;
-              debugInfo.finalResult = 'Success from cookie + validation';
+              debugInfo.finalResult = `Success from ${sessionSource} + validation`;
               
               // Set user state first
+              console.log('👤 [USER STATE] Setting user state:', validSession.user);
               setUser(validSession.user ?? null);
-              console.log('✅ User state set:', validSession.user);
+              console.log('✅ [USER STATE] User state set successfully');
               
               // Load profile based on user role
               if (validSession.user) {
-                console.log('🔄 Loading profile for user...');
+                console.log('🔄 [PROFILE] Loading profile for user:', validSession.user.email);
                 
                 // Try to get profile from different tables
                 try {
@@ -249,7 +336,7 @@ export function AuthProvider({ children }) {
                     .maybeSingle();
                   
                   if (adminData) {
-                    console.log('✅ Admin profile found');
+                    console.log('✅ [PROFILE] Admin profile found:', adminData);
                     setProfile({ ...adminData, role: 'admin' });
                   } else {
                     // Check if company user
@@ -260,7 +347,7 @@ export function AuthProvider({ children }) {
                       .maybeSingle();
                     
                     if (companyData) {
-                      console.log('✅ Company profile found');
+                      console.log('✅ [PROFILE] Company profile found:', companyData);
                       setProfile({ ...companyData, role: 'company' });
                     } else {
                       // Check if applicant
@@ -271,39 +358,47 @@ export function AuthProvider({ children }) {
                         .maybeSingle();
                       
                       if (applicantData) {
-                        console.log('✅ Applicant profile found');
+                        console.log('✅ [PROFILE] Applicant profile found:', applicantData);
                         setProfile({ ...applicantData, role: 'applicant' });
                       } else {
-                        console.log('❌ No profile found for user');
+                        console.log('❌ [PROFILE] No profile found for user');
                         setProfile(null);
                       }
                     }
                   }
+                  console.log('✅ [PROFILE] Profile loading completed');
                 } catch (profileError) {
-                  console.log('❌ Profile loading error:', profileError);
+                  console.log('❌ [PROFILE] Profile loading error:', profileError);
                   setProfile(null);
                 }
               }
               
               // Only set loading to false AFTER both session and profile are loaded
+              console.log('⏳ [LOADING] Setting loading to false');
               setLoading(false);
-              console.log('✅ Session restored, validated, and profile loaded from cookie');
+              console.log('✅ [LOADING] Loading set to false successfully');
               
               // Mark session restoration as complete
               setSessionRestored(true);
-              console.log('✅ Session restoration marked as complete');
+              console.log('✅ [RESTORE] Session restoration marked as complete');
+              
+              console.log(`🎉 [RESTORE] Complete session restoration successful from ${sessionSource}`);
               
               // Store debug info for display
               localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
               return;
+            } else {
+              console.log('❌ [SETSESSION] setSession() returned null session');
+              debugInfo.cookie = false;
+              debugInfo.finalResult = `${sessionSource} session returned null`;
             }
           } catch (validationError) {
-            console.log('❌ Session validation error:', validationError);
+            console.log('❌ [SETSESSION] Session validation error:', validationError);
             debugInfo.cookie = false;
-            debugInfo.finalResult = 'Cookie validation error';
+            debugInfo.finalResult = `${sessionSource} validation error: ${validationError.message}`;
           }
         } else {
-          console.log('❌ No cookie session found');
+          console.log('❌ [RESTORE] No session found in cookie or localStorage backup');
         }
       }
       
@@ -395,18 +490,28 @@ export function AuthProvider({ children }) {
 
     // Listen for auth changes (but don't auto-logout on token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 onAuthStateChange triggered:', { event, userId: session?.user?.id, sessionRestored });
+      const timestamp = new Date().toISOString();
+      console.log(`🔄 [AUTH CHANGE] ${timestamp} - onAuthStateChange triggered:`, { 
+        event, 
+        userId: session?.user?.id, 
+        userEmail: session?.user?.email,
+        hasSession: !!session,
+        sessionRestored,
+        accessToken: session?.access_token ? 'present' : 'missing',
+        refreshToken: session?.refresh_token ? 'present' : 'missing'
+      });
       
       // Return early if session is still being restored from cookie
       if (!sessionRestored) {
-        console.log('⏸️ Skipping onAuthStateChange - session restoration in progress');
+        console.log(`⏸️ [AUTH CHANGE] ${timestamp} - Skipping onAuthStateChange - session restoration in progress`);
         return;
       }
       
-      console.log('✅ Processing onAuthStateChange - session restoration complete');
+      console.log(`✅ [AUTH CHANGE] ${timestamp} - Processing onAuthStateChange - session restoration complete`);
       
       // Only update user state, don't auto-logout unless explicitly signed out
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        console.log(`👤 [USER STATE] ${timestamp} - Setting user from onAuthStateChange:`, session?.user);
         setUser(session?.user ?? null);
         setProfile(profile => profile || null);
         
@@ -418,9 +523,9 @@ export function AuthProvider({ children }) {
           if (iosSafari && pwa) {
             try {
               sessionStorage.setItem('supabase_session', JSON.stringify(session));
-              console.log('Session synced to sessionStorage (iOS Safari PWA)');
+              console.log(`✅ [STORAGE SYNC] ${timestamp} - Session synced to sessionStorage (iOS Safari PWA)`);
             } catch (e) {
-              console.log('SessionStorage not available:', e);
+              console.log(`❌ [STORAGE SYNC] ${timestamp} - SessionStorage not available:`, e);
             }
           }
           
@@ -435,6 +540,7 @@ export function AuthProvider({ children }) {
           }
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log(`🚪 [AUTH CHANGE] ${timestamp} - User signed out, clearing state`);
         setUser(null);
         setProfile(null);
         localStorage.removeItem('supabase_session');
@@ -443,9 +549,9 @@ export function AuthProvider({ children }) {
         if (iosSafari && pwa) {
           try {
             sessionStorage.removeItem('supabase_session');
-            console.log('Session removed from sessionStorage (iOS Safari PWA)');
+            console.log(`✅ [STORAGE CLEAR] ${timestamp} - Session removed from sessionStorage (iOS Safari PWA)`);
           } catch (e) {
-            console.log('SessionStorage not available:', e);
+            console.log(`❌ [STORAGE CLEAR] ${timestamp} - SessionStorage not available:`, e);
           }
         }
         
@@ -458,8 +564,9 @@ export function AuthProvider({ children }) {
         if (iosSafari && pwa) {
           clearSessionFromCookie();
         }
+      } else {
+        console.log(`ℹ️ [AUTH CHANGE] ${timestamp} - Ignoring event: ${event}`);
       }
-      // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
     });
 
     // Restore session from storage changes (PWA persistence)
