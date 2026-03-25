@@ -9,6 +9,7 @@ import './styles/theme.css';
 // Debug components
 import AuthDebugInfo from './components/AuthDebugInfo';
 import OnScreenDebugPanel from './components/OnScreenDebugPanel';
+import DebugActivator from './components/DebugActivator';
 
 // Home
 import Home from './pages/Home';

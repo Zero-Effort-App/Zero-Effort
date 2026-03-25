@@ -4,19 +4,40 @@ export default function OnScreenDebugPanel() {
   const [logs, setLogs] = useState([]);
   const [visible, setVisible] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
 
   useEffect(() => {
-    // Check if debug mode is enabled
-    const urlParams = new URLSearchParams(window.location.search);
-    const debugMode = urlParams.get('debug') === 'true';
+    // Check if debug mode is enabled from localStorage
+    const debugModeEnabled = localStorage.getItem('debug_mode') === 'true';
+    setDebugMode(debugModeEnabled);
     
-    if (!debugMode) {
+    if (!debugModeEnabled) {
       return null; // Don't render if not in debug mode
+    }
+
+    // Load persisted logs from localStorage
+    const persistedLogs = localStorage.getItem('debug_logs');
+    if (persistedLogs) {
+      try {
+        const parsedLogs = JSON.parse(persistedLogs);
+        window.debugLogs = [...parsedLogs];
+        setLogs([...parsedLogs]);
+      } catch (e) {
+        console.log('Failed to load persisted logs:', e);
+        window.debugLogs = [];
+        setLogs([]);
+      }
     }
 
     // Update logs function
     window.updateDebugPanel = () => {
       setLogs([...window.debugLogs]);
+      // Persist logs to localStorage
+      try {
+        localStorage.setItem('debug_logs', JSON.stringify(window.debugLogs));
+      } catch (e) {
+        console.log('Failed to persist logs:', e);
+      }
     };
 
     // Initial logs
@@ -32,10 +53,9 @@ export default function OnScreenDebugPanel() {
   }, [logs, autoScroll]);
 
   // Check if debug mode is enabled
-  const urlParams = new URLSearchParams(window.location.search);
-  const debugMode = urlParams.get('debug') === 'true';
+  const debugModeEnabled = localStorage.getItem('debug_mode') === 'true';
   
-  if (!debugMode) {
+  if (!debugModeEnabled) {
     return null; // Don't render if not in debug mode
   }
 
@@ -62,6 +82,39 @@ export default function OnScreenDebugPanel() {
   const clearLogs = () => {
     window.debugLogs = [];
     setLogs([]);
+    localStorage.removeItem('debug_logs');
+  };
+
+  const toggleDebugMode = () => {
+    const newDebugMode = !debugModeEnabled;
+    localStorage.setItem('debug_mode', newDebugMode.toString());
+    
+    if (newDebugMode) {
+      // Show brief message
+      const message = document.createElement('div');
+      message.textContent = 'Debug mode ON — restart app to see full logs';
+      message.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: monospace;
+        font-size: 14px;
+        z-index: 10000;
+        text-align: center;
+      `;
+      document.body.appendChild(message);
+      
+      setTimeout(() => {
+        document.body.removeChild(message);
+      }, 3000);
+    }
+    
+    setDebugMode(newDebugMode);
   };
 
   return (
@@ -119,6 +172,20 @@ export default function OnScreenDebugPanel() {
             }}
           >
             CLEAR
+          </button>
+          <button
+            onClick={toggleDebugMode}
+            style={{
+              background: '#ffa726',
+              border: 'none',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '3px',
+              fontSize: '10px',
+              cursor: 'pointer'
+            }}
+          >
+            OFF
           </button>
         </div>
         <button
