@@ -14,6 +14,78 @@ const isPWA = () => {
          window.navigator.standalone === true;
 };
 
+// IndexedDB helper for Home Screen PWA persistence
+const storeSessionInIndexedDB = async (session) => {
+  if (!window.indexedDB) return;
+  
+  try {
+    const request = indexedDB.open('ZeroEffortAuth', 1);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('sessions')) {
+        db.createObjectStore('sessions');
+      }
+    };
+    
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction(['sessions'], 'readwrite');
+      const store = transaction.objectStore('sessions');
+      store.put(session, 'currentSession');
+      console.log('Session stored in IndexedDB');
+    };
+  } catch (error) {
+    console.log('IndexedDB not available:', error);
+  }
+};
+
+const getSessionFromIndexedDB = async () => {
+  if (!window.indexedDB) return null;
+  
+  return new Promise((resolve) => {
+    const request = indexedDB.open('ZeroEffortAuth', 1);
+    
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction(['sessions'], 'readonly');
+      const store = transaction.objectStore('sessions');
+      const getRequest = store.get('currentSession');
+      
+      getRequest.onsuccess = (event) => {
+        const session = event.target.result;
+        if (session) {
+          console.log('Session restored from IndexedDB');
+          resolve(session);
+        } else {
+          resolve(null);
+        }
+      };
+      
+      getRequest.onerror = () => resolve(null);
+    };
+    
+    request.onerror = () => resolve(null);
+  });
+};
+
+const clearSessionFromIndexedDB = async () => {
+  if (!window.indexedDB) return;
+  
+  try {
+    const request = indexedDB.open('ZeroEffortAuth', 1);
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction(['sessions'], 'readwrite');
+      const store = transaction.objectStore('sessions');
+      store.delete('currentSession');
+      console.log('Session cleared from IndexedDB');
+    };
+  } catch (error) {
+    console.log('IndexedDB not available:', error);
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -43,38 +115,71 @@ export function AuthProvider({ children }) {
             console.log('SessionStorage not available:', e);
           }
         }
+        
+        // Home Screen PWA - store in IndexedDB
+        if (pwa) {
+          storeSessionInIndexedDB(session);
+        }
       }
     });
 
-    // Try to restore session from localStorage first (PWA persistence)
-    try {
-      const storedSession = localStorage.getItem('supabase_session');
-      if (storedSession) {
-        const session = JSON.parse(storedSession);
-        setUser(session.user ?? null);
-        setProfile(profile || null);
-        setLoading(false);
-        console.log('Session restored from localStorage');
-        return;
-      }
-    } catch (error) {
-      console.log('No stored session found in localStorage:', error);
-    }
-
-    // Try to restore from sessionStorage (iOS Safari PWA fallback)
-    if (iosSafari && pwa) {
+    // Try to restore session from IndexedDB first (Home Screen PWA)
+    if (pwa) {
+      getSessionFromIndexedDB().then(storedSession => {
+        if (storedSession) {
+          setUser(storedSession.user ?? null);
+          setProfile(profile || null);
+          setLoading(false);
+          console.log('Session restored from IndexedDB (Home Screen PWA)');
+          return;
+        }
+        
+        // Fallback to localStorage
+        try {
+          const localStorageSession = localStorage.getItem('supabase_session');
+          if (localStorageSession) {
+            const session = JSON.parse(localStorageSession);
+            setUser(session.user ?? null);
+            setProfile(profile || null);
+            setLoading(false);
+            console.log('Session restored from localStorage');
+            return;
+          }
+        } catch (error) {
+          console.log('No stored session found in localStorage:', error);
+        }
+        
+        // Try to restore from sessionStorage (iOS Safari PWA fallback)
+        if (iosSafari && pwa) {
+          try {
+            const sessionStorageSession = sessionStorage.getItem('supabase_session');
+            if (sessionStorageSession) {
+              const session = JSON.parse(sessionStorageSession);
+              setUser(session.user ?? null);
+              setProfile(profile || null);
+              setLoading(false);
+              console.log('Session restored from sessionStorage (iOS Safari PWA)');
+              return;
+            }
+          } catch (error) {
+            console.log('SessionStorage not available:', error);
+          }
+        }
+      });
+    } else {
+      // Non-PWA - use localStorage only
       try {
-        const sessionStorageSession = sessionStorage.getItem('supabase_session');
-        if (sessionStorageSession) {
-          const session = JSON.parse(sessionStorageSession);
+        const storedSession = localStorage.getItem('supabase_session');
+        if (storedSession) {
+          const session = JSON.parse(storedSession);
           setUser(session.user ?? null);
           setProfile(profile || null);
           setLoading(false);
-          console.log('Session restored from sessionStorage (iOS Safari PWA)');
+          console.log('Session restored from localStorage');
           return;
         }
       } catch (error) {
-        console.log('SessionStorage not available:', error);
+        console.log('No stored session found in localStorage:', error);
       }
     }
 
@@ -100,6 +205,11 @@ export function AuthProvider({ children }) {
               console.log('SessionStorage not available:', e);
             }
           }
+          
+          // Home Screen PWA - store in IndexedDB
+          if (pwa) {
+            storeSessionInIndexedDB(session);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -114,6 +224,11 @@ export function AuthProvider({ children }) {
           } catch (e) {
             console.log('SessionStorage not available:', e);
           }
+        }
+        
+        // Home Screen PWA - clear IndexedDB
+        if (pwa) {
+          clearSessionFromIndexedDB();
         }
       }
       // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
@@ -134,6 +249,11 @@ export function AuthProvider({ children }) {
             console.log('SessionStorage not available:', e);
           }
         }
+        
+        // Sync to IndexedDB for Home Screen PWA
+        if (pwa) {
+          storeSessionInIndexedDB(session);
+        }
       } else if (e.key === 'supabase_session' && !e.newValue) {
         setUser(null);
         setProfile(null);
@@ -145,6 +265,11 @@ export function AuthProvider({ children }) {
           } catch (e) {
             console.log('SessionStorage not available:', e);
           }
+        }
+        
+        // Sync to IndexedDB for Home Screen PWA
+        if (pwa) {
+          clearSessionFromIndexedDB();
         }
       }
     };
