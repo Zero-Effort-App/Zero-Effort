@@ -83,9 +83,14 @@ export default function ApplicantInbox() {
 
   // Browser notification function
   function showBrowserNotification(message) {
+    const hasAppointment = message.content?.includes('📅 Appointment Date');
+    const body = hasAppointment
+      ? `You have a scheduled video call appointment from ${message.companies?.name || 'a company'}. Check your inbox for details.` 
+      : `You have a new message from ${message.companies?.name || 'a company'}`;
+
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('New message from Zero Effort', {
-        body: `You have a new message from ${message.companies?.name || 'a company'}`,
+      new Notification('Zero Effort', {
+        body,
         icon: '/favicon.ico',
         tag: `message-${message.id}`,
         requireInteraction: true

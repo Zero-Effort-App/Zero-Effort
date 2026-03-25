@@ -39,7 +39,6 @@ export default function CompanyApplicants() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageContent, setMessageContent] = useState('');
-  const [meetingLink, setMeetingLink] = useState('');
   const [meetingDate, setMeetingDate] = useState('');
   const [meetingTime, setMeetingTime] = useState('');
   const [useHiringMessage, setUseHiringMessage] = useState(true);
@@ -164,28 +163,42 @@ export default function CompanyApplicants() {
       showToast('Please enter a message.', 'error')
       return
     }
-    if (!meetingDate || !meetingTime || !meetingLink.trim()) {
-      showToast('Please complete all Schedule Meeting fields — date, time, and meeting link are required.', 'error')
-      return
-    }
+
+    const hasSchedule = meetingDate && meetingTime;
+
     setSendingMessage(true)
     try {
-      // Prepare message content with meeting details if provided
+      // Prepare message content with appointment details if provided
       let finalMessage = messageContent.trim();
-      if (meetingDate && meetingTime && meetingLink.trim()) {
-        finalMessage += `\n\n📅 Meeting Date: ${meetingDate}\n⏰ Meeting Time: ${meetingTime}\n🔗 Meeting Link: ${meetingLink.trim()}\n📅 Meeting Status: Pending`;
-      } else if (meetingLink.trim()) {
-        finalMessage += `\n\n🔗 Meeting Link: ${meetingLink.trim()}\n📅 Meeting Status: Pending`;
+      if (hasSchedule) {
+        finalMessage += `\n\n📅 Appointment Date: ${meetingDate}\n⏰ Appointment Time: ${meetingTime}\n� Please be available in the app for a video call at this time.\n� Status: Pending`;
       }
 
-      // Insert message to database
-      const { error } = await supabase.from('messages').insert({
-        company_id: company.id,
-        applicant_id: selectedApp.applicant_id,
-        sender_type: 'company',
-        content: finalMessage
-      })
+      // 1. Insert message first
+      const { data: messageData, error } = await supabase
+        .from('messages')
+        .insert({
+          company_id: company.id,
+          applicant_id: selectedApp.applicant_id,
+          sender_type: 'company',
+          content: finalMessage
+        })
+        .select()
+        .single();
+
       if (error) throw error
+
+      // 2. If schedule was set, insert appointment
+      if (hasSchedule && messageData) {
+        await supabase.from('appointments').insert({
+          company_id: company.id,
+          applicant_id: selectedApp.applicant_id,
+          message_id: messageData.id,
+          appointment_date: meetingDate,
+          appointment_time: meetingTime,
+          status: 'pending'
+        });
+      }
 
       // Send email notification (non-blocking)
       fetch('https://zero-effort-server.onrender.com/api/send-message-notification', {
@@ -196,10 +209,10 @@ export default function CompanyApplicants() {
           applicantName: `${selectedApp?.applicants?.first_name} ${selectedApp?.applicants?.last_name}`,
           companyName: company.name,
           message: messageContent.trim(),
-          meetingDetails: meetingDate && meetingTime ? {
+          meetingDetails: hasSchedule ? {
             date: meetingDate,
             time: meetingTime,
-            link: meetingLink.trim(),
+            note: 'Please be available in the app for a video call at this time.',
             status: 'pending'
           } : null
         })
@@ -211,7 +224,6 @@ export default function CompanyApplicants() {
       // Reset form and show success
       setShowMessageModal(false)
       setMessageContent('')
-      setMeetingLink('')
       setMeetingDate('')
       setMeetingTime('')
       setMeetingStatus('pending')
@@ -243,23 +255,6 @@ export default function CompanyApplicants() {
       case 'rejected': return '#ef4444'; // red
       default: return '#6b7280'; // gray
     }
-  }
-
-  // Create Google Meet meeting
-  function createGoogleMeet() {
-    // Open Google Meet in a new tab
-    const meetWindow = window.open('https://meet.google.com/new', '_blank');
-    
-    // Show toast with instructions
-    showToast('Google Meet opened in new tab! Create a meeting and copy the link back here.', 'info');
-    
-    // Optional: Add a listener to detect when the user comes back to the tab
-    // This could be enhanced with clipboard monitoring in the future
-    setTimeout(() => {
-      if (meetingLink.trim() === '') {
-        showToast('Don\'t forget to paste the Google Meet link after creating the meeting!', 'info');
-      }
-    }, 5000);
   }
 
   // Generate automated hiring message
@@ -711,14 +706,14 @@ export default function CompanyApplicants() {
               onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
 
-            {/* Meeting Scheduling Section */}
+            {/* Video Call Appointment Scheduling Section */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ 
                 fontSize: '13px', fontWeight: 600, color: 'var(--text2)', 
                 marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' 
               }}>
                 <Calendar size={14} />
-                Schedule Meeting (Optional)
+                Schedule Video Call Appointment (Optional)
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
@@ -775,69 +770,11 @@ export default function CompanyApplicants() {
                 </div>
               </div>
 
-              {/* Google Meet Link */}
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: '6px' }}>
-                  Google Meet Link
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '10px 14px' }}>
-                  <Video size={14} style={{ color: 'var(--text2)', flexShrink: 0 }} />
-                  <input
-                    type="url"
-                    value={meetingLink}
-                    onChange={e => setMeetingLink(e.target.value)}
-                    placeholder="https://meet.google.com/..."
-                    style={{ background: 'none', border: 'none', outline: 'none', fontSize: '13px', color: 'var(--text)', flex: 1, fontFamily: 'inherit' }}
-                  />
-                  {meetingLink && (
-                    <button
-                      onClick={() => window.open(meetingLink, '_blank')}
-                      style={{
-                        padding: '4px 8px', borderRadius: '6px',
-                        background: 'var(--accent)', color: 'white',
-                        border: 'none', fontSize: '11px', fontWeight: 600,
-                        cursor: 'pointer', whiteSpace: 'nowrap',
-                        transition: 'background-color 150ms ease, box-shadow 150ms ease'
-                      }}
-                      onMouseEnter={e => {
-                        e.target.style.backgroundColor = '#6d28d9';
-                        e.target.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.2)';
-                      }}
-                      onMouseLeave={e => {
-                        e.target.style.backgroundColor = 'var(--accent)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    >
-                      Test Link
-                    </button>
-                  )}
-                </div>
-                
-                {/* Create Meeting Button */}
-                <button
-                  onClick={createGoogleMeet}
-                  style={{
-                    width: '100%', marginTop: '8px',
-                    padding: '8px 12px', borderRadius: '8px',
-                    background: 'var(--accent)', // Using the same purple accent color
-                    color: 'white', border: 'none',
-                    fontSize: '12px', fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                    transition: 'background-color 150ms ease, box-shadow 150ms ease'
-                  }}
-                  onMouseEnter={e => {
-                    e.target.style.backgroundColor = '#6d28d9'; // Slightly darker purple
-                    e.target.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.2)'; // Minimal shadow
-                  }}
-                  onMouseLeave={e => {
-                    e.target.style.backgroundColor = 'var(--accent)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  <ExternalLink size={12} />
-                  Create New Google Meet
-                </button>
+              <div style={{
+                fontSize: '11px', color: 'var(--text2)', 
+                marginTop: '8px', fontStyle: 'italic'
+              }}>
+                📹 The applicant will be notified to be available for a video call at this time
               </div>
             </div>
 
@@ -847,33 +784,28 @@ export default function CompanyApplicants() {
                 onClick={() => { 
                   setShowMessageModal(false); 
                   setMessageContent(''); 
-                  setMeetingLink(''); 
                   setMeetingDate(''); 
-                  setMeetingTime('');
-                  setUseHiringMessage(true);
+                  setMeetingTime(''); 
+                  setUseHiringMessage(true); 
                 }}
-                style={{
-                  flex: 1, padding: '12px', borderRadius: '12px',
-                  border: '1px solid var(--border2)', background: 'var(--surface2)',
-                  cursor: 'pointer', fontSize: '14px', fontWeight: 600,
-                  color: 'var(--text)'
+                style={{ 
+                  flex: 1, padding: '12px 16px', borderRadius: '10px', 
+                  border: '1px solid var(--border)', background: 'var(--bg2)', 
+                  color: 'var(--text)', fontSize: '14px', fontWeight: 600, 
+                  cursor: 'pointer' 
                 }}
-                onMouseEnter={e => e.target.style.borderColor = 'var(--accent)'}
-                onMouseLeave={e => e.target.style.borderColor = 'var(--border2)'}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendMessage}
-                disabled={sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim()}
-                style={{
-                  flex: 2, padding: '12px', borderRadius: '12px',
-                  border: 'none',
-                  background: sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim() ? 'var(--border)' : 'var(--accent)',
-                  cursor: sendingMessage || (!messageContent.trim() && !useHiringMessage) || !meetingDate || !meetingTime || !meetingLink.trim() ? 'not-allowed' : 'pointer',
-                  fontSize: '14px', fontWeight: 700, color: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'background-color 150ms ease, box-shadow 150ms ease'
+                disabled={sendingMessage || (!messageContent.trim() && !useHiringMessage)}
+                style={{ 
+                  flex: 2, padding: '12px 16px', borderRadius: '10px', 
+                  border: 'none', background: sendingMessage || (!messageContent.trim() && !useHiringMessage) ? 'var(--border)' : 'var(--accent)', 
+                  color: sendingMessage || (!messageContent.trim() && !useHiringMessage) ? 'var(--text2)' : 'white', 
+                  fontSize: '14px', fontWeight: 600, cursor: sendingMessage || (!messageContent.trim() && !useHiringMessage) ? 'not-allowed' : 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                 }}
                 onMouseEnter={e => {
                   if (!sendingMessage && (messageContent.trim() || useHiringMessage)) {
