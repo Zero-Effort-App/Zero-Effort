@@ -157,6 +157,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionRestored, setSessionRestored] = useState(false);
 
   useEffect(() => {
     const iosSafari = isIOSSafari();
@@ -284,8 +285,13 @@ export function AuthProvider({ children }) {
                 }
               }
               
+              // Only set loading to false AFTER both session and profile are loaded
               setLoading(false);
               console.log('✅ Session restored, validated, and profile loaded from cookie');
+              
+              // Mark session restoration as complete
+              setSessionRestored(true);
+              console.log('✅ Session restoration marked as complete');
               
               // Store debug info for display
               localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
@@ -312,6 +318,7 @@ export function AuthProvider({ children }) {
           setUser(indexedDBSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
+          setSessionRestored(true);
           console.log('✅ Session restored from IndexedDB (Home Screen PWA)');
           
           // Store debug info for display
@@ -334,6 +341,7 @@ export function AuthProvider({ children }) {
           setUser(session.user ?? null);
           setProfile(profile || null);
           setLoading(false);
+          setSessionRestored(true);
           console.log('✅ Session restored from localStorage');
           
           // Store debug info for display
@@ -359,6 +367,7 @@ export function AuthProvider({ children }) {
             setUser(session.user ?? null);
             setProfile(profile || null);
             setLoading(false);
+            setSessionRestored(true);
             console.log('✅ Session restored from sessionStorage (iOS Safari PWA)');
             
             // Store debug info for display
@@ -374,6 +383,10 @@ export function AuthProvider({ children }) {
       
       console.log('❌ No session found in any storage mechanism');
       
+      // Mark session restoration as complete even if no session found
+      setSessionRestored(true);
+      setLoading(false);
+      
       // Store debug info for display
       localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
     };
@@ -382,7 +395,15 @@ export function AuthProvider({ children }) {
 
     // Listen for auth changes (but don't auto-logout on token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event);
+      console.log('🔄 onAuthStateChange triggered:', { event, userId: session?.user?.id, sessionRestored });
+      
+      // Return early if session is still being restored from cookie
+      if (!sessionRestored) {
+        console.log('⏸️ Skipping onAuthStateChange - session restoration in progress');
+        return;
+      }
+      
+      console.log('✅ Processing onAuthStateChange - session restoration complete');
       
       // Only update user state, don't auto-logout unless explicitly signed out
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
