@@ -15,6 +15,26 @@ function displaySalary(salary) {
   return `₱${clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` 
 }
 
+// Safe date formatting function
+const formatPostedDate = (dateStr) => {
+  if (!dateStr) return 'Recently posted';
+  
+  const date = new Date(dateStr);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return 'Recently posted';
+  
+  const diff = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+  
+  if (diff < 0) return 'Recently posted';
+  if (diff === 0) return 'Posted today';
+  if (diff === 1) return 'Posted yesterday';
+  if (diff <= 7) return `Posted ${diff} days ago`;
+  if (diff <= 30) return `Posted ${Math.floor(diff / 7)} weeks ago`;
+  if (diff <= 365) return `Posted ${Math.floor(diff / 30)} months ago`;
+  return 'Posted over a year ago';
+};
+
 // Skeleton card component
 function SkeletonCard() {
   return (
@@ -117,13 +137,23 @@ export default function ApplicantJobs() {
         const [jbs, cos] = await Promise.all([getJobs(true), getCompanies(true)]);
         const now = new Date();
         const mapped = jbs.map(j => {
-          const daysAgo = Math.floor((now - new Date(j.posted_at)) / (1000 * 60 * 60 * 24));
+          // Log date field values for debugging
+          console.log('Job date fields:', {
+            created_at: j.created_at,
+            posted_at: j.posted_at,
+            date: j.date,
+            createdAt: j.createdAt
+          });
+          
+          // Use safe date formatting with posted_at as primary field
+          const agoText = formatPostedDate(j.posted_at);
+          
           return {
             ...j,
             co: j.companies?.name || cos.find(c => c.id === j.company_id)?.name || 'Unknown',
             cid: j.company_id,
-            ago: daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`,
-            isNew: daysAgo <= 3,
+            ago: agoText,
+            isNew: agoText.includes('today') || agoText.includes('yesterday') || agoText.includes('1 day ago') || agoText.includes('2 days ago') || agoText.includes('3 days ago'),
           };
         });
         setJobs(mapped);

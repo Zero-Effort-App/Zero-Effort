@@ -113,8 +113,14 @@ export default function ApplicantHome() {
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
 
   function getTimeAgo(dateString) {
+    if (!dateString) return 'Just now';
+    
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Just now';
+    
     const now = new Date()
-    const date = new Date(dateString)
     const seconds = Math.floor((now - date) / 1000)
     if (seconds < 60) return 'Just now'
     const minutes = Math.floor(seconds / 60)
