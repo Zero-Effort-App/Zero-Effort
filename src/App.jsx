@@ -152,6 +152,27 @@ function AppWithServices() {
     }
   }, []);
 
+  // Test push notification support and service worker readiness
+  React.useEffect(() => {
+    const testPushSupport = async () => {
+      console.log('Push supported:', 'PushManager' in window);
+      
+      if ('serviceWorker' in navigator) {
+        try {
+          const swReady = await navigator.serviceWorker.ready;
+          console.log('SW ready:', swReady.active ? 'active' : 'not active');
+          console.log('SW scope:', swReady.scope);
+        } catch (err) {
+          console.log('SW ready error:', err);
+        }
+      } else {
+        console.log('SW not supported');
+      }
+    };
+    
+    testPushSupport();
+  }, []);
+
   return (
     <>
       <Routes>
