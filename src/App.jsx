@@ -106,6 +106,35 @@ function DebugRoute() {
   );
 }
 
+// Applicant root route component with auth logic
+function ApplicantRootRoute() {
+  const { user, loading } = useAuth();
+  
+  console.log('ROOT ROUTE - user:', !!user, 'loading:', loading);
+  
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: 'var(--bg1)',
+        color: 'var(--text1)',
+        fontFamily: 'monospace'
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+  
+  if (user) {
+    return <Navigate to="/applicant/home" replace />;
+  }
+  
+  return <ApplicantLanding />;
+}
+
 function AppWithServices() {
   const { user } = useAuth();
 
@@ -162,7 +191,7 @@ function AppWithServices() {
 
         {/* Applicant Portal */}
         <Route path="/applicant">
-          <Route index element={<ApplicantLanding />} />
+          <Route index element={<ApplicantRootRoute />} />
           <Route path="login" element={<ApplicantLogin />} />
           <Route path="reset-password" element={<ApplicantResetPassword />} />
           <Route element={<ApplicantLayout />}>
