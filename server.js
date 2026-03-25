@@ -470,6 +470,19 @@ app.post('/api/agora/token', async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    services: {
+      push: 'active',
+      agora: 'active',
+      scheduler: 'active'
+    }
+  });
+});
+
 // Start interview reminder scheduler
 interviewNotificationService.setupReminderScheduler();
 

@@ -679,7 +679,18 @@ export default function ApplicantHome() {
               }
               
               try {
-                const response = await fetch('https://zero-effort-server.onrender.com/api/notifications/test', {
+                // Ping server first to wake it up
+                console.log('🔔 Waking up server...');
+                await fetch('https://zero-effort-server.onrender.com/health');
+                // Wait 2 seconds for it to wake
+                await new Promise(r => setTimeout(r, 2000));
+                console.log('🔔 Server awake, sending test notification...');
+                
+                const url = 'https://zero-effort-server.onrender.com/api/notifications/test';
+                console.log('🔔 Push API URL:', url);
+                console.log('🔔 User ID:', profile.id);
+                
+                const res = await fetch(url, {
                   method: 'POST',
                   headers: { 
                     'Content-Type': 'application/json',
@@ -688,14 +699,20 @@ export default function ApplicantHome() {
                   body: JSON.stringify({ userId: profile.id })
                 });
                 
-                if (response.ok) {
-                  alert('Test notification sent! Check your browser notifications.');
+                console.log('🔔 Response status:', res.status);
+                console.log('🔔 Response headers:', Object.fromEntries(res.headers.entries()));
+                
+                const data = await res.json();
+                console.log('🔔 Response data:', data);
+                
+                if (res.ok) {
+                  alert('✅ Test notification sent! Check your browser notifications.');
                 } else {
-                  const error = await response.text();
-                  alert('Failed to send test notification: ' + error);
+                  alert('❌ Failed to send test notification: ' + JSON.stringify(data));
                 }
-              } catch (error) {
-                alert('Error sending test notification: ' + error.message);
+              } catch (err) {
+                console.error('🔔 Push test error:', err);
+                alert('❌ Error sending test notification: ' + err.message);
               }
             }}
             style={{
