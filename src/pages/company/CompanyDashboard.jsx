@@ -9,14 +9,40 @@ export default function CompanyDashboard() {
   const [activity, setActivity] = useState([]);
   const navigate = useNavigate();
 
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  async function fetchWithCache(key, fetchFn) {
+    // Check if cached data exists and is fresh
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        console.log(`✅ Using cached ${key}`);
+        return data;
+      }
+    }
+    
+    // Fetch fresh data if not cached or expired
+    console.log(`🔄 Fetching fresh ${key}...`);
+    const data = await fetchFn();
+    
+    // Store in cache
+    localStorage.setItem(key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+    
+    return data;
+  }
+
   useEffect(() => {
     async function load() {
       if (!company) return;
       try {
         const [jobs, apps, act] = await Promise.all([
-          getCompanyJobs(company.id),
-          getCompanyApplications(company.id),
-          getCompanyActivityLog(company.id),
+          fetchWithCache('company_dashboard_jobs', () => getCompanyJobs(company.id)),
+          fetchWithCache('company_dashboard_applications', () => getCompanyApplications(company.id)),
+          fetchWithCache('company_dashboard_activity', () => getCompanyActivityLog(company.id)),
         ]);
         setStats({
           active: jobs.filter(j => j.status === 'active').length,

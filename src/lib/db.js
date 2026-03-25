@@ -20,7 +20,7 @@ export function formatTime(dateString) {
 
 // ── COMPANIES ──
 export async function getCompanies(activeOnly = false) {
-  let query = supabase.from('companies').select('*').order('name');
+  let query = supabase.from('companies').select('id, name, logo_url, logo_initials, color, is_active, industry').order('name');
   if (activeOnly) query = query.eq('is_active', true);
   const { data, error } = await query;
   if (error) throw error;
@@ -52,7 +52,7 @@ export async function getCompanyProfile(companyId) {
 
 // ── JOBS ──
 export async function getJobs(activeOnly = false) {
-  let query = supabase.from('jobs').select('*, companies(name, logo_initials, color, industry)').order('posted_at', { ascending: false });
+  let query = supabase.from('jobs').select('id, title, salary, department, type, status, companies(id, name, logo_url, logo_initials, color)').order('posted_at', { ascending: false });
   if (activeOnly) query = query.eq('status', 'active');
   const { data, error } = await query;
   if (error) throw error;
@@ -60,7 +60,7 @@ export async function getJobs(activeOnly = false) {
 }
 
 export async function getJobById(jobId) {
-  const { data, error } = await supabase.from('jobs').select('*, companies(name, logo_initials, color, industry)').eq('id', jobId).single();
+  const { data, error } = await supabase.from('jobs').select('id, title, salary, department, type, status, description, requirements, companies(id, name, logo_url, logo_initials, color)').eq('id', jobId).single();
   if (error) throw error;
   return data;
 }
@@ -83,23 +83,18 @@ export async function removeJob(jobId) {
 }
 
 export async function getCompanyJobs(companyId) {
-  const { data, error } = await supabase.from('jobs').select('*').eq('company_id', companyId).order('posted_at', { ascending: false });
+  const { data, error } = await supabase.from('jobs').select('id, title, status, department, type, salary').eq('company_id', companyId).order('posted_at', { ascending: false });
   if (error) throw error;
   return data || [];
 }
 
 // ── EVENTS ──
 export async function getEvents(upcomingOnly = false) {
-  let query = supabase.from('events').select('*').order('date', { ascending: true });
+  let query = supabase.from('events').select('id, title, date, description, location').order('date', { ascending: true });
   if (upcomingOnly) query = query.gte('date', new Date().toISOString());
   const { data, error } = await query;
   if (error) throw error;
-  
-  // Convert details array back to string for display compatibility
-  return data?.map(event => ({
-    ...event,
-    description: event.details ? event.details.join(', ') : ''
-  })) || [];
+  return data || [];
 }
 
 export async function addEvent(eventData) {
@@ -137,7 +132,7 @@ export async function removeEvent(eventId) {
 
 // ── ACTIVITY LOG ──
 export async function getActivityLog(limit = 50) {
-  const { data, error } = await supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(limit);
+  const { data, error } = await supabase.from('activity_log').select('id, type, icon, message, sub_text, created_at').order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return data || [];
 }
@@ -146,7 +141,7 @@ export async function getCompanyActivityLog(companyId, limit = 10) {
   try {
     const { data, error } = await supabase
       .from('activity_log')
-      .select('*')
+      .select('id, type, icon, message, sub_text, created_at')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -188,7 +183,7 @@ export async function submitApplication(applicationData) {
 export async function getMyApplications(applicantId) {
   const { data, error } = await supabase
     .from('applications')
-    .select('*, jobs(title, company_id, companies(name, logo_initials, logo_url, color))')
+    .select('id, status, applied_at, jobs(id, title, companies(id, name, logo_url, logo_initials, color))')
     .eq('applicant_id', applicantId)
     .order('applied_at', { ascending: false });
   if (error) throw error;
@@ -198,7 +193,7 @@ export async function getMyApplications(applicantId) {
 export async function getApplicationsByJob(jobId) {
   const { data, error } = await supabase
     .from('applications')
-    .select('*, applicants(first_name, last_name, email, phone)')
+    .select('id, status, applied_at, applicants(id, first_name, last_name, email, phone)')
     .eq('job_id', jobId)
     .order('applied_at', { ascending: false });
   if (error) throw error;
@@ -222,9 +217,9 @@ export async function getCompanyApplications(companyId) {
     const { data, error } = await supabase
       .from('applications')
       .select(`
-        *,
-        applicants(first_name, last_name, email, phone, photo_url, gender),
-        jobs(title, company_id, department, type)
+        id, status, applied_at,
+        applicants(id, first_name, last_name, email, phone, photo_url, gender),
+        jobs(id, title, department, type)
       `)
       .in('job_id', jobIds)
       .order('applied_at', { ascending: false })

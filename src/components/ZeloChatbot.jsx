@@ -28,24 +28,50 @@ export default function ZeloChatbot() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function fetchJobsAndCompanies() {
-    if (dataCache.current) return dataCache.current
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  async function fetchWithCache(key, fetchFn) {
+    // Check if cached data exists and is fresh
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        console.log(`✅ Using cached ${key}`);
+        return data;
+      }
+    }
     
-    const { data: jobs } = await supabase
-      .from('jobs')
-      .select('title, type, department, salary, companies(name, industry)')
-      .eq('status', 'active')
-      .limit(20)
+    // Fetch fresh data if not cached or expired
+    console.log(`🔄 Fetching fresh ${key}...`);
+    const data = await fetchFn();
+    
+    // Store in cache
+    localStorage.setItem(key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+    
+    return data;
+  }
 
-    const { data: companies } = await supabase
-      .from('companies')
-      .select('name, industry, tags')
-      .eq('is_active', true)
-      .limit(20)
+  async function fetchJobsAndCompanies() {
+    return await fetchWithCache('zelo_jobs_companies_cache', async () => {
+      const [jobs, companies] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select('title, type, department, salary, companies(name, industry)')
+          .eq('status', 'active')
+          .limit(20),
 
-    const result = { jobs: jobs || [], companies: companies || [] }
-    dataCache.current = result
-    return result
+        supabase
+          .from('companies')
+          .select('name, industry, tags')
+          .eq('is_active', true)
+          .limit(20)
+      ]);
+
+      return { jobs: jobs || [], companies: companies || [] };
+    });
   }
 
   async function fetchUserProfile() {
@@ -264,15 +290,22 @@ BEHAVIOR GUIDELINES:
     }}
   >
     {open ? <X size={20} /> : (
-      <img
-        src="/zelo-avatar.png"
-        alt="Zelo"
+      <div
         style={{
           width: '52px', height: '52px',
-          objectFit: 'contain',
-          borderRadius: '50%'
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '20px',
+          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)'
         }}
-      />
+      >
+        Z
+      </div>
     )}
   </button>
 )}
@@ -315,11 +348,21 @@ BEHAVIOR GUIDELINES:
             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img 
-                src="/zelo-avatar.png" 
-                alt="Zelo"
-                style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '50%' }}
-              />
+              <div
+                style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}
+              >
+                Z
+              </div>
               <div>
                 <div>Zelo — Career Assistant</div>
                 <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Zero Effort AI</div>

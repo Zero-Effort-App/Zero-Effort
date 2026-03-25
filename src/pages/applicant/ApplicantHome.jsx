@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanies, getJobs, getEvents, getMyApplications, getRecentHires, formatDate } from '../../lib/db';
 import { Briefcase, Building2, FileText, CalendarDays, CheckCircle, Clock, MapPin } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -21,26 +22,58 @@ export default function ApplicantHome() {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [recentHires, setRecentHires] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [slowNetwork, setSlowNetwork] = useState(false);
   const navigate = useNavigate();
+
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  async function fetchWithCache(key, fetchFn) {
+    // Check if cached data exists and is fresh
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        console.log(`✅ Using cached ${key}`);
+        return data;
+      }
+    }
+    
+    // Fetch fresh data if not cached or expired
+    console.log(`🔄 Fetching fresh ${key}...`);
+    const data = await fetchFn();
+    
+    // Store in cache
+    localStorage.setItem(key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+    
+    return data;
+  }
 
   useEffect(() => {
     async function load() {
+      const startTime = Date.now();
+      setLoading(true);
+      
       try {
-        // Fetch companies, events, applications, and recent hires
         const [cos, evts, apps, hires] = await Promise.all([
-          getCompanies(true),
-          getEvents(true),
-          profile?.id ? getMyApplications(profile.id) : Promise.resolve([]),
-          getRecentHires(10),
+          fetchWithCache('applicant_home_companies', () => getCompanies(true)),
+          fetchWithCache('applicant_home_events', () => getEvents(true)),
+          profile?.id ? fetchWithCache('applicant_home_applications', () => getMyApplications(profile.id)) : Promise.resolve([]),
+          fetchWithCache('applicant_home_hires', () => getRecentHires(10)),
         ]);
         
         // Fetch featured jobs properly
-        const { data: jobsData } = await supabase
-          .from('jobs')
-          .select('*, companies(name, logo_url, logo_initials, color)')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(4);
+        const { data: jobsData } = await fetchWithCache('applicant_home_featured_jobs', () => 
+          supabase
+            .from('jobs')
+            .select('id, title, companies(id, name, logo_url, logo_initials)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(4)
+        );
         
         setCompanies(cos);
         setEvents(evts.slice(0, 6));
@@ -52,12 +85,22 @@ export default function ApplicantHome() {
           myApps: apps.length,
           upcomingEvents: evts.length,
         });
+        
+        // Check if load took too long
+        const loadTime = Date.now() - startTime;
+        if (loadTime > 3000) {
+          setSlowNetwork(true);
+          showToast('Slow network detected. Some features may load slower.', 'info');
+        }
       } catch (err) {
         console.error('Error loading home data:', err);
+        showToast('Failed to load data. Please refresh.', 'error');
+      } finally {
+        setLoading(false);
       }
     }
     load();
-  }, [profile?.id]);
+  }, [profile?.id, showToast]);
 
   function ini(name) { return name ? name.split(' ').map(w => w[0]).join('').slice(0, 2) : '??'; }
 
@@ -76,7 +119,29 @@ export default function ApplicantHome() {
   }
 
   return (
-    <div className="pw" style={{ paddingBottom: '80px', paddingTop: '0px' }}>
+    <>
+      {loading && <LoadingOverlay show={true} />}
+      
+      {slowNetwork && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--accent)',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: 600,
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          Slow network detected
+        </div>
+      )}
+      
+      <div className="pw" style={{ paddingBottom: '80px', paddingTop: '0px' }}>
       <div className="hero" style={{ paddingTop: '0px' }}>
         <div className="hero-h1">
           {profile ? (
