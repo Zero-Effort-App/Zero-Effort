@@ -74,22 +74,36 @@ export default function OnScreenDebugPanel() {
     localStorage.removeItem('debug_logs');
   };
 
+  const hidePanel = () => {
+    setVisible(false);
+    // Shrink to minimal size
+    setTimeout(() => {
+      setVisible(false);
+    }, 100);
+  };
+
+  const showPanel = () => {
+    setVisible(true);
+  };
+
   // Always render debug panel - no conditions
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: visible ? '200px' : '30px',
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-      color: 'white',
-      fontFamily: 'monospace',
-      fontSize: '11px',
-      zIndex: 9999,
-      borderTop: visible ? '1px solid #333' : 'none',
-      transition: 'height 0.3s ease'
-    }}>
+    <>
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: visible ? '200px' : '30px',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        color: 'white',
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        zIndex: 1000, // Lower z-index to not interfere with app buttons
+        borderTop: visible ? '1px solid #333' : 'none',
+        transition: 'height 0.3s ease',
+        pointerEvents: 'auto' // Ensure panel is interactive
+      }}>
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -130,6 +144,20 @@ export default function OnScreenDebugPanel() {
             }}
           >
             CLEAR
+          </button>
+          <button
+            onClick={hidePanel}
+            style={{
+              background: '#ffa726',
+              border: 'none',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '3px',
+              fontSize: '10px',
+              cursor: 'pointer'
+            }}
+          >
+            HIDE
           </button>
         </div>
         <button
@@ -187,5 +215,33 @@ export default function OnScreenDebugPanel() {
         </div>
       )}
     </div>
+      
+      {/* Floating button to show debug panel when hidden */}
+      {!visible && (
+        <button
+          onClick={showPanel}
+          style={{
+            position: 'fixed',
+            bottom: '10px',
+            right: '10px',
+            width: '40px',
+            height: '40px',
+            backgroundColor: 'rgba(79, 195, 247, 0.9)',
+            border: 'none',
+            borderRadius: '50%',
+            color: 'white',
+            fontSize: '16px',
+            cursor: 'pointer',
+            zIndex: 1001,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          🔍
+        </button>
+      )}
+    </>
   );
 }
