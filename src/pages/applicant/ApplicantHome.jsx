@@ -635,6 +635,92 @@ export default function ApplicantHome() {
           </div>
         </div>
       )}
+
+      {/* Push Notification Status & Test */}
+      <div style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '12px'
+        }}>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'var(--text)'
+          }}>
+            {(() => {
+              if ('PushManager' in window && 'Notification' in window) {
+                const permission = Notification.permission;
+                if (permission === 'granted') {
+                  return '🟢 Push notifications: Active';
+                } else if (permission === 'denied') {
+                  return '🔴 Push notifications: Permission denied';
+                } else {
+                  return '🟡 Push notifications: Not enabled';
+                }
+              } else {
+                return '🔴 Push notifications: Not supported';
+              }
+            })()}
+          </div>
+          
+          <button
+            onClick={async () => {
+              if (!profile?.id) {
+                alert('Please log in first');
+                return;
+              }
+              
+              try {
+                const response = await fetch('https://zero-effort-server.onrender.com/api/notifications/test', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${profile.id}`
+                  },
+                  body: JSON.stringify({ userId: profile.id })
+                });
+                
+                if (response.ok) {
+                  alert('Test notification sent! Check your browser notifications.');
+                } else {
+                  const error = await response.text();
+                  alert('Failed to send test notification: ' + error);
+                }
+              } catch (error) {
+                alert('Error sending test notification: ' + error.message);
+              }
+            }}
+            style={{
+              background: 'var(--accent)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Test Push Notification
+          </button>
+        </div>
+        
+        <div style={{
+          fontSize: '12px',
+          color: 'var(--text2)',
+          textAlign: 'center'
+        }}>
+          Check browser console for detailed push status logs
+        </div>
+      </div>
       </div>
     </>
   );

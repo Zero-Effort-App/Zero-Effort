@@ -61,6 +61,7 @@ export default function ApplicantLayout() {
             // Don't redirect - user is authenticated even without profile
             setLoading(false);
             if (user?.id) {
+              console.log('📲 Subscribing to push for user:', user.id);
               subscribeToPush(user.id, 'applicant');
             }
           } else {
@@ -100,6 +101,7 @@ export default function ApplicantLayout() {
           // Has session but error checking profile - allow access
           setLoading(false);
           if (user?.id) {
+            console.log('📲 Subscribing to push for user:', user.id);
             subscribeToPush(user.id, 'applicant');
           }
         }
@@ -117,6 +119,7 @@ export default function ApplicantLayout() {
     setLoading(false);
     
     if (user?.id) {
+      console.log('📲 Subscribing to push for user:', user.id);
       subscribeToPush(user.id, 'applicant');
     }
   }
