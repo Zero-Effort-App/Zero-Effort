@@ -47,6 +47,20 @@ const getSessionFromCookie = () => {
         const decodedData = atob(value); // Base64 decode
         const session = JSON.parse(decodedData);
         console.log('✅ Session restored from cookie:', session);
+        
+        // Validate session has required fields
+        if (!session || !session.access_token) {
+          console.log('❌ Invalid session: missing access_token');
+          return null;
+        }
+        
+        // Check if session is expired (simple check)
+        if (session.expires_at && new Date(session.expires_at) < new Date()) {
+          console.log('❌ Session expired');
+          return null;
+        }
+        
+        console.log('✅ Session appears valid');
         return session;
       }
     }
@@ -201,17 +215,34 @@ export function AuthProvider({ children }) {
         console.log('🍪 Trying cookie restoration first...');
         const cookieSession = getSessionFromCookie();
         if (cookieSession) {
-          console.log('✅ Cookie session found, setting user state');
-          debugInfo.cookie = true;
-          debugInfo.finalResult = 'Success from cookie';
-          setUser(cookieSession.user ?? null);
-          setProfile(profile || null);
-          setLoading(false);
-          console.log('✅ Session restored from cookie (iOS PWA force close)');
+          console.log('✅ Cookie session found, validating with Supabase...');
           
-          // Store debug info for display
-          localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
-          return;
+          // Validate session with Supabase
+          try {
+            const { data: { session: validSession }, error } = await supabase.auth.setSession(cookieSession.access_token, cookieSession.refresh_token);
+            
+            if (error) {
+              console.log('❌ Supabase session validation failed:', error);
+              debugInfo.cookie = false;
+              debugInfo.finalResult = 'Cookie session invalid';
+            } else if (validSession) {
+              console.log('✅ Supabase session validation successful');
+              debugInfo.cookie = true;
+              debugInfo.finalResult = 'Success from cookie + validation';
+              setUser(validSession.user ?? null);
+              setProfile(profile || null);
+              setLoading(false);
+              console.log('✅ Session restored and validated from cookie');
+              
+              // Store debug info for display
+              localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
+              return;
+            }
+          } catch (validationError) {
+            console.log('❌ Session validation error:', validationError);
+            debugInfo.cookie = false;
+            debugInfo.finalResult = 'Cookie validation error';
+          }
         } else {
           console.log('❌ No cookie session found');
         }
