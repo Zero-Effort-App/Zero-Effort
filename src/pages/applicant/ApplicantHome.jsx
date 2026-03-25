@@ -154,7 +154,7 @@ export default function ApplicantHome() {
   }
 
   return (
-    <>
+    <div>
       {loading && <LoadingOverlay show={true} />}
       
       {slowNetwork && (
@@ -190,6 +190,7 @@ export default function ApplicantHome() {
           <button className="btn-acc" onClick={() => navigate('/applicant/jobs')}>Browse open jobs</button>
           <button className="btn-ghost" onClick={() => navigate('/applicant/companies')}>Explore companies</button>
         </div>
+      </div>
       </div>
 
       <div className="stat-row stagger">
@@ -635,110 +636,6 @@ export default function ApplicantHome() {
           </div>
         </div>
       )}
-
-      {/* Push Notification Status & Test */}
-      <div style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px'
-        }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: 'var(--text)'
-          }}>
-            {(() => {
-              if ('PushManager' in window && 'Notification' in window) {
-                const permission = Notification.permission;
-                if (permission === 'granted') {
-                  return '🟢 Push notifications: Active';
-                } else if (permission === 'denied') {
-                  return '🔴 Push notifications: Permission denied';
-                } else {
-                  return '🟡 Push notifications: Not enabled';
-                }
-              } else {
-                return '🔴 Push notifications: Not supported';
-              }
-            })()}
-          </div>
-          
-          <button
-            onClick={async () => {
-              if (!profile?.id) {
-                alert('Please log in first');
-                return;
-              }
-              
-              try {
-                // Ping server first to wake it up
-                console.log('🔔 Waking up server...');
-                await fetch('https://zero-effort-server.onrender.com/health');
-                // Wait 2 seconds for it to wake
-                await new Promise(r => setTimeout(r, 2000));
-                console.log('🔔 Server awake, sending test notification...');
-                
-                const url = 'https://zero-effort-server.onrender.com/api/notifications/test';
-                console.log('🔔 Push API URL:', url);
-                console.log('🔔 User ID:', profile.id);
-                
-                const res = await fetch(url, {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${profile.id}`
-                  },
-                  body: JSON.stringify({ userId: profile.id })
-                });
-                
-                console.log('🔔 Response status:', res.status);
-                console.log('🔔 Response headers:', Object.fromEntries(res.headers.entries()));
-                
-                const data = await res.json();
-                console.log('🔔 Response data:', data);
-                
-                if (res.ok) {
-                  alert('✅ Test notification sent! Check your browser notifications.');
-                } else {
-                  alert('❌ Failed to send test notification: ' + JSON.stringify(data));
-                }
-              } catch (err) {
-                console.error('🔔 Push test error:', err);
-                alert('❌ Error sending test notification: ' + err.message);
-              }
-            }}
-            style={{
-              background: 'var(--accent)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Test Push Notification
-          </button>
-        </div>
-        
-        <div style={{
-          fontSize: '12px',
-          color: 'var(--text2)',
-          textAlign: 'center'
-        }}>
-          Check browser console for detailed push status logs
-        </div>
-      </div>
-      </div>
-    </>
+    </div>
   );
 }

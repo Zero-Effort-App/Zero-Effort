@@ -206,6 +206,30 @@ export default function CompanyApplicants() {
 
       if (error) throw error
 
+      // Send push notification to applicant (non-blocking)
+      try {
+        if (!selectedApp.applicant_id || !company.name) {
+          console.error('Push notification skipped: missing applicant_id or company name');
+          return;
+        }
+        
+        await fetch('https://zero-effort-server.onrender.com/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: selectedApp.applicant_id,
+            user_type: 'applicant',
+            title: `New message from ${company.name} 💬`,
+            body: hasSchedule 
+              ? '📅 You have a video call appointment scheduled. Tap to view.' 
+              : messageContent.trim().substring(0, 100),
+            url: '/applicant/inbox'
+          })
+        });
+      } catch (pushErr) {
+        console.error('Push notification failed (non-critical):', pushErr.message);
+      }
+
       // 2. If schedule was set, insert appointment
       if (hasSchedule && messageData) {
         await supabase.from('appointments').insert({
@@ -515,6 +539,28 @@ export default function CompanyApplicants() {
                     }
 
                     console.log('✅ Call session created:', data);
+
+                    // Send push notification to applicant (non-blocking)
+                    try {
+                      if (!selectedApp.applicant_id || !company.name) {
+                        console.error('Push notification skipped: missing applicant_id or company name');
+                        return;
+                      }
+                      
+                      await fetch('https://zero-effort-server.onrender.com/api/push/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          user_id: selectedApp.applicant_id,
+                          user_type: 'applicant',
+                          title: `📹 Incoming Video Call from ${company.name}`,
+                          body: 'Tap to open the app and join the call now.',
+                          url: '/applicant'
+                        })
+                      });
+                    } catch (pushErr) {
+                      console.error('Push notification failed (non-critical):', pushErr.message);
+                    }
 
                     // HR joins immediately
                     setActiveCall({

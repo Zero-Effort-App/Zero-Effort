@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import busboy from 'busboy';
 import sharp from 'sharp';
 import webpush from 'web-push';
+import cron from 'node-cron';
 
 // Load environment variables first
 dotenv.config()
@@ -483,6 +484,91 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Appointment reminder scheduler
+cron.schedule('0 * * * *', async () => {
+  try {
+    const now = new Date();
+    
+    // Find appointments in the next 24 hours
+    const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const in1Hour = new Date(now.getTime() + 60 * 60 * 1000);
+    const in1HourPlus5 = new Date(now.getTime() + 65 * 60 * 1000);
+
+    // 24-hour reminder
+    const { data: dayReminders } = await supabaseAdmin
+      .from('appointments')
+      .select('*, companies(name)')
+      .eq('status', 'confirmed')
+      .gte('appointment_date', in24Hours.toISOString().split('T')[0])
+      .lte('appointment_date', in24Hours.toISOString().split('T')[0])
+      .eq('reminder_24h_sent', false);
+
+    for (const apt of dayReminders || []) {
+      try {
+        await fetch('https://zero-effort-server.onrender.com/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: apt.applicant_id,
+            user_type: 'applicant',
+            title: '📅 Appointment Tomorrow',
+            body: `You have a video call with ${apt.companies.name} tomorrow at ${apt.appointment_time}`,
+            url: '/applicant/inbox'
+          })
+        });
+        
+        await supabaseAdmin
+          .from('appointments')
+          .update({ reminder_24h_sent: true })
+          .eq('id', apt.id);
+          
+        console.log(`✅ 24h reminder sent for appointment ${apt.id}`);
+      } catch (err) {
+        console.error(`❌ Failed to send 24h reminder for appointment ${apt.id}:`, err);
+      }
+    }
+
+    // 1-hour reminder
+    const { data: hourReminders } = await supabaseAdmin
+      .from('appointments')
+      .select('*, companies(name)')
+      .eq('status', 'confirmed')
+      .eq('reminder_1h_sent', false);
+
+    for (const apt of hourReminders || []) {
+      try {
+        const aptDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+        if (aptDateTime >= in1Hour && aptDateTime <= in1HourPlus5) {
+          await fetch('https://zero-effort-server.onrender.com/api/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: apt.applicant_id,
+              user_type: 'applicant',
+              title: '⏰ Video Call in 1 Hour',
+              body: `Your video call with ${apt.companies.name} starts in 1 hour. Be ready!`,
+              url: '/applicant/inbox'
+            })
+          });
+          
+          await supabaseAdmin
+            .from('appointments')
+            .update({ reminder_1h_sent: true })
+            .eq('id', apt.id);
+            
+          console.log(`✅ 1h reminder sent for appointment ${apt.id}`);
+        }
+      } catch (err) {
+        console.error(`❌ Failed to send 1h reminder for appointment ${apt.id}:`, err);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Appointment reminder scheduler error:', error);
+  }
+});
+
+console.log('✅ Appointment reminder scheduler started');
+
 // Start interview reminder scheduler
 interviewNotificationService.setupReminderScheduler();
 
@@ -492,4 +578,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Agora video call service started')
   console.log('✅ Push notification service started')
   console.log('✅ Interview reminder scheduler started')
+  console.log('✅ Appointment reminder scheduler started')
 })

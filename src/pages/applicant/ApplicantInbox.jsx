@@ -313,6 +313,28 @@ export default function ApplicantInbox() {
       
       if (error) throw error
       
+      // Send push notification to company (non-blocking)
+      try {
+        if (!selectedConvo.company.id || !user?.user_metadata?.first_name) {
+          console.error('Push notification skipped: missing company.id or user first_name');
+          return;
+        }
+        
+        await fetch('https://zero-effort-server.onrender.com/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: selectedConvo.company.id,
+            user_type: 'company',
+            title: `${user?.user_metadata?.first_name} replied 💬`,
+            body: newMessage.trim().substring(0, 100),
+            url: '/company/inbox'
+          })
+        });
+      } catch (pushErr) {
+        console.error('Push notification failed (non-critical):', pushErr.message);
+      }
+      
       // Add message locally for immediate feedback
       setMessages(prev => [...prev, data])
       setNewMessage('')

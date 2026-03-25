@@ -71,8 +71,6 @@ const usePushNotifications = (userId) => {
 
       // Save subscription to backend
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      console.log('📲 Push API URL for subscription:', `${apiUrl}/notifications/subscribe`);
-      console.log('📲 User ID for subscription:', userId);
       
       const response = await fetch(`${apiUrl}/notifications/subscribe`, {
         method: 'POST',
@@ -86,19 +84,13 @@ const usePushNotifications = (userId) => {
         }),
       });
 
-      console.log('📲 Subscription response status:', response.status);
-      console.log('📲 Subscription response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('📲 Subscription error response:', errorText);
         throw new Error('Failed to save subscription');
       }
 
       setSubscription(pushSubscription);
       setIsLoading(false);
       
-      console.log('Successfully subscribed to push notifications');
       return true;
     } catch (err) {
       setError(err.message);
@@ -192,11 +184,8 @@ const usePushNotifications = (userId) => {
   const testNotification = useCallback(async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const testUrl = `${apiUrl}/notifications/test`;
-      console.log('📲 Test notification API URL:', testUrl);
-      console.log('📲 User ID for test:', userId);
       
-      const response = await fetch(testUrl, {
+      const response = await fetch(`${apiUrl}/notifications/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,17 +193,11 @@ const usePushNotifications = (userId) => {
         },
       });
 
-      console.log('📲 Test notification response status:', response.status);
-      console.log('📲 Test notification response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('📲 Test notification error response:', errorText);
         throw new Error('Failed to send test notification');
       }
 
       const result = await response.json();
-      console.log('📲 Test notification sent successfully:', result);
       return true;
     } catch (err) {
       setError(err.message);
