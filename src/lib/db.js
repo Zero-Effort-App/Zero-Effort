@@ -370,6 +370,10 @@ export async function uploadCompanyLogo(file, companyId) {
 
 export async function getRecentHires(limit = 10) {
   try {
+    // Filter for hires within the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     const { data, error } = await supabase
       .from('applications')
       .select(`
@@ -380,6 +384,7 @@ export async function getRecentHires(limit = 10) {
         jobs(title, companies(name))
       `)
       .eq('status', 'accepted')
+      .gte('applied_at', sevenDaysAgo.toISOString())
       .order('applied_at', { ascending: false })
       .limit(limit)
 

@@ -14,6 +14,14 @@ function displaySalary(salary) {
   return `₱${clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` 
 }
 
+// New salary formatting function
+const formatSalary = (min, max, currency = 'PHP') => {
+  if (!min && !max) return null; // return null, not "Salary not specified"
+  if (min && max) return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  if (min) return `${currency} ${min.toLocaleString()}+`;
+  if (max) return `Up to ${currency} ${max.toLocaleString()}`;
+};
+
 export default function ApplicantHome() {
   const { profile } = useOutletContext();
   const { showToast } = useToast();
@@ -180,7 +188,7 @@ export default function ApplicantHome() {
         </div>
       </div>
 
-      {recentHires.length > 0 && (
+      {(recentHires.length > 0 || true) && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <span style={{ fontSize: '18px', fontWeight: 800 }}><CheckCircle size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Recent Hires</span>
@@ -193,51 +201,101 @@ export default function ApplicantHome() {
             }}>LIVE</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {recentHires.map(hire => {
-              const firstName = hire.applicants?.first_name || ''
-              const lastInitial = hire.applicants?.last_name?.charAt(0) || ''
-              const jobTitle = hire.jobs?.title || 'a position'
-              const companyName = hire.jobs?.companies?.name || 'a company'
-              const timeAgo = getTimeAgo(hire.applied_at)
+          {recentHires.length > 0 ? (
+            <>
+              <div className="recent-hires-scroll" style={{
+                display: 'grid',
+                gridTemplateRows: 'repeat(3, auto)',
+                gridAutoFlow: 'column',
+                gridAutoColumns: '200px',
+                overflowX: 'auto',
+                gap: '12px',
+                paddingBottom: '8px',
+                marginBottom: '12px'
+              }}>
+                {recentHires.map(hire => {
+                  const firstName = hire.applicants?.first_name || ''
+                  const lastInitial = hire.applicants?.last_name?.charAt(0) || ''
+                  const jobTitle = hire.jobs?.title || 'a position'
+                  const companyName = hire.jobs?.companies?.name || 'a company'
+                  const timeAgo = getTimeAgo(hire.applied_at)
 
-              return (
-                <div key={hire.id} style={{
+                  return (
+                    <div key={hire.id} style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      minHeight: '120px'
+                    }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'rgba(34,197,94,0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <CheckCircle size={16} style={{ color: '#22c55e' }} />
+                      </div>
+                      
+                      <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, lineHeight: '1.3' }}>
+                          <span style={{ color: '#22c55e' }}>{firstName} {lastInitial}.</span>
+                        </p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', fontWeight: 700, color: 'var(--text1)' }}>
+                          {jobTitle}
+                        </p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--text2)' }}>
+                          {companyName}
+                        </p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: 'var(--accent)', fontWeight: 600 }}>
+                          {timeAgo}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <button 
+                onClick={() => navigate('/applicant/applications')}
+                style={{
+                  background: 'var(--bg2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--accent)',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 16px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: 'rgba(34,197,94,0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    flexShrink: 0
-                  }}>
-                    <CheckCircle size={20} style={{ color: '#22c55e' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
-                      <span style={{ color: '#22c55e' }}>{firstName} {lastInitial}.</span>
-                      {' '}was hired as{' '}
-                      <span style={{ fontWeight: 700 }}>{jobTitle}</span>
-                    </p>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text2)', marginTop: '2px' }}>
-                      at {companyName} · {timeAgo}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  gap: '6px',
+                  alignSelf: 'flex-start'
+                }}
+              >
+                View All →
+              </button>
+            </>
+          ) : (
+            <div style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '24px',
+              textAlign: 'center',
+              color: 'var(--text2)',
+              fontSize: '14px'
+            }}>
+              No recent hires in the past 7 days
+            </div>
+          )}
         </div>
       )}
 
@@ -377,14 +435,14 @@ export default function ApplicantHome() {
                   </div>
                 </div>
 
-                <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
-                  {(() => {
-                    if (!job.salary) return 'Salary not specified';
-                    const clean = job.salary.toString().replace(/[^0-9]/g, '');
-                    if (!clean || clean === '0') return 'Salary not specified';
-                    return `₱${parseInt(clean).toLocaleString()}`;
-                  })()}
-                </p>
+                {(() => {
+                  const salary = formatSalary(job.salary_min, job.salary_max);
+                  return salary && (
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e', margin: 0 }}>
+                      {salary}
+                    </p>
+                  );
+                })()}
               </div>
             ))}
           </div>
