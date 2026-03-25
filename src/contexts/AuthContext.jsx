@@ -229,10 +229,63 @@ export function AuthProvider({ children }) {
               console.log('✅ Supabase session validation successful');
               debugInfo.cookie = true;
               debugInfo.finalResult = 'Success from cookie + validation';
+              
+              // Set user state first
               setUser(validSession.user ?? null);
-              setProfile(profile || null);
+              console.log('✅ User state set:', validSession.user);
+              
+              // Load profile based on user role
+              if (validSession.user) {
+                console.log('🔄 Loading profile for user...');
+                
+                // Try to get profile from different tables
+                try {
+                  // Check if admin
+                  const { data: adminData } = await supabase
+                    .from('admin_users')
+                    .select('*')
+                    .eq('email', validSession.user.email)
+                    .maybeSingle();
+                  
+                  if (adminData) {
+                    console.log('✅ Admin profile found');
+                    setProfile({ ...adminData, role: 'admin' });
+                  } else {
+                    // Check if company user
+                    const { data: companyData } = await supabase
+                      .from('company_users')
+                      .select('*')
+                      .eq('email', validSession.user.email)
+                      .maybeSingle();
+                    
+                    if (companyData) {
+                      console.log('✅ Company profile found');
+                      setProfile({ ...companyData, role: 'company' });
+                    } else {
+                      // Check if applicant
+                      const { data: applicantData } = await supabase
+                        .from('applicants')
+                        .select('*')
+                        .eq('email', validSession.user.email)
+                        .maybeSingle();
+                      
+                      if (applicantData) {
+                        console.log('✅ Applicant profile found');
+                        setProfile({ ...applicantData, role: 'applicant' });
+                      } else {
+                        console.log('❌ No profile found for user');
+                        setProfile(null);
+                      }
+                    }
+                  }
+                } catch (profileError) {
+                  console.log('❌ Profile loading error:', profileError);
+                  setProfile(null);
+                }
+              }
+              
               setLoading(false);
-              console.log('✅ Session restored and validated from cookie');
+              console.log('✅ Session restored, validated, and profile loaded from cookie');
               
               // Store debug info for display
               localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
