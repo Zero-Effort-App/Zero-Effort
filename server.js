@@ -24,19 +24,44 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+// Initialize Supabase admin client with error handling
+let supabaseAdmin = null;
+try {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabaseAdmin = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    console.log('✅ Supabase admin client initialized');
+  } else {
+    console.warn('⚠️ Supabase credentials not found - some features may not work');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Supabase:', error.message);
+}
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-)
+// Initialize web-push with error handling
+try {
+  if (process.env.VAPID_EMAIL && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL,
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+    console.log('✅ Web-push initialized');
+  } else {
+    console.warn('⚠️ VAPID credentials not found - push notifications may not work');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize web-push:', error.message);
+}
 
 // Create any auth account (admin or company)
 app.post('/api/create-account', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { email, password, metadata } = req.body
   console.log('Create account request:', { email, passwordLength: password?.length, metadata })
   
@@ -100,6 +125,10 @@ app.post('/api/create-account', async (req, res) => {
 
 // Delete auth account
 app.post('/api/delete-account', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { userId } = req.body
   try {
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
@@ -112,6 +141,10 @@ app.post('/api/delete-account', async (req, res) => {
 
 // Get user by email (for admin deletion)
 app.post('/api/get-user-by-email', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { email } = req.body
   try {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers()
@@ -128,6 +161,10 @@ app.post('/api/get-user-by-email', async (req, res) => {
 
 // Reset password endpoint
 app.post('/api/reset-password', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { email, newPassword } = req.body
   console.log('Reset password request:', { email, passwordLength: newPassword?.length })
   
@@ -242,6 +279,10 @@ app.post('/api/chat', async (req, res) => {
 })
 
 app.post('/api/send-message-notification', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   try {
     const { applicantEmail, applicantName, companyName, message } = req.body
 
@@ -375,6 +416,10 @@ app.post('/api/validate-photo', async (req, res) => {
 
 // Save push subscription
 app.post('/api/push/subscribe', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { user_id, user_type, subscription } = req.body;
   if (!user_id || !user_type || !subscription) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -396,6 +441,10 @@ app.post('/api/push/subscribe', async (req, res) => {
 
 // Send push notification
 app.post('/api/push/send', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
   const { user_id, user_type, title, body, url } = req.body;
   try {
     const { data, error } = await supabaseAdmin
@@ -487,6 +536,11 @@ app.get('/health', (req, res) => {
 // Appointment reminder scheduler
 cron.schedule('0 * * * *', async () => {
   try {
+    if (!supabaseAdmin) {
+      console.error('❌ Supabase not available for appointment reminders');
+      return;
+    }
+    
     const now = new Date();
     
     // Find appointments in the next 24 hours
