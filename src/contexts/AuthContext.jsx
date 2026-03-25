@@ -17,42 +17,53 @@ const isPWA = () => {
 // Cookie-based storage for iOS force close scenarios
 const storeSessionInCookie = (session) => {
   try {
+    console.log('🍪 Attempting to store session in cookie:', session);
     const sessionData = JSON.stringify(session);
     const encodedData = btoa(sessionData); // Base64 encode
     const expires = new Date();
     expires.setDate(expires.getDate() + 30); // 30 days
     
     document.cookie = `supabase_session=${encodedData}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-    console.log('Session stored in cookie');
+    console.log('✅ Session stored in cookie successfully');
+    
+    // Verify cookie was set
+    const testCookie = document.cookie.includes('supabase_session');
+    console.log('🔍 Cookie verification:', testCookie);
   } catch (error) {
-    console.log('Cookie storage failed:', error);
+    console.log('❌ Cookie storage failed:', error);
   }
 };
 
 const getSessionFromCookie = () => {
   try {
+    console.log('🍪 Attempting to retrieve session from cookie');
+    console.log('🔍 All cookies:', document.cookie);
+    
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
       if (name === 'supabase_session') {
+        console.log('🔍 Found supabase_session cookie');
         const decodedData = atob(value); // Base64 decode
         const session = JSON.parse(decodedData);
-        console.log('Session restored from cookie');
+        console.log('✅ Session restored from cookie:', session);
         return session;
       }
     }
+    console.log('❌ No supabase_session cookie found');
   } catch (error) {
-    console.log('Cookie retrieval failed:', error);
+    console.log('❌ Cookie retrieval failed:', error);
   }
   return null;
 };
 
 const clearSessionFromCookie = () => {
   try {
+    console.log('🍪 Clearing session from cookie');
     document.cookie = 'supabase_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';
-    console.log('Session cleared from cookie');
+    console.log('✅ Session cleared from cookie');
   } catch (error) {
-    console.log('Cookie clearing failed:', error);
+    console.log('❌ Cookie clearing failed:', error);
   }
 };
 
@@ -172,61 +183,82 @@ export function AuthProvider({ children }) {
 
     // Try to restore session from multiple storage mechanisms
     const restoreSession = async () => {
+      console.log('🔄 Starting session restoration...');
+      console.log('🔍 Platform detection:', { iosSafari, pwa });
+      
       // 1. Try cookie first (most persistent for iOS force close)
       if (iosSafari && pwa) {
+        console.log('🍪 Trying cookie restoration first...');
         const cookieSession = getSessionFromCookie();
         if (cookieSession) {
+          console.log('✅ Cookie session found, setting user state');
           setUser(cookieSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
-          console.log('Session restored from cookie (iOS PWA force close)');
+          console.log('✅ Session restored from cookie (iOS PWA force close)');
           return;
+        } else {
+          console.log('❌ No cookie session found');
         }
       }
       
       // 2. Try IndexedDB (Home Screen PWA)
       if (pwa) {
+        console.log('💾 Trying IndexedDB restoration...');
         const indexedDBSession = await getSessionFromIndexedDB();
         if (indexedDBSession) {
+          console.log('✅ IndexedDB session found, setting user state');
           setUser(indexedDBSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
-          console.log('Session restored from IndexedDB (Home Screen PWA)');
+          console.log('✅ Session restored from IndexedDB (Home Screen PWA)');
           return;
+        } else {
+          console.log('❌ No IndexedDB session found');
         }
       }
       
       // 3. Try localStorage
+      console.log('📦 Trying localStorage restoration...');
       try {
         const localStorageSession = localStorage.getItem('supabase_session');
         if (localStorageSession) {
+          console.log('✅ localStorage session found, parsing...');
           const session = JSON.parse(localStorageSession);
           setUser(session.user ?? null);
           setProfile(profile || null);
           setLoading(false);
-          console.log('Session restored from localStorage');
+          console.log('✅ Session restored from localStorage');
           return;
+        } else {
+          console.log('❌ No localStorage session found');
         }
       } catch (error) {
-        console.log('No stored session found in localStorage:', error);
+        console.log('❌ localStorage restoration failed:', error);
       }
       
       // 4. Try sessionStorage (iOS Safari PWA fallback)
       if (iosSafari && pwa) {
+        console.log('🗂️ Trying sessionStorage restoration...');
         try {
           const sessionStorageSession = sessionStorage.getItem('supabase_session');
           if (sessionStorageSession) {
+            console.log('✅ sessionStorage session found, parsing...');
             const session = JSON.parse(sessionStorageSession);
             setUser(session.user ?? null);
             setProfile(profile || null);
             setLoading(false);
-            console.log('Session restored from sessionStorage (iOS Safari PWA)');
+            console.log('✅ Session restored from sessionStorage (iOS Safari PWA)');
             return;
+          } else {
+            console.log('❌ No sessionStorage session found');
           }
         } catch (error) {
-          console.log('SessionStorage not available:', error);
+          console.log('❌ sessionStorage restoration failed:', error);
         }
       }
+      
+      console.log('❌ No session found in any storage mechanism');
     };
     
     restoreSession();
