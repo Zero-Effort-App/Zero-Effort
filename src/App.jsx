@@ -6,6 +6,9 @@ import { ToastProvider } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import './styles/theme.css';
 
+// Debug component
+import AuthDebugInfo from './components/AuthDebugInfo';
+
 // Home
 import Home from './pages/Home';
 
@@ -120,6 +123,7 @@ export default function App() {
         <ToastProvider>
           <AuthProvider>
             <AppWithServices />
+            <AuthDebugInfo />
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>

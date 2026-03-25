@@ -186,16 +186,31 @@ export function AuthProvider({ children }) {
       console.log('🔄 Starting session restoration...');
       console.log('🔍 Platform detection:', { iosSafari, pwa });
       
+      // Create debug info for display
+      let debugInfo = {
+        platform: { iosSafari, pwa },
+        cookie: false,
+        indexedDB: false,
+        localStorage: false,
+        sessionStorage: false,
+        finalResult: 'No session found'
+      };
+      
       // 1. Try cookie first (most persistent for iOS force close)
       if (iosSafari && pwa) {
         console.log('🍪 Trying cookie restoration first...');
         const cookieSession = getSessionFromCookie();
         if (cookieSession) {
           console.log('✅ Cookie session found, setting user state');
+          debugInfo.cookie = true;
+          debugInfo.finalResult = 'Success from cookie';
           setUser(cookieSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
           console.log('✅ Session restored from cookie (iOS PWA force close)');
+          
+          // Store debug info for display
+          localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
           return;
         } else {
           console.log('❌ No cookie session found');
@@ -208,10 +223,15 @@ export function AuthProvider({ children }) {
         const indexedDBSession = await getSessionFromIndexedDB();
         if (indexedDBSession) {
           console.log('✅ IndexedDB session found, setting user state');
+          debugInfo.indexedDB = true;
+          debugInfo.finalResult = 'Success from IndexedDB';
           setUser(indexedDBSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
           console.log('✅ Session restored from IndexedDB (Home Screen PWA)');
+          
+          // Store debug info for display
+          localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
           return;
         } else {
           console.log('❌ No IndexedDB session found');
@@ -225,10 +245,15 @@ export function AuthProvider({ children }) {
         if (localStorageSession) {
           console.log('✅ localStorage session found, parsing...');
           const session = JSON.parse(localStorageSession);
+          debugInfo.localStorage = true;
+          debugInfo.finalResult = 'Success from localStorage';
           setUser(session.user ?? null);
           setProfile(profile || null);
           setLoading(false);
           console.log('✅ Session restored from localStorage');
+          
+          // Store debug info for display
+          localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
           return;
         } else {
           console.log('❌ No localStorage session found');
@@ -245,10 +270,15 @@ export function AuthProvider({ children }) {
           if (sessionStorageSession) {
             console.log('✅ sessionStorage session found, parsing...');
             const session = JSON.parse(sessionStorageSession);
+            debugInfo.sessionStorage = true;
+            debugInfo.finalResult = 'Success from sessionStorage';
             setUser(session.user ?? null);
             setProfile(profile || null);
             setLoading(false);
             console.log('✅ Session restored from sessionStorage (iOS Safari PWA)');
+            
+            // Store debug info for display
+            localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
             return;
           } else {
             console.log('❌ No sessionStorage session found');
@@ -259,6 +289,9 @@ export function AuthProvider({ children }) {
       }
       
       console.log('❌ No session found in any storage mechanism');
+      
+      // Store debug info for display
+      localStorage.setItem('auth_debug_info', JSON.stringify(debugInfo));
     };
     
     restoreSession();
