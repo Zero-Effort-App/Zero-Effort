@@ -14,6 +14,48 @@ const isPWA = () => {
          window.navigator.standalone === true;
 };
 
+// Cookie-based storage for iOS force close scenarios
+const storeSessionInCookie = (session) => {
+  try {
+    const sessionData = JSON.stringify(session);
+    const encodedData = btoa(sessionData); // Base64 encode
+    const expires = new Date();
+    expires.setDate(expires.getDate() + 30); // 30 days
+    
+    document.cookie = `supabase_session=${encodedData}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    console.log('Session stored in cookie');
+  } catch (error) {
+    console.log('Cookie storage failed:', error);
+  }
+};
+
+const getSessionFromCookie = () => {
+  try {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'supabase_session') {
+        const decodedData = atob(value); // Base64 decode
+        const session = JSON.parse(decodedData);
+        console.log('Session restored from cookie');
+        return session;
+      }
+    }
+  } catch (error) {
+    console.log('Cookie retrieval failed:', error);
+  }
+  return null;
+};
+
+const clearSessionFromCookie = () => {
+  try {
+    document.cookie = 'supabase_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';
+    console.log('Session cleared from cookie');
+  } catch (error) {
+    console.log('Cookie clearing failed:', error);
+  }
+};
+
 // IndexedDB helper for Home Screen PWA persistence
 const storeSessionInIndexedDB = async (session) => {
   if (!window.indexedDB) return;
@@ -120,58 +162,45 @@ export function AuthProvider({ children }) {
         if (pwa) {
           storeSessionInIndexedDB(session);
         }
+        
+        // iOS PWA force close - store in cookie
+        if (iosSafari && pwa) {
+          storeSessionInCookie(session);
+        }
       }
     });
 
-    // Try to restore session from IndexedDB first (Home Screen PWA)
-    if (pwa) {
-      getSessionFromIndexedDB().then(storedSession => {
-        if (storedSession) {
-          setUser(storedSession.user ?? null);
+    // Try to restore session from multiple storage mechanisms
+    const restoreSession = async () => {
+      // 1. Try cookie first (most persistent for iOS force close)
+      if (iosSafari && pwa) {
+        const cookieSession = getSessionFromCookie();
+        if (cookieSession) {
+          setUser(cookieSession.user ?? null);
+          setProfile(profile || null);
+          setLoading(false);
+          console.log('Session restored from cookie (iOS PWA force close)');
+          return;
+        }
+      }
+      
+      // 2. Try IndexedDB (Home Screen PWA)
+      if (pwa) {
+        const indexedDBSession = await getSessionFromIndexedDB();
+        if (indexedDBSession) {
+          setUser(indexedDBSession.user ?? null);
           setProfile(profile || null);
           setLoading(false);
           console.log('Session restored from IndexedDB (Home Screen PWA)');
           return;
         }
-        
-        // Fallback to localStorage
-        try {
-          const localStorageSession = localStorage.getItem('supabase_session');
-          if (localStorageSession) {
-            const session = JSON.parse(localStorageSession);
-            setUser(session.user ?? null);
-            setProfile(profile || null);
-            setLoading(false);
-            console.log('Session restored from localStorage');
-            return;
-          }
-        } catch (error) {
-          console.log('No stored session found in localStorage:', error);
-        }
-        
-        // Try to restore from sessionStorage (iOS Safari PWA fallback)
-        if (iosSafari && pwa) {
-          try {
-            const sessionStorageSession = sessionStorage.getItem('supabase_session');
-            if (sessionStorageSession) {
-              const session = JSON.parse(sessionStorageSession);
-              setUser(session.user ?? null);
-              setProfile(profile || null);
-              setLoading(false);
-              console.log('Session restored from sessionStorage (iOS Safari PWA)');
-              return;
-            }
-          } catch (error) {
-            console.log('SessionStorage not available:', error);
-          }
-        }
-      });
-    } else {
-      // Non-PWA - use localStorage only
+      }
+      
+      // 3. Try localStorage
       try {
-        const storedSession = localStorage.getItem('supabase_session');
-        if (storedSession) {
-          const session = JSON.parse(storedSession);
+        const localStorageSession = localStorage.getItem('supabase_session');
+        if (localStorageSession) {
+          const session = JSON.parse(localStorageSession);
           setUser(session.user ?? null);
           setProfile(profile || null);
           setLoading(false);
@@ -181,7 +210,26 @@ export function AuthProvider({ children }) {
       } catch (error) {
         console.log('No stored session found in localStorage:', error);
       }
-    }
+      
+      // 4. Try sessionStorage (iOS Safari PWA fallback)
+      if (iosSafari && pwa) {
+        try {
+          const sessionStorageSession = sessionStorage.getItem('supabase_session');
+          if (sessionStorageSession) {
+            const session = JSON.parse(sessionStorageSession);
+            setUser(session.user ?? null);
+            setProfile(profile || null);
+            setLoading(false);
+            console.log('Session restored from sessionStorage (iOS Safari PWA)');
+            return;
+          }
+        } catch (error) {
+          console.log('SessionStorage not available:', error);
+        }
+      }
+    };
+    
+    restoreSession();
 
     // Listen for auth changes (but don't auto-logout on token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -210,6 +258,11 @@ export function AuthProvider({ children }) {
           if (pwa) {
             storeSessionInIndexedDB(session);
           }
+          
+          // iOS PWA force close - store in cookie
+          if (iosSafari && pwa) {
+            storeSessionInCookie(session);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -230,6 +283,11 @@ export function AuthProvider({ children }) {
         if (pwa) {
           clearSessionFromIndexedDB();
         }
+        
+        // iOS PWA force close - clear cookie
+        if (iosSafari && pwa) {
+          clearSessionFromCookie();
+        }
       }
       // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
     });
@@ -241,7 +299,7 @@ export function AuthProvider({ children }) {
         setUser(session.user ?? null);
         setProfile(profile || null);
         
-        // Sync to sessionStorage for iOS Safari PWA
+        // Sync to other storage mechanisms
         if (iosSafari && pwa) {
           try {
             sessionStorage.setItem('supabase_session', JSON.stringify(session));
@@ -250,15 +308,18 @@ export function AuthProvider({ children }) {
           }
         }
         
-        // Sync to IndexedDB for Home Screen PWA
         if (pwa) {
           storeSessionInIndexedDB(session);
+        }
+        
+        if (iosSafari && pwa) {
+          storeSessionInCookie(session);
         }
       } else if (e.key === 'supabase_session' && !e.newValue) {
         setUser(null);
         setProfile(null);
         
-        // Sync to sessionStorage for iOS Safari PWA
+        // Clear from other storage mechanisms
         if (iosSafari && pwa) {
           try {
             sessionStorage.removeItem('supabase_session');
@@ -267,9 +328,12 @@ export function AuthProvider({ children }) {
           }
         }
         
-        // Sync to IndexedDB for Home Screen PWA
         if (pwa) {
           clearSessionFromIndexedDB();
+        }
+        
+        if (iosSafari && pwa) {
+          clearSessionFromCookie();
         }
       }
     };
