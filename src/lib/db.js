@@ -91,7 +91,10 @@ export async function getCompanyJobs(companyId) {
 // ── EVENTS ──
 export async function getEvents(upcomingOnly = false) {
   let query = supabase.from('events').select('id, title, date, description, location').order('date', { ascending: true });
-  if (upcomingOnly) query = query.gte('date', new Date().toISOString());
+  if (upcomingOnly) {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    query = query.gte('date', today);
+  }
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
