@@ -299,7 +299,7 @@ export default function ApplicantHome() {
         </div>
       )}
 
-      {events.length > 0 && (
+      {events.length > 0 ? (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -364,6 +364,33 @@ export default function ApplicantHome() {
             ))}
           </div>
         </>
+      ) : (
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+              Upcoming Hiring Events
+            </h2>
+            <button onClick={() => navigate('/applicant/events')} style={{ fontSize: '13px', color: 'var(--accent)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              View all →
+            </button>
+          </div>
+
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '16px',
+            padding: '32px',
+            textAlign: 'center',
+            color: 'var(--text2)',
+            fontSize: '14px'
+          }}>
+            <div style={{ marginBottom: '12px' }}>
+              <CalendarDays size={32} style={{ color: 'var(--accent)', opacity: 0.5 }} />
+            </div>
+            No upcoming events at the moment
+          </div>
+        </div>
       )}
 
       {featuredJobs.length > 0 && (
