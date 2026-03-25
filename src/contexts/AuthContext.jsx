@@ -3,20 +3,46 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+// iOS Safari detection helper
+const isIOSSafari = () => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !/CriOS|FxiOS|Chrome|Edgi/.test(navigator.userAgent);
+};
+
+const isPWA = () => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         ('standalone' in navigator && navigator.standalone) ||
+         window.navigator.standalone === true;
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const iosSafari = isIOSSafari();
+    const pwa = isPWA();
+    
+    console.log('Platform detection:', { iosSafari, pwa });
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Store session in localStorage for PWA persistence
+      // Store session in multiple storage mechanisms for iOS PWA persistence
       if (session) {
         localStorage.setItem('supabase_session', JSON.stringify(session));
+        
+        // iOS Safari PWA specific - store in sessionStorage
+        if (iosSafari && pwa) {
+          try {
+            sessionStorage.setItem('supabase_session', JSON.stringify(session));
+            console.log('Session stored in sessionStorage for iOS Safari PWA');
+          } catch (e) {
+            console.log('SessionStorage not available:', e);
+          }
+        }
       }
     });
 
@@ -28,10 +54,28 @@ export function AuthProvider({ children }) {
         setUser(session.user ?? null);
         setProfile(profile || null);
         setLoading(false);
+        console.log('Session restored from localStorage');
         return;
       }
     } catch (error) {
-      console.log('No stored session found, using fresh session');
+      console.log('No stored session found in localStorage:', error);
+    }
+
+    // Try to restore from sessionStorage (iOS Safari PWA fallback)
+    if (iosSafari && pwa) {
+      try {
+        const sessionStorageSession = sessionStorage.getItem('supabase_session');
+        if (sessionStorageSession) {
+          const session = JSON.parse(sessionStorageSession);
+          setUser(session.user ?? null);
+          setProfile(profile || null);
+          setLoading(false);
+          console.log('Session restored from sessionStorage (iOS Safari PWA)');
+          return;
+        }
+      } catch (error) {
+        console.log('SessionStorage not available:', error);
+      }
     }
 
     // Listen for auth changes (but don't auto-logout on token refresh)
@@ -43,27 +87,65 @@ export function AuthProvider({ children }) {
         setUser(session?.user ?? null);
         setProfile(profile => profile || null);
         
-        // Store session in localStorage for PWA persistence
+        // Store session in multiple storage mechanisms for iOS PWA persistence
         if (session) {
           localStorage.setItem('supabase_session', JSON.stringify(session));
+          
+          // iOS Safari PWA specific
+          if (iosSafari && pwa) {
+            try {
+              sessionStorage.setItem('supabase_session', JSON.stringify(session));
+              console.log('Session synced to sessionStorage (iOS Safari PWA)');
+            } catch (e) {
+              console.log('SessionStorage not available:', e);
+            }
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
         localStorage.removeItem('supabase_session');
+        
+        // iOS Safari PWA specific
+        if (iosSafari && pwa) {
+          try {
+            sessionStorage.removeItem('supabase_session');
+            console.log('Session removed from sessionStorage (iOS Safari PWA)');
+          } catch (e) {
+            console.log('SessionStorage not available:', e);
+          }
+        }
       }
       // Ignore other events like 'INITIAL_SESSION' to prevent unwanted logouts
     });
 
-    // Restore session from localStorage on app load (PWA persistence)
+    // Restore session from storage changes (PWA persistence)
     const handleStorageChange = (e) => {
       if (e.key === 'supabase_session' && e.newValue) {
         const session = JSON.parse(e.newValue);
         setUser(session.user ?? null);
         setProfile(profile || null);
+        
+        // Sync to sessionStorage for iOS Safari PWA
+        if (iosSafari && pwa) {
+          try {
+            sessionStorage.setItem('supabase_session', JSON.stringify(session));
+          } catch (e) {
+            console.log('SessionStorage not available:', e);
+          }
+        }
       } else if (e.key === 'supabase_session' && !e.newValue) {
         setUser(null);
         setProfile(null);
+        
+        // Sync to sessionStorage for iOS Safari PWA
+        if (iosSafari && pwa) {
+          try {
+            sessionStorage.removeItem('supabase_session');
+          } catch (e) {
+            console.log('SessionStorage not available:', e);
+          }
+        }
       }
     };
 
