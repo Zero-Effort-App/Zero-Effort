@@ -30,11 +30,30 @@ export default function ApplicantHome() {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [recentHires, setRecentHires] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [slowNetwork, setSlowNetwork] = useState(false);
   const navigate = useNavigate();
 
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Fetch upcoming appointments
+  async function fetchUpcomingAppointments(applicantId) {
+    if (!applicantId) return [];
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, companies(name, logo_url)')
+      .eq('applicant_id', applicantId)
+      .gte('appointment_date', today)
+      .in('status', ['pending', 'confirmed'])
+      .order('appointment_date', { ascending: true })
+      .limit(3);
+      
+    return data || [];
+  }
 
   async function fetchWithCache(key, fetchFn) {
     // Check if cached data exists and is fresh
@@ -66,11 +85,12 @@ export default function ApplicantHome() {
       setLoading(true);
       
       try {
-        const [cos, evts, apps, hires] = await Promise.all([
+        const [cos, evts, apps, hires, upcomingApts] = await Promise.all([
           fetchWithCache('applicant_home_companies', () => getCompanies(true)),
           fetchWithCache('applicant_home_events', () => getEvents(true)),
           profile?.id ? fetchWithCache('applicant_home_applications', () => getMyApplications(profile.id)) : Promise.resolve([]),
           fetchWithCache('applicant_home_hires', () => getRecentHires(10)),
+          profile?.id ? fetchWithCache('applicant_home_upcoming_appointments', () => fetchUpcomingAppointments(profile.id)) : Promise.resolve([]),
         ]);
         
         // Fetch featured jobs properly
@@ -87,6 +107,7 @@ export default function ApplicantHome() {
         setEvents(evts.slice(0, 6));
         setRecentHires(hires);
         setFeaturedJobs(jobsData || []);
+        setUpcomingAppointments(upcomingApts);
         setStats({
           openPositions: jobsData?.length || 0,
           companiesHiring: cos.length,
@@ -302,6 +323,139 @@ export default function ApplicantHome() {
               No recent hires in the past 7 days
             </div>
           )}
+        </div>
+      )}
+
+      {upcomingAppointments.length > 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '18px', fontWeight: 800 }}><Calendar size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Upcoming Appointments</span>
+            <span style={{ 
+              fontSize: '11px', 
+              background: 'rgba(59,130,246,0.15)', 
+              color: '#3b82f6',
+              borderRadius: '20px',
+              fontWeight: 700
+            }}>SCHEDULED</span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '16px'
+          }}>
+            {upcomingAppointments.map(apt => (
+              <div key={apt.id} style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    background: apt.companies?.logo_url ? 'transparent' : '#3b82f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                  }}>
+                    {apt.companies?.logo_url ? (
+                      <img src={apt.companies.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
+                    ) : (
+                      <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
+                        {apt.companies?.name?.[0] || 'C'}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+                      {apt.companies?.name || 'Company'}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        background: apt.status === 'confirmed' ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)',
+                        color: apt.status === 'confirmed' ? '#22c55e' : '#f59e0b'
+                      }}>
+                        {apt.status === 'confirmed' ? '🟢 Confirmed' : '🟡 Pending'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text)' }}>
+                    <Calendar size={14} />
+                    {new Date(apt.appointment_date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric'
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text)' }}>
+                    <Clock size={14} />
+                    {apt.appointment_time}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/applicant/inbox', { state: { companyId: apt.company_id } })}
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Video size={14} />
+                  Join Call
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button 
+            onClick={() => navigate('/applicant/inbox')}
+            style={{
+              background: 'var(--bg2)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: 'var(--accent)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              alignSelf: 'flex-start',
+              marginTop: '12px'
+            }}
+          >
+            View All Appointments →
+          </button>
         </div>
       )}
 

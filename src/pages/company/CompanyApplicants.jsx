@@ -58,6 +58,14 @@ export default function CompanyApplicants() {
       ]);
       setJobs(jbs);
       
+      // Fetch appointments for this company
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('company_id', company.id)
+        .in('status', ['pending', 'confirmed'])
+        .order('appointment_date', { ascending: true });
+      
       // Process applicants with meeting details
       const processedApplicants = await Promise.all(
         apps.map(async (a) => {
@@ -93,6 +101,16 @@ export default function CompanyApplicants() {
             }
           } catch (err) {
             console.error('Error fetching meeting details:', err);
+          }
+          
+          // Add appointment information
+          const applicantAppointments = appointments?.filter(apt => apt.applicant_id === baseApplicant.applicant_id) || [];
+          if (applicantAppointments.length > 0) {
+            const nextAppointment = applicantAppointments[0]; // Most recent/appointment
+            baseApplicant.hasAppointment = true;
+            baseApplicant.appointmentStatus = nextAppointment.status;
+            baseApplicant.appointmentDate = nextAppointment.appointment_date;
+            baseApplicant.appointmentTime = nextAppointment.appointment_time;
           }
           
           return baseApplicant;
@@ -319,9 +337,26 @@ export default function CompanyApplicants() {
                   <div className="acard-name">{a.name}</div>
                   <div className="acard-role">{a.jobTitle}</div>
                 </div>
-                <span className={`status-badge sb-${a.status}`} style={{ marginLeft: 'auto', fontSize: '.62rem', padding: '2px 7px' }}>
-                  {a.status?.charAt(0).toUpperCase() + a.status?.slice(1)}
-                </span>
+                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                  <span className={`status-badge sb-${a.status}`} style={{ fontSize: '.62rem', padding: '2px 7px' }}>
+                    {a.status?.charAt(0).toUpperCase() + a.status?.slice(1)}
+                  </span>
+                  {a.hasAppointment && (
+                    <span className="appointment-badge" style={{
+                      fontSize: '.62rem',
+                      padding: '2px 7px',
+                      borderRadius: '10px',
+                      background: a.appointmentStatus === 'confirmed' ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)',
+                      color: a.appointmentStatus === 'confirmed' ? '#22c55e' : '#f59e0b',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '2px'
+                    }}>
+                      📅 {a.appointmentStatus === 'confirmed' ? 'Confirmed' : 'Pending'}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="acard-meta">
                 <div className="acard-date">{a.date}</div>

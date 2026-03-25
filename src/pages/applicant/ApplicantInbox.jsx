@@ -197,8 +197,23 @@ export default function ApplicantInbox() {
         .eq('company_id', selectedConvo.company.id)
         .order('created_at', { ascending: true })
         .limit(50)
-      
-      if (data) setMessages(data)
+
+      // When opening a conversation, also fetch any appointments
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('applicant_id', user.id)
+        .eq('company_id', selectedConvo.company.id)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        // Attach appointment data to messages
+        const messagesWithAppointments = data.map(msg => ({
+          ...msg,
+          appointment: appointments?.find(apt => apt.message_id === msg.id) || null
+        }));
+        setMessages(messagesWithAppointments)
+      }
     } catch (error) {
       console.error('Error fetching messages:', error)
     }
@@ -225,6 +240,30 @@ export default function ApplicantInbox() {
       console.error('Error marking messages as read:', error)
     }
   }
+
+  // Confirm appointment function
+  const confirmAppointment = async (appointmentId) => {
+    try {
+      // Update appointment status
+      await supabase
+        .from('appointments')
+        .update({ status: 'confirmed' })
+        .eq('id', appointmentId);
+
+      // Also notify HR via a reply message
+      await supabase.from('messages').insert({
+        company_id: selectedConvo.company.id,
+        applicant_id: user.id,
+        sender_type: 'applicant',
+        content: '✅ I have confirmed the video call appointment. I will be available at the scheduled time.'
+      });
+
+      // Refresh messages to show updated status
+      await fetchMessages();
+    } catch (error) {
+      console.error('Error confirming appointment:', error);
+    }
+  };
 
   async function handleSend() {
     if (!newMessage.trim() || sending) return
@@ -534,97 +573,90 @@ export default function ApplicantInbox() {
                   }}>
                     {(() => {
                       const content = msg.content;
-                      const meetingDetails = parseMeetingDetails(content);
                       
-                      // Check if this message contains meeting details
-                      if (meetingDetails.meetingLink) {
-                        const mainMessage = content.split('\n\n📅 Meeting Date:')[0];
-                        
+                      // Check if this message has an appointment
+                      if (msg.appointment) {
                         return (
                           <div>
                             {/* Main message content */}
                             <p style={{ margin: '0 0 16px 0', whiteSpace: 'pre-line' }}>
-                              {mainMessage}
+                              {content.split('\n\n📅 Appointment Date:')[0]}
                             </p>
                             
-                            {/* Improved Meeting Card */}
-                            <div className={styles.meetingCard}>
-                              {/* Meeting Header */}
-                              <div className={styles.meetingHeader}>
-                                <div className={styles.companyInfo}>
-                                  <div className={styles.companyName}>
-                                    {selectedConvo?.company?.name || 'Company'}
-                                  </div>
-                                  <div className={styles.meetingStatus}>
-                                    {meetingDetails.meetingStatus?.includes('✅') && (
-                                      <span className={styles.statusConfirmed}>✅ Confirmed</span>
-                                    )}
-                                    {meetingDetails.meetingStatus?.includes('❌') && (
-                                      <span className={styles.statusDeclined}>❌ Declined</span>
-                                    )}
-                                    {meetingDetails.meetingStatus?.includes('Pending') && (
-                                      <span className={styles.statusPending}>⏳ Pending</span>
-                                    )}
-                                  </div>
-                                </div>
+                            {/* Appointment Card */}
+                            <div className="appointment-card" style={{
+                              background: 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '12px',
+                              padding: '16px',
+                              marginTop: '12px'
+                            }}>
+                              <div className="appointment-header" style={{
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                color: 'var(--accent)',
+                                marginBottom: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}>
+                                📹 Video Call Appointment
                               </div>
-                              
-                              {/* Meeting Details */}
-                              <div className={styles.meetingDetails}>
-                                {meetingDetails.meetingDate && (
-                                  <div className={styles.meetingDetailRow}>
-                                    <Calendar size={14} />
-                                    <span>{meetingDetails.meetingDate}</span>
-                                  </div>
-                                )}
-                                
-                                {meetingDetails.meetingTime && (
-                                  <div className={styles.meetingDetailRow}>
-                                    <Clock size={14} />
-                                    <span>{meetingDetails.meetingTime}</span>
-                                  </div>
-                                )}
+                              <div className="appointment-details" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                marginBottom: '12px'
+                              }}>
+                                <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+                                  📅 {new Date(msg.appointment.appointment_date).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                                <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+                                  ⏰ {msg.appointment.appointment_time}
+                                </span>
                               </div>
-                              
-                              {/* Meeting Actions */}
-                              {meetingDetails.meetingStatus?.includes('✅') && meetingDetails.meetingLink && (
-                                <div className={styles.meetingActions}>
-                                  <button 
-                                    onClick={() => {
-                                      setActiveCall({
-                                        interviewId: msg.id,
-                                        channelName: `interview_${msg.id}`,
-                                        userRole: 'applicant'
-                                      });
-                                    }}
-                                    className={styles.joinVideoBtn}
-                                    aria-label="Join video call"
-                                    title="Join video interview call"
-                                  >
-                                    <Video size={18} />
-                                    🎥 Join Video Call
-                                  </button>
-                                  
-                                  <a
-                                    href={meetingDetails.meetingLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.joinMeetingBtn}
-                                    aria-label="Join meeting link"
-                                    title="Open meeting in new tab"
-                                  >
-                                    <Video size={16} />
-                                    Join Meeting
-                                  </a>
-                                </div>
+                              <div className={`appointment-status status-${msg.appointment.status}`} style={{
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                display: 'inline-block',
+                                marginBottom: '12px'
+                              }}>
+                                {msg.appointment.status === 'pending' && '🟡 Pending'}
+                                {msg.appointment.status === 'confirmed' && '🟢 Confirmed'}
+                                {msg.appointment.status === 'completed' && '✅ Completed'}
+                              </div>
+                              {msg.appointment.status === 'pending' && (
+                                <button 
+                                  onClick={() => confirmAppointment(msg.appointment.id)}
+                                  style={{
+                                    background: 'var(--accent)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 16px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    width: '100%'
+                                  }}
+                                >
+                                  Confirm Appointment
+                                </button>
                               )}
                             </div>
                           </div>
-                        )
+                        );
                       }
                       
-                      // Regular message without meeting details
-                      return <span style={{ whiteSpace: 'pre-line' }}>{content}</span>;
+                      // Regular message without appointment
+                      return <div style={{ whiteSpace: 'pre-line' }}>{content}</div>;
                     })()}
                   </div>
                   <p style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px',
