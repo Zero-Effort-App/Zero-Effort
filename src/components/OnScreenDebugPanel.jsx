@@ -42,6 +42,9 @@ export default function OnScreenDebugPanel() {
 
     // Initial logs
     setLogs([...window.debugLogs]);
+    
+    // Auto-expand panel when debug mode is enabled
+    setVisible(true);
 
     // Auto-scroll to bottom when new logs are added
     if (autoScroll && logs.length > 0) {

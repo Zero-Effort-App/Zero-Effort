@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Briefcase, Target, Moon, Sun, Download, Shield } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Particles from '../components/Particles';
-import DebugActivator from '../components/DebugActivator';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -83,18 +82,16 @@ export default function Home() {
         </div>
 
         {/* Logo */}
-        <DebugActivator>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-            <img
-              src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'}
-              alt="Zero Effort"
-              style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '12px' }}
-            />
-            <span style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text1)' }}>
-              <span style={{ fontWeight: 900 }}>Zero</span> Effort
-            </span>
-          </div>
-        </DebugActivator>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+          <img
+            src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'}
+            alt="Zero Effort"
+            style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '12px' }}
+          />
+          <span style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text1)' }}>
+            <span style={{ fontWeight: 900 }}>Zero</span> Effort
+          </span>
+        </div>
 
         {/* Description */}
         <p style={{

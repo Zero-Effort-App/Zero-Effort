@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -9,7 +9,7 @@ import './styles/theme.css';
 // Debug components
 import AuthDebugInfo from './components/AuthDebugInfo';
 import OnScreenDebugPanel from './components/OnScreenDebugPanel';
-import DebugActivator from './components/DebugActivator';
+import DebugButton from './components/DebugButton';
 
 // Home
 import Home from './pages/Home';
@@ -49,8 +49,70 @@ import ApplicantResetPassword from './pages/applicant/ApplicantResetPassword';
 import ApplicantInbox from './pages/applicant/ApplicantInbox';
 import ApplicantEvents from './pages/applicant/ApplicantEvents';
 
+// Debug route component
+function DebugRoute() {
+  const navigate = useNavigate();
+  
+  React.useEffect(() => {
+    // Enable debug mode
+    localStorage.setItem('debug_mode', 'true');
+    
+    // Show confirmation message
+    const message = document.createElement('div');
+    message.textContent = '🔍 Debug mode enabled';
+    message.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 10000;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    `;
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+      if (document.body.contains(message)) {
+        document.body.removeChild(message);
+      }
+    }, 2000);
+    
+    console.log('Debug mode ENABLED via /debug route');
+    
+    // Redirect to applicant after 2 seconds
+    setTimeout(() => {
+      navigate('/applicant');
+    }, 2000);
+  }, [navigate]);
+  
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      backgroundColor: 'var(--bg1)',
+      color: 'var(--text1)',
+      fontFamily: 'monospace'
+    }}>
+      <div>Enabling debug mode...</div>
+    </div>
+  );
+}
+
 function AppWithServices() {
   const { user } = useAuth();
+
+  // Log app load on every render
+  React.useEffect(() => {
+    console.log('APP LOADED - debug_mode:', localStorage.getItem('debug_mode'));
+  }, []);
 
   // Register Service Worker on component mount
   React.useEffect(() => {
@@ -64,6 +126,9 @@ function AppWithServices() {
   return (
     <>
       <Routes>
+        {/* Debug Route */}
+        <Route path="/debug" element={<DebugRoute />} />
+
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
 
@@ -127,6 +192,7 @@ export default function App() {
             <AppWithServices />
             <AuthDebugInfo />
             <OnScreenDebugPanel />
+            <DebugButton />
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>
