@@ -97,8 +97,9 @@ export default function CompanyLayout() {
         const co = await getCompanyProfile(p.company_id);
         setCompany(co);
         
-        // Check if company is disabled
-        if (co && !co.is_active) {
+        // Check if company is disabled - only after auth is fully initialized
+        if (co && !co.is_active && !loading) {
+          console.log('🚪 CompanyLayout - Company disabled, signing out...');
           await supabase.auth.signOut();
           navigate('/company');
           showToast('Your company account has been disabled. Please contact the administrator.', 'error');

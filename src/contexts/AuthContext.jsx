@@ -13,26 +13,61 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 [AUTH] Setting up Supabase auth listener');
-    
-    // Simple auth state change listener - let Supabase handle persistence
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        // Step 1: Explicitly check for existing session on app load
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        console.log('� [AUTH INIT] getSession result:', { 
+          hasSession: !!session, 
+          userId: session?.user?.id,
+          error 
+        });
+
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            loadProfile(session.user.email);
+          } else {
+            setUser(null);
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('❌ [AUTH INIT] getSession failed:', err);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    // Step 2: Also listen for future auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 [AUTH] Auth state change:', { event, hasUser: !!session?.user, userId: session?.user?.id });
+      console.log('🔄 [AUTH CHANGE]', event, session?.user?.id ?? 'null');
       
-      // Set user state and stop loading
-      setUser(session?.user ?? null);
-      setLoading(false);
+      // Only process AFTER initial load is done
+      if (!mounted) return;
       
-      // Load profile if user exists
-      if (session?.user) {
-        console.log('🔄 [PROFILE] Loading profile for user:', session.user.email);
+      if (event === 'SIGNED_IN') {
+        setUser(session.user);
         loadProfile(session.user.email);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         setProfile(null);
+      } else if (event === 'TOKEN_REFRESHED') {
+        setUser(session.user);
       }
     });
 
-    return () => subscription.unsubscribe();
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadProfile = async (email) => {
