@@ -304,7 +304,16 @@ BEHAVIOR GUIDELINES:
           boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)'
         }}
       >
-        👨‍💼
+        <img
+          src="/zelo-avatar.png"
+          alt="Kimoel"
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            objectFit: 'cover'
+          }}
+        />
       </div>
     )}
   </button>
@@ -348,21 +357,17 @@ BEHAVIOR GUIDELINES:
             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div
+              <img
+                src="/zelo-avatar.png"
+                alt="Kimoel"
                 style={{
-                  width: '36px', height: '36px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '16px'
+                  objectFit: 'cover',
+                  border: '2px solid rgba(255,255,255,0.2)'
                 }}
-              >
-                👨‍💼
-              </div>
+              />
               <div>
                 <div>Kimoel — Career Assistant</div>
                 <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Zero Effort AI</div>
