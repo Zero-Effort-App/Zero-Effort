@@ -79,7 +79,7 @@ export default function CompanyDashboard() {
           <div className="hero-h1">
             Welcome back,<br /><span className="gc">{company.name?.split(' ')[0]}.</span>
           </div>
-          <div className="hero-p">Here's a snapshot of your hiring activity inside Zero Effort.</div>
+          <div className="hero-p">Here's a snapshot of your hiring activity inside HANAP.</div>
           <div className="hero-btns">
             <button className="btn-acc" onClick={() => navigate('/company/listings')}>+ Post a job</button>
             <button className="btn-ghost" onClick={() => navigate('/company/applicants')}>Review applicants →</button>

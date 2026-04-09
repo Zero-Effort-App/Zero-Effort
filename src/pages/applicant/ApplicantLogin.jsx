@@ -183,7 +183,7 @@ export default function ApplicantLogin() {
       userId: pendingRegistration.userId
     })
 
-    showToast('Email verified! Welcome to Zero Effort! 🎉', 'success')
+    showToast('Email verified! Welcome to HANAP! 🎉', 'success')
     navigate('/applicant/home')
 
   } catch (err) {
@@ -266,8 +266,8 @@ export default function ApplicantLogin() {
               gap: '12px'
             }}>
               <img
-                src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'}
-                alt="Zero Effort"
+                src={theme === 'dark' ? '/hanap-icon-white.png' : '/hanap-icon-dark.png'}
+                alt="HANAP"
                 style={{ 
                   height: '60px', 
                   width: '60px', 
@@ -286,7 +286,7 @@ export default function ApplicantLogin() {
                 padding: 0,
                 paddingBottom: '8px'
               }}>
-                Zero Effort
+                HANAP
               </span>
             </div>
             <div className="brand-badge">APPLICANT</div>
@@ -382,7 +382,7 @@ export default function ApplicantLogin() {
                 <h1 style={{ fontWeight: 800, fontSize: '28px', marginBottom: '4px' }}>
                   Welcome back
                 </h1>
-                <div className="step-s">Sign in to your Zero Effort account</div>
+                <div className="step-s">Sign in to your HANAP account</div>
                 {error && (
                   <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
                     {error}

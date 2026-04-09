@@ -137,8 +137,8 @@ export default function ApplicantResetPassword() {
         <div className="brand">
           <div style={{ marginBottom: '0.5rem' }}>
             <img 
-              src={theme === 'dark' ? '/zero-effort-logo-white.png' : '/zero-effort-logo-dark.png'} 
-              alt="Zero Effort" 
+              src={theme === 'dark' ? '/hanap-logo-white.png' : '/hanap-logo-dark.png'} 
+              alt="HANAP" 
               style={{ height: '60px', width: 'auto', objectFit: 'contain' }} 
             />
           </div>

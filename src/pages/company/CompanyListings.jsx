@@ -237,7 +237,7 @@ export default function CompanyListings() {
         <div className="success-wrap">
           <div className="sw-icon"><CheckCircle size={32} /></div>
           <h3>Job listing posted!</h3>
-          <p><strong>{modal.data?.title}</strong> is now live on Zero Effort.<br /><br />Applicants can start applying right away.</p>
+          <p><strong>{modal.data?.title}</strong> is now live on HANAP.<br /><br />Applicants can start applying right away.</p>
           <button className="btn-primary" style={{ maxWidth: 160, margin: '1.25rem auto 0', display: 'block' }} onClick={closeModal}>View listings</button>
         </div>
       </Modal>
@@ -298,7 +298,7 @@ function JobForm({ isEdit, initialData, companyName, onSubmit, onClose }) {
       <div className="m-head">
         <div>
           <div className="m-title">{isEdit ? 'Edit Listing' : 'Post a New Job'}</div>
-          <div className="m-sub">{companyName} · Zero Effort</div>
+          <div className="m-sub">{companyName} · HANAP</div>
         </div>
         <button className="m-close" type="button" onClick={onClose}>✕</button>
       </div>

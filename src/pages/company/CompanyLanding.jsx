@@ -6,7 +6,7 @@ const tickerItems = [
   'Review Applicants & Track Hiring',
   'Accept · Decline · Contact Applicants',
   'Manage Company Profile',
-  'Zero Effort Tenant Portal',
+  'HANAP Tenant Portal',
 ];
 
 const title = [
@@ -21,9 +21,9 @@ export default function CompanyLanding() {
   return (
     <Landing
       portalType="company"
-      badge="Zero Effort · Company Portal"
+      badge="HANAP · Company Portal"
       title={title}
-      description="The official company portal for Zero Effort. Post jobs, review applicants, and build your team — all in one dedicated space for park tenants."
+      description="The official company portal for HANAP. Post jobs, review applicants, and build your team — all in one dedicated space for park tenants."
       buttonText="Company Sign In"
       tickerItems={tickerItems}
       showLogo={true}
