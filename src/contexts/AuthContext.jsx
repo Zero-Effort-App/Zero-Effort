@@ -162,8 +162,18 @@ export function AuthProvider({ children }) {
       console.log('Email not confirmed, attempting server confirmation...');
       
       try {
+        // Try production server first, then fallback to local
+        let serverUrl = '/api/confirm-company-account';
+        
+        // Check if we're in production and need to use full URL
+        if (import.meta.env.VITE_BACKEND_URL) {
+          serverUrl = `${import.meta.env.VITE_BACKEND_URL}/api/confirm-company-account`;
+        }
+        
+        console.log('Calling server at:', serverUrl);
+        
         // Call server to confirm the account
-        const confirmResponse = await fetch('/api/confirm-company-account', {
+        const confirmResponse = await fetch(serverUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
