@@ -271,23 +271,55 @@ export default function AdminCompanies() {
         return;
       }
 
-      // Step 2: Create account via local API (bypasses rate limits)
-      const response = await fetch('/api/create-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-          metadata: { company_id: company.id, full_name: company.name }
-        })
-      });
+      // Step 1.5: Check if server is available
+      try {
+        const healthCheck = await fetch('/api/health');
+        if (!healthCheck.ok) {
+          showToast('Server is not responding. Please try again later.');
+          setCreatingAccount(false);
+          return;
+        }
+      } catch (healthError) {
+        console.error('Server health check failed:', healthError);
+        showToast('Unable to connect to server. Please ensure the backend is running.');
+        setCreatingAccount(false);
+        return;
+      }
 
-      const result = await response.json();
+      // Step 2: Create account via local API (bypasses rate limits)
+      let response;
+      try {
+        response = await fetch('/api/create-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            metadata: { company_id: company.id, full_name: company.name }
+          })
+        });
+      } catch (fetchError) {
+        console.error('Network error:', fetchError);
+        showToast('Unable to connect to server. Please check your connection.');
+        setCreatingAccount(false);
+        return;
+      }
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        showToast('Server response error. Please try again.');
+        setCreatingAccount(false);
+        return;
+      }
+      
       if (!response.ok) {
-        if (result.error?.includes('User already registered') || result.error?.includes('duplicate')) {
+        if (result?.error?.includes('User already registered') || result?.error?.includes('duplicate')) {
           showToast('An account with this email already exists');
         } else {
-          throw new Error(result.error);
+          throw new Error(result?.error || 'Failed to create account');
         }
         setCreatingAccount(false);
         return;
