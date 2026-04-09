@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { getCompanies, addCompany, updateCompany, removeCompany as removeCompanyDb, addActivityLog, checkCompanyAccountExists, uploadCompanyLogo, formatDate } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
@@ -274,16 +275,26 @@ export default function AdminCompanies() {
       // Step 2: Create account using Supabase directly
       let result;
       try {
-        const { data, error } = await supabase.auth.signUp({
+        // Use admin client for company accounts to bypass email confirmation
+        const adminSupabase = createClient(
+          import.meta.env.VITE_SUPABASE_URL,
+          import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+
+        const { data, error } = await adminSupabase.auth.admin.createUser({
           email: email,
           password: password,
-          options: {
-            data: { 
-              company_id: company.id, 
-              full_name: company.name,
-              role: 'company'
-            },
-            email_confirm: false // Auto-confirm company accounts created by admin
+          email_confirm: true, // Force confirm for company accounts
+          user_metadata: { 
+            company_id: company.id, 
+            full_name: company.name,
+            role: 'company'
           }
         });
 
