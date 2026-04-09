@@ -78,7 +78,7 @@ export default function Home() {
       }}>
         {/* Badge */}
         <div className="land-badge" style={{ marginBottom: '20px' }}>
-          Zero Effort · Jobs Portal System
+          HANAP · Jobs Portal System
         </div>
 
         {/* Logo */}
