@@ -146,7 +146,7 @@ export function AuthProvider({ children }) {
     console.log(' attempting login for:', email);
     console.log(' password length:', password?.length);
     
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     console.log(' signInWithPassword result:', { 
       hasData: !!data, 
@@ -155,6 +155,42 @@ export function AuthProvider({ children }) {
       error: error?.message,
       errorCode: error?.status 
     });
+    
+    // Handle email not confirmed error for company accounts
+    if (error && error.message === 'Email not confirmed') {
+      console.log('Email not confirmed, attempting to confirm and retry...');
+      
+      // Try to get the user and confirm them
+      const { data: userList } = await supabase.auth.admin.listUsers();
+      const user = userList.users.find(u => u.email === email);
+      
+      if (user) {
+        // Confirm the user
+        const { error: confirmError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { email_confirm: true }
+        );
+        
+        if (confirmError) {
+          console.error('Failed to confirm user:', confirmError);
+          throw new Error('Account not confirmed. Please contact administrator.');
+        } else {
+          console.log('Successfully confirmed user, retrying login...');
+          
+          // Retry login after confirmation
+          const retryResult = await supabase.auth.signInWithPassword({ email, password });
+          data = retryResult.data;
+          error = retryResult.error;
+          
+          console.log('Retry login result:', { 
+            hasData: !!data, 
+            hasUser: !!data?.user, 
+            hasSession: !!data?.session,
+            error: error?.message
+          });
+        }
+      }
+    }
     
     if (error) {
       console.error('Login error details:', error);
