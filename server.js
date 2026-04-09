@@ -159,6 +159,40 @@ app.post('/api/get-user-by-email', async (req, res) => {
   }
 })
 
+// Confirm company account email
+app.post('/api/confirm-company-account', async (req, res) => {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+  
+  const { email } = req.body
+  try {
+    // Find the user
+    const { data: userList } = await supabaseAdmin.auth.admin.listUsers()
+    const user = userList.users.find(u => u.email === email)
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    
+    // Confirm the user
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(
+      user.id,
+      { email_confirm: true }
+    )
+    
+    if (error) {
+      return res.status(400).json({ error: error.message })
+    }
+    
+    console.log(`Confirmed company account: ${email}`)
+    return res.json({ success: true, message: 'Account confirmed successfully' })
+  } catch (err) {
+    console.error('Confirm account error:', err)
+    return res.status(500).json({ error: err.message })
+  }
+})
+
 // Reset password endpoint
 app.post('/api/reset-password', async (req, res) => {
   if (!supabaseAdmin) {

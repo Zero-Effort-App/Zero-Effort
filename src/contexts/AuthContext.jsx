@@ -146,15 +146,8 @@ export function AuthProvider({ children }) {
     console.log(' attempting login for:', email);
     console.log(' password length:', password?.length);
     
-    // For company accounts, try to bypass email confirmation
-    let { data, error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password,
-      options: {
-        // Skip email verification for company accounts
-        skipEmailConfirmation: true
-      }
-    });
+    // First, try to confirm the account via server if needed
+    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     console.log(' signInWithPassword result:', { 
       hasData: !!data, 
@@ -164,21 +157,40 @@ export function AuthProvider({ children }) {
       errorCode: error?.status 
     });
     
-    // If still getting email not confirmed error, try the regular method
+    // If email not confirmed, try to confirm via server
     if (error && error.message === 'Email not confirmed') {
-      console.log('Email confirmation bypass failed, trying regular login...');
+      console.log('Email not confirmed, attempting server confirmation...');
       
-      // Try regular login as fallback
-      const fallbackResult = await supabase.auth.signInWithPassword({ email, password });
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-      
-      console.log('Fallback login result:', { 
-        hasData: !!data, 
-        hasUser: !!data?.user, 
-        hasSession: !!data?.session,
-        error: error?.message
-      });
+      try {
+        // Call server to confirm the account
+        const confirmResponse = await fetch('/api/confirm-company-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const confirmResult = await confirmResponse.json();
+        
+        if (confirmResult.success) {
+          console.log('Server confirmation successful, retrying login...');
+          
+          // Retry login after confirmation
+          const retryResult = await supabase.auth.signInWithPassword({ email, password });
+          data = retryResult.data;
+          error = retryResult.error;
+          
+          console.log('Retry login result:', { 
+            hasData: !!data, 
+            hasUser: !!data?.user, 
+            hasSession: !!data?.session,
+            error: error?.message
+          });
+        } else {
+          console.error('Server confirmation failed:', confirmResult.error);
+        }
+      } catch (confirmErr) {
+        console.error('Server confirmation error:', confirmErr);
+      }
     }
     
     if (error) {
