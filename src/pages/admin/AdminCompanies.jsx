@@ -183,6 +183,7 @@ export default function AdminCompanies() {
 
   function openDetail(company) { setModal({ type: 'detail', data: company }); }
   function openAdd() { setModal({ type: 'add', data: null }); }
+  function openEdit(company) { setModal({ type: 'edit', data: company }); }
   function openConfirmDisable(company) { setModal({ type: 'disable', data: company }); }
   function openConfirmRemove(company) { setModal({ type: 'remove', data: company }); }
   function openCreatePortalAccount(company) { setModal({ type: 'createPortal', data: company }); }
@@ -200,7 +201,7 @@ export default function AdminCompanies() {
       } else {
         await addCompany(formData);
       }
-      await addActivityLog('company', '🏢', `New company '${formData.name}' added to the park`, 'Admin · System');
+      await addActivityLog('company', '', `New company '${formData.name}' added to the park`, 'Admin · System');
       closeModal();
       setLogoFile(null);
       showToast('Company added successfully!');
@@ -210,11 +211,33 @@ export default function AdminCompanies() {
     }
   }
 
+  async function handleEditCompany(formData) {
+    try {
+      const company = modal.data;
+      let logoUrl = null;
+      
+      if (logoFile) {
+        // Upload new logo
+        logoUrl = await uploadCompanyLogo(logoFile, company.id);
+        formData.logo_url = logoUrl;
+      }
+      
+      await updateCompany(company.id, formData);
+      await addActivityLog('company', '', `Company '${company.name}' information updated`, 'Admin · System');
+      closeModal();
+      setLogoFile(null);
+      showToast('Company updated successfully!');
+      loadCompanies();
+    } catch (err) {
+      showToast('Error updating company: ' + err.message);
+    }
+  }
+
   async function handleToggleActive(company) {
     try {
       await updateCompany(company.id, { is_active: !company.is_active });
       const action = company.is_active ? 'disabled' : 'enabled';
-      await addActivityLog('company', company.is_active ? '🚫' : '✅', `Company '${company.name}' access ${action}`, 'Admin · System');
+      await addActivityLog('company', company.is_active ? '' : '', `Company '${company.name}' access ${action}`, 'Admin · System');
       closeModal();
       showToast(`Company ${action} successfully.`);
       loadCompanies();
@@ -519,7 +542,7 @@ export default function AdminCompanies() {
                 <td>
                   <div className="tbl-actions">
                     <button className="tbl-btn" onClick={() => openEdit(c)}>Edit</button>
-                    <button className="tbl-btn danger" onClick={() => openRemove(c)}>Remove</button>
+                    <button className="tbl-btn danger" onClick={() => openConfirmRemove(c)}>Remove</button>
                   </div>
                 </td>
               </tr>
@@ -544,6 +567,11 @@ export default function AdminCompanies() {
       {/* Add Modal */}
       <Modal isOpen={modal.type === 'add'} onClose={closeModal}>
         <AddCompanyForm onSubmit={handleAddCompany} onClose={closeModal} companies={companies} logoFile={logoFile} setLogoFile={setLogoFile} />
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={modal.type === 'edit'} onClose={closeModal}>
+        {modal.data && <EditCompanyForm company={modal.data} onSubmit={handleEditCompany} onClose={closeModal} companies={companies} logoFile={logoFile} setLogoFile={setLogoFile} />}
       </Modal>
 
       {/* Disable Confirm */}
@@ -781,6 +809,116 @@ function AddCompanyForm({ onSubmit, onClose, companies, logoFile, setLogoFile })
   );
 }
 
+function EditCompanyForm({ company, onSubmit, onClose, companies, logoFile, setLogoFile }) {
+  const DEFAULT_INDUSTRIES = [
+    'Electronics & High-Precision Assembly',
+    'Automotive & Transport Equipment',
+    'Food & Beverage / FMCG',
+    'Logistics & Warehousing',
+    'Business Process Outsourcing (BPO)',
+    'Information Technology (IT)',
+    'Retail & Leisure',
+    'Hospitality',
+    'Construction & Real Estate',
+    'Utilities & Energy',
+    'Light Manufacturing',
+    'Industrial Packaging',
+    'Supply Chain & Freight Forwarding',
+    'Shared Services',
+  ];
+  
+  const [form, setForm] = useState({ 
+    name: company.name || '', 
+    industry: company.industry || '', 
+    description: company.description || '', 
+    email: company.email || '', 
+    phone: company.phone || '', 
+    location: company.location || '', 
+    website: company.website || '', 
+    logo_initials: company.logo_initials || '', 
+    color: company.color || '#6366f1' 
+  });
+  const [industryInput, setIndustryInput] = useState(company.industry || '');
+  const [customIndustries, setCustomIndustries] = useState(
+    () => JSON.parse(localStorage.getItem('custom_industries') || '[]')
+  );
+  
+  // Get existing industries from companies in database
+  const existingIndustries = [...new Set(companies.map(c => c.industry).filter(Boolean))];
+  const allIndustries = [...new Set([...DEFAULT_INDUSTRIES, ...existingIndustries, ...customIndustries])];
+
+  function handleChange(field, value) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    
+    // Auto-save custom industry on submit
+    if (industryInput && !allIndustries.includes(industryInput)) {
+      const updated = [...customIndustries, industryInput];
+      setCustomIndustries(updated);
+      localStorage.setItem('custom_industries', JSON.stringify(updated));
+    }
+    
+    onSubmit({
+      ...form,
+      industry: industryInput,
+      logo_initials: form.logo_initials || form.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      tags: company.tags || [],
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="m-head">
+        <div><div className="m-title">Edit Company</div><div className="m-sub">Update company information</div></div>
+        <button className="m-close" type="button" onClick={onClose}>×</button>
+      </div>
+      <div className="msep">Company Details</div>
+      <div className="fgroup"><label className="flabel">Company Name *</label><input className="finput" required value={form.name} onChange={e => handleChange('name', e.target.value)} placeholder="e.g. NovaTech Solutions" /></div>
+      <div className="frow">
+        <div className="fgroup"><label className="flabel">Industry</label>
+          <input
+            className="finput"
+            id="nc-ind"
+            list="industry-options"
+            placeholder="Select or type industry..."
+            autoComplete="off"
+            value={industryInput}
+            onChange={e => setIndustryInput(e.target.value)}
+          />
+          <datalist id="industry-options">
+            {allIndustries.map(ind => (
+              <option key={ind} value={ind} />
+            ))}
+          </datalist>
+        </div>
+        <div className="fgroup"><label className="flabel">Logo Initials</label><input className="finput" value={form.logo_initials} onChange={e => handleChange('logo_initials', e.target.value)} placeholder="NT" maxLength={3} /></div>
+      </div>
+      <div className="fgroup">
+        <label className="flabel">Company Logo (optional)</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={e => setLogoFile(e.target.files[0])}
+        />
+        {logoFile && <span style={{ fontSize: '12px', color: 'var(--text2)' }}>New: {logoFile.name}</span>}
+      </div>
+      <div className="fgroup"><label className="flabel">Description</label><textarea className="ftextarea" value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="Brief company description..." /></div>
+      <div className="msep">Contact Info</div>
+      <div className="frow">
+        <div className="fgroup"><label className="flabel">Email</label><input className="finput" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} placeholder="hr@company.com" /></div>
+        <div className="fgroup"><label className="flabel">Phone</label><input className="finput" value={form.phone} onChange={e => handleChange('phone', e.target.value)} placeholder="+63 32 XXX XXXX" /></div>
+      </div>
+      <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Tower X, Floor Y, Zero Effort" /></div>
+      <div className="fgroup"><label className="flabel">Website</label><input className="finput" value={form.website} onChange={e => handleChange('website', e.target.value)} placeholder="e.g. https://company.com" /></div>
+      <button className="btn-primary" type="submit">Update Company</button>
+    </form>
+  );
+}
+
 function CreatePortalAccountForm({ company, onSubmit, onClose, loading }) {
   const [form, setForm] = useState({ 
     email: company.email || '', 
@@ -801,7 +939,7 @@ function CreatePortalAccountForm({ company, onSubmit, onClose, loading }) {
           <div className="m-title">Create Portal Account for {company.name}</div>
           <div className="m-sub">Set up login credentials for company portal access</div>
         </div>
-        <button className="m-close" type="button" onClick={onClose}>✕</button>
+        <button className="m-close" type="button" onClick={onClose}>×</button>
       </div>
       
       <div className="fgroup">
