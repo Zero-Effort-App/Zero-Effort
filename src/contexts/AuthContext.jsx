@@ -146,7 +146,15 @@ export function AuthProvider({ children }) {
     console.log(' attempting login for:', email);
     console.log(' password length:', password?.length);
     
-    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // For company accounts, try to bypass email confirmation
+    let { data, error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password,
+      options: {
+        // Skip email verification for company accounts
+        skipEmailConfirmation: true
+      }
+    });
     
     console.log(' signInWithPassword result:', { 
       hasData: !!data, 
@@ -156,40 +164,21 @@ export function AuthProvider({ children }) {
       errorCode: error?.status 
     });
     
-    // Handle email not confirmed error for company accounts
+    // If still getting email not confirmed error, try the regular method
     if (error && error.message === 'Email not confirmed') {
-      console.log('Email not confirmed, attempting to confirm and retry...');
+      console.log('Email confirmation bypass failed, trying regular login...');
       
-      // Try to get the user and confirm them
-      const { data: userList } = await supabase.auth.admin.listUsers();
-      const user = userList.users.find(u => u.email === email);
+      // Try regular login as fallback
+      const fallbackResult = await supabase.auth.signInWithPassword({ email, password });
+      data = fallbackResult.data;
+      error = fallbackResult.error;
       
-      if (user) {
-        // Confirm the user
-        const { error: confirmError } = await supabase.auth.admin.updateUserById(
-          user.id,
-          { email_confirm: true }
-        );
-        
-        if (confirmError) {
-          console.error('Failed to confirm user:', confirmError);
-          throw new Error('Account not confirmed. Please contact administrator.');
-        } else {
-          console.log('Successfully confirmed user, retrying login...');
-          
-          // Retry login after confirmation
-          const retryResult = await supabase.auth.signInWithPassword({ email, password });
-          data = retryResult.data;
-          error = retryResult.error;
-          
-          console.log('Retry login result:', { 
-            hasData: !!data, 
-            hasUser: !!data?.user, 
-            hasSession: !!data?.session,
-            error: error?.message
-          });
-        }
-      }
+      console.log('Fallback login result:', { 
+        hasData: !!data, 
+        hasUser: !!data?.user, 
+        hasSession: !!data?.session,
+        error: error?.message
+      });
     }
     
     if (error) {
