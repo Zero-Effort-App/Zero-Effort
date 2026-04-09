@@ -1,7 +1,7 @@
 {
-  "name": "Zero Effort Admin",
-  "short_name": "ZE Admin",
-  "description": "Admin dashboard for Zero Effort",
+  "name": "HANAP Admin",
+  "short_name": "HANAP Ad",
+  "description": "Admin dashboard for HANAP",
   "start_url": "/admin",
   "display": "standalone",
   "background_color": "#0f1117",
@@ -9,25 +9,25 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

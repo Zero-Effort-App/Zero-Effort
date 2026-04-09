@@ -1,7 +1,7 @@
 {
-  "name": "Zero Effort Company",
-  "short_name": "ZE Company",
-  "description": "Manage your company portal on Zero Effort",
+  "name": "HANAP Company",
+  "short_name": "HANAP Co",
+  "description": "Manage your company portal on HANAP",
   "start_url": "/company",
   "display": "standalone",
   "background_color": "#0f1117",
@@ -9,25 +9,25 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

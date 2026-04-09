@@ -1,7 +1,7 @@
 {
-  "name": "Zero Effort Jobs",
-  "short_name": "Zero Effort",
-  "description": "Find your next role at Zero Effort",
+  "name": "HANAP Jobs",
+  "short_name": "HANAP",
+  "description": "Find your next role at HANAP",
   "start_url": "/applicant",
   "display": "standalone",
   "background_color": "#0f1117",
@@ -9,25 +9,25 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/hanap-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/hanap-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
