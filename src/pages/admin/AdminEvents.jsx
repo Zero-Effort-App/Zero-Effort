@@ -157,7 +157,7 @@ function EventForm({ title, initialData, onSubmit, onClose }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="m-head">
-        <div><div className="m-title">{title}</div><div className="m-sub">Zero Effort · Events</div></div>
+        <div><div className="m-title">{title}</div><div className="m-sub">HANAP · Events</div></div>
         <button className="m-close" type="button" onClick={onClose}>✕</button>
       </div>
       <div className="msep">Event Details</div>

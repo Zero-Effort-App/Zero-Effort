@@ -128,7 +128,7 @@ export default function AdminOverview() {
         <div className="hero-h1">
           Welcome back,<br /><span className="gc">Admin.</span>
         </div>
-        <div className="hero-p">Here's what's happening across Zero Effort today.</div>
+        <div className="hero-p">Here's what's happening across HANAP today.</div>
         <div className="hero-btns">
           <button className="btn-acc" onClick={() => navigate('/admin/companies')}>Manage Companies</button>
           <button className="btn-ghost" onClick={() => navigate('/admin/events')}>View Events →</button>

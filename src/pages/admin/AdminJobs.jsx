@@ -109,7 +109,7 @@ export default function AdminJobs() {
 
   if (isLoading) return (
     <div className="pw">
-      <div className="ph"><h2>Job Postings</h2><p>All job listings across Zero Effort companies.</p></div>
+      <div className="ph"><h2>Job Postings</h2><p>All job listings across HANAP companies.</p></div>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ fontSize: '2rem' }}>⏳</div>
         <p style={{ color: 'var(--text2)' }}>Loading job postings...</p>
@@ -120,7 +120,7 @@ export default function AdminJobs() {
   return (
     <div className="pw">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <div className="ph" style={{ margin: 0 }}><h2>Job Postings</h2><p>All job listings across Zero Effort companies.</p></div>
+        <div className="ph" style={{ margin: 0 }}><h2>Job Postings</h2><p>All job listings across HANAP companies.</p></div>
         <button className="btn-acc" onClick={() => setModal({ type: 'add', data: null })}>+ Add Job</button>
       </div>
 
@@ -265,7 +265,7 @@ function JobForm({ onSubmit, onClose, initialData, companies }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="m-head">
-        <div><div className="m-title">{initialData ? 'Edit Job' : 'Add New Job'}</div><div className="m-sub">Zero Effort · Jobs</div></div>
+        <div><div className="m-title">{initialData ? 'Edit Job' : 'Add New Job'}</div><div className="m-sub">HANAP · Jobs</div></div>
         <button className="m-close" type="button" onClick={onClose}>✕</button>
       </div>
       <div className="msep">Job Details</div>

@@ -363,7 +363,7 @@ export default function AdminCompanies() {
 
   if (isLoading) return (
     <div className="pw">
-      <div className="ph"><h2>Companies</h2><p>All tenant companies inside Zero Effort.</p></div>
+      <div className="ph"><h2>Companies</h2><p>All tenant companies inside HANAP.</p></div>
       <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
         {[1,2,3].map(i => <SkeletonCard key={i} />)}
       </div>
@@ -375,7 +375,7 @@ export default function AdminCompanies() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div className="ph" style={{ margin: 0 }}>
           <h2>Companies</h2>
-          <p>All tenant companies inside Zero Effort.</p>
+          <p>All tenant companies inside HANAP.</p>
         </div>
         <button className="btn-acc" onClick={openAdd}>+ Add Company</button>
       </div>

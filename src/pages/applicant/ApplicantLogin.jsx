@@ -449,7 +449,7 @@ export default function ApplicantLogin() {
               <div className="step active">
                 <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
                 <div className="step-h">Create your account</div>
-                <div className="step-s">Join Zero Effort for free</div>
+                <div className="step-s">Join HANAP for free</div>
                 {error && (
                   <div style={{ background: 'rgba(244,63,94,.1)', border: '1px solid rgba(244,63,94,.2)', borderRadius: '8px', padding: '.6rem .8rem', marginBottom: '.875rem', fontSize: '.78rem', color: 'var(--danger)' }}>
                     {error}

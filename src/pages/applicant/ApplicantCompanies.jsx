@@ -49,7 +49,7 @@ export default function ApplicantCompanies() {
 
   return (
     <div className="pw">
-      <div className="ph"><h2>Companies Inside the Park</h2><p>All companies are physically located within Zero Effort.</p></div>
+      <div className="ph"><h2>Companies Inside the Park</h2><p>All companies are physically located within HANAP.</p></div>
 
       <div className="fbar" style={{ marginBottom: '1.25rem' }}>
         <input className="fi fi-grow" placeholder="Search companies…" value={search} onChange={e => setSearch(e.target.value)} />

@@ -89,7 +89,7 @@ export default function ApplicantInbox() {
       : `You have a new message from ${message.companies?.name || 'a company'}`;
 
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Zero Effort', {
+      new Notification('HANAP', {
         body,
         icon: '/favicon.ico',
         tag: `message-${message.id}`,

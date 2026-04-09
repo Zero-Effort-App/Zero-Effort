@@ -412,7 +412,7 @@ export default function ApplicantJobs() {
 
   if (isLoading) return (
     <div className="pw">
-      <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside Zero Effort.</p></div>
+      <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside HANAP.</p></div>
       <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
         {[1,2,3].map(i => (
           <div key={i} className="card" style={{
@@ -439,7 +439,7 @@ export default function ApplicantJobs() {
 
   return (
     <div className="pw">
-      <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside Zero Effort.</p></div>
+      <div className="ph"><h2>Open Positions</h2><p>All roles are at companies physically located inside HANAP.</p></div>
 
       <div className="fbar">
         <input className="fi fi-grow" placeholder="Search title, skill, company…" value={search} onChange={e => { setSearch(e.target.value); setSelected(null); }} />
@@ -513,7 +513,7 @@ export default function ApplicantJobs() {
                 <div>
                   <div className="dp-title">{selectedJob.title}</div>
                   <div className="dp-co" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {selectedJob.co} · Zero Effort
+                    {selectedJob.co} · HANAP
                     {selectedCo?.is_verified && <VerifiedBadge size="sm" />}
                   </div>
                 </div>

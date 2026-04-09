@@ -166,7 +166,7 @@ export default function Home() {
 
         {/* Footer */}
         <p style={{ marginTop: '28px', fontSize: '12px', opacity: 0.4 }}>
-          Zero Effort · Lipa City, Batangas · Official Job Portal System
+          HANAP · Lipa City, Batangas · Official Job Portal System
         </p>
       </div>
     </div>

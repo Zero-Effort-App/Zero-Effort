@@ -6,7 +6,7 @@ const tickerItems = [
   'Oversee Job Postings & Events',
   'Admin Account Management',
   'Activity Log & Monitoring',
-  'Zero Effort Admin Hub',
+  'HANAP Admin Hub',
 ];
 
 const title = [
@@ -21,9 +21,9 @@ export default function AdminLanding() {
   return (
     <Landing
       portalType="admin"
-      badge="Zero Effort · Admin Portal"
+      badge="HANAP · Admin Portal"
       title={title}
-      description="The official admin dashboard for Zero Effort. Manage tenants, oversee job postings, coordinate events — all from one centralized hub."
+      description="The official admin dashboard for HANAP. Manage tenants, oversee job postings, coordinate events — all from one centralized hub."
       buttonText="Admin Sign In"
       tickerItems={tickerItems}
       showLogo={true}

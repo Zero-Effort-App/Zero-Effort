@@ -178,8 +178,8 @@ export default function CompanyLogin() {
               gap: '12px'
             }}>
               <img
-                src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'}
-                alt="Zero Effort"
+                src={theme === 'dark' ? '/hanap-icon-white.png' : '/hanap-icon-dark.png'}
+                alt="HANAP"
                 style={{ 
                   height: '80px', 
                   width: '80px', 
@@ -196,7 +196,7 @@ export default function CompanyLogin() {
                 padding: 0,
                 paddingBottom: '8px'
               }}>
-                Zero Effort
+                HANAP
               </span>
             </div>
             <div className="brand-badge">COMPANY</div>
