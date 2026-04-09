@@ -304,6 +304,24 @@ export default function AdminCompanies() {
           hasSession: !!data.session,
           userConfirmed: data.user?.email_confirmed_at 
         });
+
+        // If account was created but not confirmed, try to confirm it manually
+        if (data.user?.email_confirmed_at === null) {
+          console.log('Account not auto-confirmed, attempting manual confirmation...');
+          try {
+            const { error: confirmError } = await supabase.auth.admin.updateUserById(
+              data.user.id,
+              { email_confirm: true }
+            );
+            if (confirmError) {
+              console.warn('Failed to manually confirm email:', confirmError);
+            } else {
+              console.log('Successfully confirmed email manually');
+            }
+          } catch (confirmErr) {
+            console.warn('Manual confirmation failed (admin rights may be required):', confirmErr);
+          }
+        }
       } catch (supabaseError) {
         console.error('Supabase error:', supabaseError);
         showToast('Failed to create account. Please try again.');
