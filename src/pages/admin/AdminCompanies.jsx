@@ -282,7 +282,8 @@ export default function AdminCompanies() {
               company_id: company.id, 
               full_name: company.name,
               role: 'company'
-            }
+            },
+            email_confirm: false // Auto-confirm company accounts created by admin
           }
         });
 
