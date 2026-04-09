@@ -4,30 +4,63 @@ class GoogleMeetService {
   constructor() {
     // Initialize Google Calendar service
     if (!process.env.GOOGLE_CREDENTIALS_JSON) {
-      throw new Error('GOOGLE_CREDENTIALS_JSON environment variable is not set');
+      console.warn('⚠️ GOOGLE_CREDENTIALS_JSON environment variable not set - Google Meet integration disabled');
+      this.auth = null;
+      this.enabled = false;
+      return;
     }
     
     let credentials;
     try {
       credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
     } catch (error) {
-      throw new Error('Invalid GOOGLE_CREDENTIALS_JSON format: ' + error.message);
+      console.error('❌ Invalid GOOGLE_CREDENTIALS_JSON format:', error.message);
+      this.auth = null;
+      this.enabled = false;
+      return;
     }
     
-    this.auth = new google.auth.GoogleAuth({
-      credentials: credentials,
-      scopes: ['https://www.googleapis.com/auth/calendar']
-    });
+    try {
+      this.auth = new google.auth.GoogleAuth({
+        credentials: credentials,
+        scopes: ['https://www.googleapis.com/auth/calendar']
+      });
+      this.enabled = true;
+      console.log('✅ Google Meet service initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize Google Meet service:', error.message);
+      this.auth = null;
+      this.enabled = false;
+    }
     
-    this.calendar = google.calendar({
-      version: 'v3',
-      auth: this.auth
-    });
+    if (this.enabled) {
+      this.calendar = google.calendar({
+        version: 'v3',
+        auth: this.auth
+      });
+    }
   }
 
   // Create Google Meet event and get conferenceData
   async createMeetingLink(channelName, applicantEmail, hrEmail) {
     try {
+      if (!this.enabled || !this.auth) {
+        console.warn('⚠️ Google Meet service not available - using fallback link');
+        // Generate fallback link
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const meetingCode = `interview-${timestamp}-${random}`;
+        const meetingLink = `https://meet.google.com/${meetingCode}`;
+        
+        return {
+          success: true,
+          meetingLink: meetingLink,
+          eventId: meetingCode,
+          channelName: channelName,
+          fallback: true
+        };
+      }
+      
       console.log('🟡 Creating Google Meet for:', { channelName, applicantEmail, hrEmail });
 
       // Generate meeting code: interview_timestamp_random

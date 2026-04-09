@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import ZeloChatbot from '../../components/ZeloChatbot';
+import KimoelChatbot from '../../components/KimoelChatbot';
 
 export default function AdminLayout() {
   const { profile, checkSession } = useAuth();
@@ -107,7 +107,7 @@ export default function AdminLayout() {
         companyLogo={null}
       />
       <Outlet />
-      <ZeloChatbot />
+      <KimoelChatbot />
     </>
   );
 }

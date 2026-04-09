@@ -4,6 +4,11 @@ class CallUsageService {
   // Track call start
   async trackCallStart(companyId, callSessionId) {
     try {
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available - skipping call start tracking');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('call_usage_tracking')
         .insert({
@@ -32,6 +37,11 @@ class CallUsageService {
   // Track call end
   async trackCallEnd(callSessionId, durationMinutes, reason = 'completed') {
     try {
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available - skipping call end tracking');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('call_usage_tracking')
         .update({
@@ -59,6 +69,11 @@ class CallUsageService {
   // Get monthly usage for company
   async getMonthlyUsage(companyId) {
     try {
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available - returning 0 usage');
+        return 0;
+      }
+      
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -113,6 +128,11 @@ class CallUsageService {
   // Get recent calls for admin
   async getRecentCalls(companyId, limit = 20) {
     try {
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available - returning empty calls list');
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('call_usage_tracking')
         .select(`

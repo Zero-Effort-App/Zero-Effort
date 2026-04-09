@@ -5,7 +5,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import ZeloChatbot from '../../components/ZeloChatbot';
+import KimoelChatbot from '../../components/KimoelChatbot';
 import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
 import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { subscribeToPush } from '../../lib/pushNotifications';
@@ -221,7 +221,7 @@ export default function ApplicantLayout() {
       )}
       
       <Outlet context={{ profile }} />
-      <ZeloChatbot />
+      <KimoelChatbot />
     </>
   );
 }

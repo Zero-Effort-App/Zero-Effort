@@ -5,14 +5,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Bot, MessageCircle, X, Send } from 'lucide-react'
 
-export default function ZeloChatbot() {
+export default function KimoelChatbot() {
   const { theme } = useTheme()
   const { user } = useAuth()
   const location = useLocation();
   const isHomePage = location.pathname === '/applicant/home';
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: `Hi! I'm Zelo, your personalized Zero Effort career assistant!\n\nI can help you:\n• Track your applications and provide status updates\n• Find jobs matching your background\n• Learn about hiring companies\n• Get application tips & interview prep\n• Help with account and technical issues\n• Guide you through platform features\n\nHow can I assist you today?` }
+    { role: 'assistant', content: `Hi! I'm Kimoel, your personalized Zero Effort career assistant!\n\nI can help you:\n• Track your applications and provide status updates\n• Find jobs matching your background\n• Learn about hiring companies\n• Get application tips & interview prep\n• Help with account and technical issues\n• Guide you through platform features\n\nHow can I assist you today?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -147,7 +147,7 @@ export default function ZeloChatbot() {
         ? companies.map(c => `- ${c.name} (${c.industry}) — ${c.description || 'No description'} — Tags: ${c.tags?.join(', ') || 'None'}`).join('\n')
         : 'No companies available'
 
-      const systemPrompt = `You are Zelo, a helpful career assistant for Zero Effort job portal.
+      const systemPrompt = `You are Kimoel, a helpful career assistant for Zero Effort job portal.
 
 USER CONTEXT:
 - User's name: ${profile?.first_name || 'User'}
@@ -240,7 +240,7 @@ BEHAVIOR GUIDELINES:
       )}
 
       <style>{`
-  @keyframes zeloSlideUp {
+  @keyframes kimoelSlideUp {
     0% {
       opacity: 0;
       transform: scale(0.8) translateY(20px);
@@ -250,7 +250,7 @@ BEHAVIOR GUIDELINES:
       transform: scale(1) translateY(0);
     }
   }
-  @keyframes zeloSlideDown {
+  @keyframes kimoelSlideDown {
     0% {
       opacity: 1;
       transform: scale(1) translateY(0);
@@ -260,20 +260,20 @@ BEHAVIOR GUIDELINES:
       transform: scale(0.8) translateY(20px);
     }
   }
-  @keyframes zeloFabPulse {
+  @keyframes kimoelFabPulse {
     0% { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
     50% { box-shadow: 0 4px 30px rgba(99,102,241,0.7), 0 0 0 8px rgba(99,102,241,0.1); }
     100% { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
   }
-  .zelo-fab-idle {
-    animation: zeloFabPulse 2.5s ease-in-out infinite;
+  .kimoel-fab-idle {
+    animation: kimoelFabPulse 2.5s ease-in-out infinite;
   }
 `}</style>
 
       {/* Permanent Widget - All Screen Sizes */}
       {isHomePage && (
   <button
-    className={`zelo-fab ${!open ? 'zelo-fab-idle' : ''}`}
+    className={`kimoel-fab ${!open ? 'kimoel-fab-idle' : ''}`}
     onClick={() => setOpen(!open)}
     style={{
       position: 'fixed',
@@ -304,7 +304,7 @@ BEHAVIOR GUIDELINES:
           boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)'
         }}
       >
-        Z
+        👨‍💼
       </div>
     )}
   </button>
@@ -337,7 +337,7 @@ BEHAVIOR GUIDELINES:
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          animation: 'zeloSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          animation: 'kimoelSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           transformOrigin: 'bottom right',
         }}>
           {/* Header */}
@@ -361,10 +361,10 @@ BEHAVIOR GUIDELINES:
                   fontSize: '16px'
                 }}
               >
-                Z
+                👨‍💼
               </div>
               <div>
-                <div>Zelo — Career Assistant</div>
+                <div>Kimoel — Career Assistant</div>
                 <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Zero Effort AI</div>
               </div>
             </div>
@@ -412,7 +412,7 @@ BEHAVIOR GUIDELINES:
                 fontSize: '13px', color: text2Color,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
-                Zelo is thinking... 🤔
+                Kimoel is thinking... 🤔
               </div>
             )}
             <div ref={bottomRef} />
@@ -431,7 +431,7 @@ BEHAVIOR GUIDELINES:
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
               onFocus={e => e.target.style.borderColor = 'var(--accent)'}
               onBlur={e => e.target.style.borderColor = 'var(--border)'}
-              placeholder="Ask Zelo anything..."
+              placeholder="Ask Kimoel anything..."
               style={{
                 flex: 1, padding: '12px 16px', borderRadius: '12px',
                 border: '1px solid var(--border)', background: 'var(--surface)',
