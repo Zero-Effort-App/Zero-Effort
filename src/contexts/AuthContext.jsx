@@ -143,8 +143,23 @@ export function AuthProvider({ children }) {
   };
 
   const companyLogin = async (email, password) => {
+    console.log(' attempting login for:', email);
+    console.log(' password length:', password?.length);
+    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    
+    console.log(' signInWithPassword result:', { 
+      hasData: !!data, 
+      hasUser: !!data?.user, 
+      hasSession: !!data?.session,
+      error: error?.message,
+      errorCode: error?.status 
+    });
+    
+    if (error) {
+      console.error('Login error details:', error);
+      throw error;
+    }
 
     const { data: companyUser, error: cuError } = await supabase
       .from('company_users')

@@ -298,7 +298,12 @@ export default function AdminCompanies() {
         }
 
         result = { success: true, user: { id: data.user?.id } };
-        console.log('Account created successfully via Supabase');
+        console.log('Account created successfully via Supabase:', { 
+          userId: data.user?.id, 
+          email: email,
+          hasSession: !!data.session,
+          userConfirmed: data.user?.email_confirmed_at 
+        });
       } catch (supabaseError) {
         console.error('Supabase error:', supabaseError);
         showToast('Failed to create account. Please try again.');
