@@ -275,64 +275,50 @@ export default function AdminCompanies() {
       // Step 2: Create account using Supabase directly
       let result;
       try {
-        // Use admin client for company accounts to bypass email confirmation
-        const adminSupabase = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        );
-
-        const { data, error } = await adminSupabase.auth.admin.createUser({
-          email: email,
-          password: password,
-          email_confirm: true, // Force confirm for company accounts
-          user_metadata: { 
-            company_id: company.id, 
-            full_name: company.name,
-            role: 'company'
-          }
+        // Use server endpoint for company account creation (admin privileges on server)
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/create-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            metadata: { 
+              company_id: company.id, 
+              full_name: company.name,
+              role: 'company'
+            },
+            skipEmailConfirmation: true // Bypass confirmation for company accounts
+          })
         });
 
-        if (error) {
-          if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+        let result;
+        try {
+          result = await response.json();
+        } catch (jsonError) {
+          console.error('JSON parsing error:', jsonError);
+          showToast('Server response error. Please try again.');
+          setCreatingAccount(false);
+          return;
+        }
+        
+        if (!response.ok) {
+          if (result?.error?.includes('already registered') || result?.error?.includes('duplicate')) {
             showToast('An account with this email already exists');
           } else {
-            showToast('Error creating account: ' + error.message);
+            showToast('Error creating account: ' + (result?.error || 'Server error'));
           }
           setCreatingAccount(false);
           return;
         }
 
-        result = { success: true, user: { id: data.user?.id } };
-        console.log('Account created successfully via Supabase:', { 
-          userId: data.user?.id, 
+        result = { success: true, user: { id: result.user?.id } };
+        console.log('Account created successfully via server:', { 
+          userId: result.user?.id, 
           email: email,
-          hasSession: !!data.session,
-          userConfirmed: data.user?.email_confirmed_at 
+          success: result.success
         });
 
-        // If account was created but not confirmed, try to confirm it manually
-        if (data.user?.email_confirmed_at === null) {
-          console.log('Account not auto-confirmed, attempting manual confirmation...');
-          try {
-            const { error: confirmError } = await supabase.auth.admin.updateUserById(
-              data.user.id,
-              { email_confirm: true }
-            );
-            if (confirmError) {
-              console.warn('Failed to manually confirm email:', confirmError);
-            } else {
-              console.log('Successfully confirmed email manually');
-            }
-          } catch (confirmErr) {
-            console.warn('Manual confirmation failed (admin rights may be required):', confirmErr);
-          }
-        }
+        // Server handles confirmation automatically with skipEmailConfirmation flag
       } catch (supabaseError) {
         console.error('Supabase error:', supabaseError);
         showToast('Failed to create account. Please try again.');

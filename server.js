@@ -62,8 +62,8 @@ app.post('/api/create-account', async (req, res) => {
     return res.status(500).json({ error: 'Database not available' });
   }
   
-  const { email, password, metadata } = req.body
-  console.log('Create account request:', { email, passwordLength: password?.length, metadata })
+  const { email, password, metadata, skipEmailConfirmation } = req.body
+  console.log('Create account request:', { email, passwordLength: password?.length, metadata, skipEmailConfirmation })
   
   // Backend password validation
   if (!password || password.length < 8) {
@@ -93,7 +93,7 @@ app.post('/api/create-account', async (req, res) => {
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: !isApplicant, // Don't auto-confirm for applicants
+      email_confirm: skipEmailConfirmation ? true : !isApplicant, // Use flag or default logic
       user_metadata: metadata || {}
     })
     if (error) {
