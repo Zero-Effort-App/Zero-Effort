@@ -12,7 +12,7 @@ export default function KimoelChatbot() {
   const isHomePage = location.pathname === '/applicant/home';
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: `Hi! I'm Kimoel, your personalized Zero Effort career assistant!\n\nI can help you:\n• Track your applications and provide status updates\n• Find jobs matching your background\n• Learn about hiring companies\n• Get application tips & interview prep\n• Help with account and technical issues\n• Guide you through platform features\n\nHow can I assist you today?` }
+    { role: 'assistant', content: `Hi! I'm Kimoel, your personalized HANAP career assistant!\n\nI can help you:\n• Track your applications and provide status updates\n• Find jobs matching your background\n• Learn about hiring companies\n• Get application tips & interview prep\n• Help with account and technical issues\n• Guide you through platform features\n\nHow can I assist you today?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -147,7 +147,7 @@ export default function KimoelChatbot() {
         ? companies.map(c => `- ${c.name} (${c.industry}) — ${c.description || 'No description'} — Tags: ${c.tags?.join(', ') || 'None'}`).join('\n')
         : 'No companies available'
 
-      const systemPrompt = `You are Kimoel, a helpful career assistant for Zero Effort job portal.
+      const systemPrompt = `You are Kimoel, a helpful career assistant for HANAP job portal.
 
 USER CONTEXT:
 - User's name: ${profile?.first_name || 'User'}
@@ -370,7 +370,7 @@ BEHAVIOR GUIDELINES:
               />
               <div>
                 <div>Kimoel — Career Assistant</div>
-                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by Zero Effort AI</div>
+                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.85 }}>Powered by HANAP AI</div>
               </div>
             </div>
             {/* Close button */}

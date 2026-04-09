@@ -711,7 +711,7 @@ function CompanyDetail({ company, onDisable, onRemove, onEnable, onClose }) {
       <div className="m-head">
         <div>
           <div className="m-title">{company.name}</div>
-          <div className="m-sub">{company.industry} · Zero Effort</div>
+          <div className="m-sub">{company.industry} · HANAP</div>
         </div>
         <button className="m-close" onClick={onClose}>✕</button>
       </div>
@@ -837,7 +837,7 @@ function AddCompanyForm({ onSubmit, onClose, companies, logoFile, setLogoFile })
         <div className="fgroup"><label className="flabel">Email</label><input className="finput" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} placeholder="hr@company.com" /></div>
         <div className="fgroup"><label className="flabel">Phone</label><input className="finput" value={form.phone} onChange={e => handleChange('phone', e.target.value)} placeholder="+63 32 XXX XXXX" /></div>
       </div>
-      <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Tower X, Floor Y, Zero Effort" /></div>
+      <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Tower X, Floor Y, HANAP" /></div>
       <div className="fgroup"><label className="flabel">Website</label><input className="finput" value={form.website} onChange={e => handleChange('website', e.target.value)} placeholder="e.g. https://company.com" /></div>
       <button className="btn-primary" type="submit">Add Company →</button>
     </form>
@@ -947,7 +947,7 @@ function EditCompanyForm({ company, onSubmit, onClose, companies, logoFile, setL
         <div className="fgroup"><label className="flabel">Email</label><input className="finput" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} placeholder="hr@company.com" /></div>
         <div className="fgroup"><label className="flabel">Phone</label><input className="finput" value={form.phone} onChange={e => handleChange('phone', e.target.value)} placeholder="+63 32 XXX XXXX" /></div>
       </div>
-      <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Tower X, Floor Y, Zero Effort" /></div>
+      <div className="fgroup"><label className="flabel">Location</label><input className="finput" value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Tower X, Floor Y, HANAP" /></div>
       <div className="fgroup"><label className="flabel">Website</label><input className="finput" value={form.website} onChange={e => handleChange('website', e.target.value)} placeholder="e.g. https://company.com" /></div>
       <button className="btn-primary" type="submit">Update Company</button>
     </form>

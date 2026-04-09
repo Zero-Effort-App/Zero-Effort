@@ -32,8 +32,8 @@ export default function Landing({ portalType, badge, title, description, buttonT
         {showLogo ? (
           <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
-              src={theme === 'dark' ? '/zero-effort-icon-white.png' : '/zero-effort-icon-dark.png'} 
-              alt="Zero Effort" 
+              src={theme === 'dark' ? '/hanap-icon-white.png' : '/hanap-icon-dark.png'} 
+              alt="HANAP" 
               style={{ 
                 width: '100px', 
                 height: '100px',
@@ -42,7 +42,7 @@ export default function Landing({ portalType, badge, title, description, buttonT
               }} 
             />
             <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text1)' }}>
-              <span style={{ fontWeight: 900 }}>Zero</span> Effort
+              HANAP
             </span>
           </div>
         ) : (

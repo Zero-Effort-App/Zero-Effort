@@ -646,7 +646,7 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-              }}>Zero Effort</span>
+              }}>HANAP</span>
             </div>
           </div>
 
