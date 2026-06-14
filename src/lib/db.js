@@ -52,7 +52,7 @@ export async function getCompanyProfile(companyId) {
 
 // ── JOBS ──
 export async function getJobs(activeOnly = false) {
-  let query = supabase.from('jobs').select('id, title, salary, department, type, status, companies(id, name, logo_url, logo_initials, color)').order('posted_at', { ascending: false });
+  let query = supabase.from('jobs').select('id, title, salary, department, type, status, description, requirements, company_id, companies(id, name, logo_url, logo_initials, color)').order('posted_at', { ascending: false });
   if (activeOnly) query = query.eq('status', 'active');
   const { data, error } = await query;
   if (error) throw error;
