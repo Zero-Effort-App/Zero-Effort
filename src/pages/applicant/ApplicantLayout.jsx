@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useOutletContext, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -7,8 +7,10 @@ import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import KimoelChatbot from '../../components/KimoelChatbot';
 import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
-import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { subscribeToPush } from '../../lib/pushNotifications';
+
+// Agora's SDK is ~1.5 MB; load it only when a call actually starts (keeps first load light on mobile data).
+const AgoraVideoCall = lazy(() => import('../../components/AgoraVideoCall'));
 
 export default function ApplicantLayout() {
   const { profile, checkSession, user } = useAuth();
@@ -212,12 +214,14 @@ export default function ApplicantLayout() {
       )}
 
       {activeCall && !incomingCall && (
-        <AgoraVideoCall
-          channelName={activeCall.channelName}
-          userRole="applicant"
-          user={user}
-          onClose={() => setActiveCall(null)}
-        />
+        <Suspense fallback={null}>
+          <AgoraVideoCall
+            channelName={activeCall.channelName}
+            userRole="applicant"
+            user={user}
+            onClose={() => setActiveCall(null)}
+          />
+        </Suspense>
       )}
       
       <Outlet context={{ profile }} />

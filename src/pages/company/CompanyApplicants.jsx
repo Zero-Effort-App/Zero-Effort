@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { getCompanyJobs, getCompanyApplications, getCompanyActivityLog, formatTime, formatDate, updateApplicationStatus, getLatestMeetingDetails, updateMeetingStatus } from '../../lib/db';
 import { CheckCircle, Clock, Calendar, FileText, FolderOpen, Mail, X, User, Briefcase, Phone, MessageCircle, Send, ChevronLeft, Video, ExternalLink } from 'lucide-react';
 import CompanyLogo from '../../components/CompanyLogo';
 import Modal from '../../components/Modal';
-import AgoraVideoCall from '../../components/AgoraVideoCall';
+
+// Agora's SDK is ~1.5 MB; load it only when a call actually starts (keeps first load light on mobile data).
+const AgoraVideoCall = lazy(() => import('../../components/AgoraVideoCall'));
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -911,12 +913,14 @@ export default function CompanyApplicants() {
       )}
 
       {activeCall && (
-        <AgoraVideoCall
-          channelName={activeCall.channelName}
-          userRole={activeCall.userRole}
-          user={user}
-          onClose={() => setActiveCall(null)}
-        />
+        <Suspense fallback={null}>
+          <AgoraVideoCall
+            channelName={activeCall.channelName}
+            userRole={activeCall.userRole}
+            user={user}
+            onClose={() => setActiveCall(null)}
+          />
+        </Suspense>
       )}
     </div>
   );
