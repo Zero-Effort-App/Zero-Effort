@@ -7,7 +7,7 @@
 //   - icons / manifest / misc  -> stale-while-revalidate : instant from cache, refreshed in bg.
 //   - Cross-origin (Supabase, API server, Agora, Groq, fonts) -> NOT intercepted (network only).
 // Bump VERSION whenever this file changes so old caches are purged on activate.
-const VERSION = 'v6';
+const VERSION = 'v7';
 const STATIC_CACHE = `hanap-static-${VERSION}`;
 const SHELL_CACHE = `hanap-shell-${VERSION}`;
 
@@ -123,21 +123,32 @@ self.addEventListener('push', function (event) {
     data = { title: 'HANAP', body: event.data ? event.data.text() : 'You have a new notification' };
   }
 
+  const isCall = data.notificationType === 'call';
   const options = {
     body: data.body || 'You have a new notification',
     icon: '/hanap-icon-192.png',
     badge: '/hanap-icon-192.png',
-    tag: data.tag || 'notification',
-    requireInteraction: data.requireInteraction || false,
+    tag: data.tag || (isCall ? 'incoming-call' : 'notification'),
+    // Keep an incoming call on screen until the user acts on it.
+    requireInteraction: isCall ? true : (data.requireInteraction || false),
     data: {
       interviewId: data.interviewId,
       applicantId: data.applicantId,
       companyId: data.companyId,
       notificationType: data.notificationType,
+      channel_name: data.channel_name,
+      caller: data.caller,
       url: data.url || '/',
     },
-    vibrate: [200, 100, 200],
+    vibrate: isCall ? [300, 150, 300, 150, 300] : [200, 100, 200],
   };
+  // Accept/Decline buttons (Android; iOS Safari ignores actions and just opens on tap).
+  if (isCall) {
+    options.actions = [
+      { action: 'accept', title: '✅ Accept' },
+      { action: 'decline', title: '✕ Decline' },
+    ];
+  }
   if (data.image) options.image = data.image;
 
   event.waitUntil(self.registration.showNotification(data.title || 'HANAP', options));
@@ -145,16 +156,29 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  const urlToOpen = (event.notification.data && event.notification.data.url) || '/';
+  // "Decline" just dismisses the notification.
+  if (event.action === 'decline') return;
+
+  const d = event.notification.data || {};
+  const urlToOpen = d.url || '/';
+  const isCall = d.notificationType === 'call' && d.channel_name;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+      // If the app is already open, focus it and tell it about the call (no reload needed).
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+        if (client.url.includes('/applicant') && 'focus' in client) {
+          client.focus();
+          if (isCall) {
+            client.postMessage({ type: 'incoming-call', channel: d.channel_name, caller: d.caller });
+          } else if ('navigate' in client && client.url !== urlToOpen) {
+            client.navigate(urlToOpen);
+          }
+          return;
         }
       }
+      // Otherwise open a fresh window at the call URL (the app reads ?call=… on load).
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }

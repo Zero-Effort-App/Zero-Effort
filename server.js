@@ -585,7 +585,7 @@ app.post('/api/push/send', requireUserOrInternal, sendLimiter, async (req, res) 
     return res.status(500).json({ error: 'Database not available' });
   }
   
-  const { user_id, user_type, title, body, url } = req.body;
+  const { user_id, user_type, title, body, url, channel_name, caller, notificationType } = req.body;
   try {
     const { data, error } = await supabaseAdmin
       .from('push_subscriptions')
@@ -597,7 +597,8 @@ app.post('/api/push/send', requireUserOrInternal, sendLimiter, async (req, res) 
 
     await webpush.sendNotification(
       data.subscription,
-      JSON.stringify({ title, body, url })
+      // Forward the optional call fields so a tapped notification can open the right call.
+      JSON.stringify({ title, body, url, channel_name, caller, notificationType })
     );
     res.json({ success: true });
   } catch (err) {

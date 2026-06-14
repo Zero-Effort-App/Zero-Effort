@@ -161,6 +161,50 @@ export default function ApplicantLayout() {
     };
   }, [user?.id]);
 
+  // Open the ringing modal for a specific call when the applicant taps a push notification.
+  // This works from the background (where the realtime websocket above is suspended) by
+  // reading the call from the notification: either the ?call= URL param (app was closed)
+  // or a message the service worker posts (app was already open).
+  useEffect(() => {
+    if (!user?.id) return;
+
+    async function openCallByChannel(channel, from) {
+      if (!channel) return;
+      const { data: call } = await supabase
+        .from('call_sessions')
+        .select('id, channel_name, status')
+        .eq('channel_name', channel)
+        .eq('applicant_id', user.id)
+        .eq('status', 'ringing')
+        .maybeSingle();
+      if (call) {
+        setIncomingCall({
+          interviewId: call.id,
+          channelName: call.channel_name,
+          hrName: 'HR Representative',
+          companyName: from || 'Company',
+        });
+      }
+    }
+
+    // App was closed: opened fresh at /applicant/home?call=<channel>&from=<name>
+    const params = new URLSearchParams(window.location.search);
+    const callChannel = params.get('call');
+    if (callChannel) {
+      openCallByChannel(callChannel, params.get('from'));
+      window.history.replaceState({}, '', window.location.pathname); // avoid re-popping on refresh
+    }
+
+    // App was already open: the service worker forwards the tapped call.
+    const onSwMessage = (event) => {
+      if (event.data && event.data.type === 'incoming-call') {
+        openCallByChannel(event.data.channel, event.data.caller);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', onSwMessage);
+    return () => navigator.serviceWorker?.removeEventListener('message', onSwMessage);
+  }, [user?.id]);
+
   // Call handlers
   const handleAcceptCall = () => {
     setActiveCall(incomingCall);

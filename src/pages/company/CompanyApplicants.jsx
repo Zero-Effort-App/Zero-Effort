@@ -557,8 +557,12 @@ export default function CompanyApplicants() {
                           user_id: selectedApp.applicant_id,
                           user_type: 'applicant',
                           title: `📹 Incoming Video Call from ${company.name}`,
-                          body: 'Tap to open the app and join the call now.',
-                          url: '/applicant'
+                          body: 'Tap to open the app and join the call.',
+                          // Carry the call so a tapped notification opens straight into it.
+                          url: `/applicant/home?call=${encodeURIComponent(data.channel_name)}&from=${encodeURIComponent(company.name)}`,
+                          channel_name: data.channel_name,
+                          caller: company.name,
+                          notificationType: 'call'
                         })
                       });
                     } catch (pushErr) {
