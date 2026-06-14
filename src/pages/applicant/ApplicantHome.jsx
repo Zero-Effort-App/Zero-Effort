@@ -191,7 +191,6 @@ export default function ApplicantHome() {
           <button className="btn-ghost" onClick={() => navigate('/applicant/companies')}>Explore companies</button>
         </div>
       </div>
-      </div>
 
       <div className="stat-row stagger">
         <div className="scard" onClick={() => navigate('/applicant/jobs')} style={{ cursor: 'pointer' }}>
@@ -636,6 +635,7 @@ export default function ApplicantHome() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
