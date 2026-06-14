@@ -6,6 +6,74 @@ import { supabase } from '../lib/supabase'
 import { authHeaders } from '../lib/apiAuth'
 import { Bot, MessageCircle, X, Send } from 'lucide-react'
 
+// --- Deterministic job search ------------------------------------------------
+// Scales past what fits in an LLM prompt: instead of sending every posting, we
+// filter by the user's query across title/department/description/requirements
+// and hand Kimoel only the relevant matches.
+const JOB_SEARCH_STOPWORDS = new Set([
+  'a','an','the','for','of','to','in','on','is','are','am','i','me','my','we','you','do','does',
+  'any','some','there','here','jobs','job','position','positions','role','roles','work','working',
+  'hiring','available','looking','look','want','wants','need','needs','find','show','search','about',
+  'can','could','with','at','as','or','and','please','hi','hello','hey','what','which','who','that',
+])
+
+// Map short forms / fields to the words that actually appear in postings.
+const JOB_SEARCH_SYNONYMS = {
+  cpe: ['computer', 'engineering'], ce: ['computer', 'engineering'],
+  it: ['information', 'technology'], ict: ['information', 'communications', 'technology'],
+  cs: ['computer', 'science'], dev: ['developer'], programmer: ['developer'],
+  programming: ['developer', 'software'], hr: ['human', 'resources'],
+  qa: ['quality', 'assurance'], ui: ['design', 'designer', 'frontend'], ux: ['design', 'designer'],
+  admin: ['administrative', 'administration'], accountant: ['accounting'], nurse: ['nursing'],
+}
+
+const jobSearchNormalize = (s) =>
+  (s ?? '').toString().toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+
+const jobSearchSingular = (t) => (t.length > 3 && t.endsWith('s') ? t.slice(0, -1) : t)
+
+function buildQueryTerms(message) {
+  const words = jobSearchNormalize(message).split(' ').filter((w) => w && !JOB_SEARCH_STOPWORDS.has(w))
+  const terms = new Set()
+  words.forEach((w) => {
+    terms.add(w)
+    terms.add(jobSearchSingular(w))
+    ;(JOB_SEARCH_SYNONYMS[w] || JOB_SEARCH_SYNONYMS[jobSearchSingular(w)] || []).forEach((s) => terms.add(s))
+  })
+  // consecutive word pairs (e.g. "computer engineer") match more strongly
+  for (let i = 0; i < words.length - 1; i++) {
+    terms.add(`${words[i]} ${words[i + 1]}`)
+    terms.add(`${jobSearchSingular(words[i])} ${jobSearchSingular(words[i + 1])}`)
+  }
+  return [...terms].filter(Boolean)
+}
+
+const jobSearchHaystack = (j) =>
+  jobSearchNormalize(
+    [
+      j.title, j.department, j.type, j.description,
+      ...(Array.isArray(j.requirements) ? j.requirements : []),
+      j.companies?.name, j.companies?.industry,
+    ].join(' ')
+  )
+
+// Jobs relevant to the query, highest-scoring first. Empty array if no query terms.
+function searchJobs(message, jobs, limit = 10) {
+  const terms = buildQueryTerms(message)
+  if (!terms.length) return []
+  return jobs
+    .map((j) => {
+      const hay = jobSearchHaystack(j)
+      let score = 0
+      terms.forEach((t) => { if (hay.includes(t)) score += t.includes(' ') ? 3 : 1 })
+      return { job: j, score }
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((x) => x.job)
+}
+
 export default function KimoelChatbot() {
   const { theme } = useTheme()
   const { user } = useAuth()
@@ -56,13 +124,13 @@ export default function KimoelChatbot() {
   }
 
   async function fetchJobsAndCompanies() {
-    return await fetchWithCache('zelo_jobs_companies_cache', async () => {
-      const [jobs, companies] = await Promise.all([
+    return await fetchWithCache('zelo_jobs_companies_cache_v4', async () => {
+      const [jobsRes, companiesRes] = await Promise.all([
         supabase
           .from('jobs')
-          .select('title, type, department, salary, companies(name, industry)')
+          .select('title, type, department, salary, description, requirements, companies(name, industry)')
           .eq('status', 'active')
-          .limit(20),
+          .limit(200),
 
         supabase
           .from('companies')
@@ -71,7 +139,9 @@ export default function KimoelChatbot() {
           .limit(20)
       ]);
 
-      return { jobs: jobs || [], companies: companies || [] };
+      // Supabase returns { data, error } — unwrap .data (this was the bug: the chatbot
+      // was keeping the whole response object, so it never actually had any jobs).
+      return { jobs: jobsRes.data || [], companies: companiesRes.data || [] };
     });
   }
 
@@ -140,8 +210,14 @@ export default function KimoelChatbot() {
           }).join('\n')
         : 'No applications yet - I can help you find and apply!'
 
-      const jobsList = jobs.length > 0
-        ? jobs.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary} — Requirements: ${j.requirements?.join(', ')}`).join('\n')
+      // Send Kimoel only the postings relevant to this question so it scales past the prompt size limit.
+      const relevantJobs = searchJobs(userMessage, jobs, 10)
+      const jobsForPrompt = relevantJobs.length ? relevantJobs : jobs.slice(0, 15)
+      const jobsHeader = relevantJobs.length
+        ? `JOBS MATCHING THE USER'S QUESTION (searched across title, department, description, and requirements — present these as the relevant openings):`
+        : `SAMPLE OF AVAILABLE JOBS (no direct match to this question; ${jobs.length} active job(s) total):`
+      const jobsList = jobsForPrompt.length > 0
+        ? jobsForPrompt.map(j => `- ${j.title} at ${j.companies?.name} (${j.type}, ${j.department}) — Salary: ₱${j.salary}${j.requirements?.length ? ` — Requirements: ${j.requirements.join(', ')}` : ''}${j.description ? ` — Description: ${String(j.description).slice(0, 500)}` : ''}`).join('\n')
         : 'No jobs available'
 
       const companiesList = companies.length > 0
@@ -158,11 +234,18 @@ USER CONTEXT:
 APPLICATION STATUS:
 ${applicationsList}
 
-AVAILABLE JOBS:
+${jobsHeader}
 ${jobsList}
 
 AVAILABLE COMPANIES:
 ${companiesList}
+
+JOB MATCHING RULES (important):
+- When the user asks about jobs for a field, role, course, or degree (e.g. "computer engineer", "computer engineering", "CpE", "nursing", "accounting"), scan EVERY job's title, department, description, AND requirements — not just the title.
+- A job counts as a match if the field, or a close synonym/related field, appears ANYWHERE in those fields — even if it only appears in the requirements or as an accepted degree/course. Example: a "Full Stack Developer" whose requirements accept Computer Engineering graduates IS a valid result for someone asking about computer engineer jobs.
+- Treat these as equivalent: "computer engineer" = "computer engineering" = "CpE"; "IT" = "information technology"; "dev" = "developer"; etc.
+- When you list a match, give the job title, company, and a short reason it fits (e.g. "accepts Computer Engineering graduates").
+- Only say there are no matching jobs if truly nothing in any job's details relates to the query.
 
 🎯 I CAN HELP YOU WITH:
 
@@ -206,13 +289,17 @@ BEHAVIOR GUIDELINES:
         body: JSON.stringify({ system: systemPrompt, messages: conversationHistory })
       })
 
-      if (!response.ok) throw new Error('Failed to get response')
+      if (!response.ok) {
+        const errBody = await response.text().catch(() => '')
+        throw new Error(`Chat API ${response.status} ${response.statusText} — ${errBody}`)
+      }
       const data = await response.json()
 
       const botReply = data.content?.[0]?.text || "Sorry, I couldn't process that. Please try again!"
 
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }])
     } catch (error) {
+      console.error('🟣 Kimoel chat error:', error)
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again!' }])
     } finally {
       setLoading(false)
