@@ -139,16 +139,22 @@ const sendLimiter = rateLimit({
   skip: (req) => !!process.env.INTERNAL_API_SECRET
     && req.headers['x-internal-secret'] === process.env.INTERNAL_API_SECRET
 })
+// Signup endpoints stay public (no JWT yet), so cap per-IP to curb account-spam abuse.
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 15,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many sign-up attempts, please try again later.' }
+})
 // ---- end auth middleware ----
 
 // Create any auth account (admin or company)
-app.post('/api/create-account', async (req, res) => {
+app.post('/api/create-account', signupLimiter, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
   
   const { email, password, metadata, skipEmailConfirmation } = req.body
-  console.log('Create account request:', { email, passwordLength: password?.length, metadata, skipEmailConfirmation })
+  console.log('Create account request received')
   
   // Backend password validation
   if (!password || password.length < 8) {
@@ -245,7 +251,7 @@ app.post('/api/get-user-by-email', requireAdmin, async (req, res) => {
 })
 
 // Confirm company account email
-app.post('/api/confirm-company-account', async (req, res) => {
+app.post('/api/confirm-company-account', signupLimiter, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
@@ -270,7 +276,7 @@ app.post('/api/confirm-company-account', async (req, res) => {
       return res.status(400).json({ error: error.message })
     }
     
-    console.log(`Confirmed company account: ${email}`)
+    console.log('Confirmed company account')
     return res.json({ success: true, message: 'Account confirmed successfully' })
   } catch (err) {
     console.error('Confirm account error:', err)
@@ -285,7 +291,7 @@ app.post('/api/reset-password', requireAdmin, async (req, res) => {
   }
   
   const { email, newPassword } = req.body
-  console.log('Reset password request:', { email, passwordLength: newPassword?.length })
+  console.log('Reset password request received')
   
   // Backend password validation for reset
   if (!newPassword || newPassword.length < 8) {
@@ -333,7 +339,7 @@ app.post('/api/reset-password', requireAdmin, async (req, res) => {
     
     const user = users.users.find(u => u.email === email)
     if (!user) {
-      console.log('User not found for email:', email)
+      console.log('User not found for reset request')
       return res.status(404).json({ error: 'User not found' })
     }
 
@@ -358,7 +364,7 @@ app.post('/api/reset-password', requireAdmin, async (req, res) => {
       // Don't fail the request, just log the error
     }
 
-    console.log('Password reset successfully for user:', user.id)
+    console.log('Password reset successfully')
     return res.json({ success: true })
   } catch (err) {
     console.error('Server error in reset password:', err)

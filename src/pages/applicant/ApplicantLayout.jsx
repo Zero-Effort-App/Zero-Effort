@@ -49,7 +49,7 @@ export default function ApplicantLayout() {
         return;
       }
       
-      console.log('🔐 ApplicantLayout - Supabase session exists for:', session.user.email);
+      console.log('🔐 ApplicantLayout - Supabase session exists');
       
       // FALLBACK 2: If AuthContext profile not loaded yet, wait for it
       if (!profile) {

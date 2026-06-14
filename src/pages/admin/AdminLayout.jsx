@@ -25,7 +25,7 @@ export default function AdminLayout() {
           return;
         }
         
-        console.log('🔐 AdminLayout - Supabase session exists for:', session.user.email);
+        console.log('🔐 AdminLayout - Supabase session exists');
         
         // FALLBACK 2: If AuthContext profile not loaded yet, wait for it
         if (!profile) {
