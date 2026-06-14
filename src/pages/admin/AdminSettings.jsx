@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAdminUsers, addAdminUser, removeAdminUser, addActivityLog } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
+import { authHeaders } from '../../lib/apiAuth';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal';
@@ -100,7 +101,7 @@ async function handleCreateAdmin(formData) {
   try {
     const userResponse = await fetch('https://zero-effort-server.onrender.com/api/get-user-by-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ email: admin.email })
     });
     // Delete from admin_users table

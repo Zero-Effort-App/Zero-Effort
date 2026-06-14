@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { MessageCircle, Send, Building2, ChevronLeft, Calendar, Clock, Video, CheckCircle, X, Filter } from 'lucide-react'
 import { sendPushNotification } from '../../lib/pushNotifications';
+import { authHeaders } from '../../lib/apiAuth';
 import JitsiMeetModal from '../../components/VideoCall/JitsiMeetModal';
 import styles from '../../styles/ApplicantInbox.module.css';
 
@@ -322,7 +323,7 @@ export default function ApplicantInbox() {
         
         await fetch('https://zero-effort-server.onrender.com/api/push/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await authHeaders(),
           body: JSON.stringify({
             user_id: selectedConvo.company.id,
             user_type: 'company',

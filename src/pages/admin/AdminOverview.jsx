@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCompanies, getJobs, getEvents, getActivityLog, getLiveStats, formatTime } from '../../lib/db';
 import { supabase } from '../../lib/supabase';
+import { authHeaders } from '../../lib/apiAuth';
 import { useToast } from '../../contexts/ToastContext';
 import CompanyLogo from '../../components/CompanyLogo';
 import { Calendar } from 'lucide-react';
@@ -83,7 +84,7 @@ export default function AdminOverview() {
     try {
       const response = await fetch('https://zero-effort-server.onrender.com/api/reset-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({ email: selectedRequest.email, newPassword })
       });
       
