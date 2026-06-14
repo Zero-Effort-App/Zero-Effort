@@ -7,7 +7,6 @@ import PortalNav from '../../components/PortalNav';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import KimoelChatbot from '../../components/KimoelChatbot';
 import IncomingCallModal from '../../components/VideoCall/IncomingCallModal';
-import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { subscribeToPush } from '../../lib/pushNotifications';
 import { getCompanyProfile } from '../../lib/db';
 

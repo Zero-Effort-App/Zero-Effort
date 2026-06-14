@@ -138,14 +138,7 @@ function AppWithServices() {
     console.log('APP LOADED - debug_mode:', localStorage.getItem('debug_mode'));
   }, []);
 
-  // Register Service Worker on component mount
-  React.useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered'))
-        .catch(err => console.log('Service Worker registration failed:', err));
-    }
-  }, []);
+  // Service worker is registered once in main.jsx (with auto-update handling).
 
   return (
     <>

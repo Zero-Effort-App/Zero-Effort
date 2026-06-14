@@ -121,16 +121,37 @@ console.warn = function(...args) {
 const debugMode = localStorage.getItem('debug_mode') === 'true';
 console.log('Debug mode:', debugMode ? 'ENABLED' : 'DISABLED');
 
-// Register service worker for PWA functionality
+// Register service worker for PWA functionality, with automatic update-on-deploy.
+// When a new SW is found while one already controls the page, we tell it to activate
+// immediately and reload once — so users always run the latest build without ever
+// clearing their cache. Brand-new visitors (no prior controller) are not reloaded.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
-        console.log('SW registered:', registration.scope);
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            // A new SW finished installing while an old one still controls the page => update.
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              installing.postMessage('SKIP_WAITING');
+            }
+          });
+        });
       })
       .catch(error => {
         console.error('SW registration failed:', error);
       });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing || !hadController) return; // skip the first-install claim
+      refreshing = true;
+      window.location.reload();
+    });
   });
 }
 
