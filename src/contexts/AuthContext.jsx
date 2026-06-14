@@ -143,9 +143,6 @@ export function AuthProvider({ children }) {
   };
 
   const companyLogin = async (email, password) => {
-    console.log(' attempting login for:', email);
-    console.log(' password length:', password?.length);
-    
     // First, try to confirm the account via server if needed
     let { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
@@ -242,8 +239,8 @@ export function AuthProvider({ children }) {
 
   const sendRegistrationOTP = async ({ email, password, firstName, lastName, phone }) => {
     try {
-      console.log('📧 sendRegistrationOTP called with:', { email, passwordLength: password.length, firstName, lastName, phone });
-      
+      console.log('📧 sendRegistrationOTP called');
+
       // Create account directly (no CAPTCHA needed)
       const accountResponse = await fetch('https://zero-effort-server.onrender.com/api/create-account', {
         method: 'POST',

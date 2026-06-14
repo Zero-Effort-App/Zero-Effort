@@ -130,16 +130,7 @@ export default function ApplicantLogin() {
     
     try {
       console.log('🚀 Starting registration...');
-      console.log('📧 Email:', email);
-      console.log('🔒 Password length:', password.length);
-      console.log('🔒 Password contains uppercase:', /[A-Z]/.test(password));
-      console.log('🔒 Password contains lowercase:', /[a-z]/.test(password));
-      console.log('🔒 Password contains number:', /[0-9]/.test(password));
-      console.log('🔒 Password contains special:', /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password));
-      console.log('👤 First name:', firstName);
-      console.log('👤 Last name:', lastName);
-      console.log('📱 Phone:', phone);
-      
+
       // Show immediate feedback
       showToast('Creating your account...', 'info')
       
