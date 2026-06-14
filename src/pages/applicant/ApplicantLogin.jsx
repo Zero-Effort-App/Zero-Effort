@@ -222,7 +222,7 @@ export default function ApplicantLogin() {
           setError('Failed to send reset link. Please try again.');
         }
       } else {
-        showToast('Password reset link sent! Check your email at techpark.jobs.ph@gmail.com', 'success');
+        showToast(`Password reset link sent! Check the inbox for ${forgotEmail}.`, 'success');
         setForgotEmail('');
         setStep('choose');
       }

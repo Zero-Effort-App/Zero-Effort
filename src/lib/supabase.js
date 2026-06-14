@@ -8,7 +8,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     storage: window.localStorage,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    // Must be true so the recovery token in the password-reset email link is
+    // read from the URL and a session is established on /applicant/reset-password.
+    detectSessionInUrl: true,
   },
   realtime: {
     params: {
