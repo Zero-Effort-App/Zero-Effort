@@ -1,3 +1,5 @@
+import { authHeaders } from './apiAuth';
+
 const VAPID_PUBLIC_KEY = 'BMh7CsfzO1Ild-3Piq2rlIWzB-TV8B5z7rwrxsA-Bue1arrlcseRe_LU3zTqcS_rWFVUcSEC5DGhITktDTiMB9I';
 
 function urlBase64ToUint8Array(base64String) {
@@ -67,7 +69,7 @@ export async function sendPushNotification(userId, userType, title, body, url) {
   try {
     const response = await fetch('https://zero-effort-server.onrender.com/api/push/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ user_id: userId, user_type: userType, title, body, url })
     });
     return response.ok;

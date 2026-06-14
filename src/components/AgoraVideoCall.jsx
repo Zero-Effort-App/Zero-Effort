@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Clock, Wifi } from 'lucide-react';
+import { authHeaders } from '../lib/apiAuth';
 
 const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
   // Sanitize channel name at the TOP of component - FIRST LINE
@@ -95,7 +96,7 @@ const AgoraVideoCall = ({ channelName, userRole, user, onClose }) => {
 
       const response = await fetch(`${backendUrl}/api/agora/token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({ channelName: sanitizedChannel, uid: 0, role: userRole })
       });
       

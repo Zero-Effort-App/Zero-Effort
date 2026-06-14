@@ -6,6 +6,7 @@ import busboy from 'busboy';
 import sharp from 'sharp';
 import webpush from 'web-push';
 import cron from 'node-cron';
+import rateLimit from 'express-rate-limit';
 
 // Load environment variables first
 dotenv.config()
@@ -21,7 +22,23 @@ console.log('SUPABASE_URL loaded:', process.env.SUPABASE_URL ? 'YES' : 'NO')
 console.log('Service role key loaded:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'YES' : 'NO - CHECK .env FILE')
 
 const app = express()
-app.use(cors())
+// Render sits behind one proxy; trust it so rate-limit keys on the real client IP.
+app.set('trust proxy', 1)
+
+// Lock CORS to known origins (comma-separated ALLOWED_ORIGINS). Falls back to
+// open CORS only when none are configured (keeps local dev working).
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',').map(o => o.trim()).filter(Boolean)
+if (!allowedOrigins.length) {
+  console.warn('⚠️ CORS is open to all origins — set ALLOWED_ORIGINS to lock it down')
+}
+app.use(cors(allowedOrigins.length ? {
+  origin(origin, cb) {
+    // allow same-origin / curl (no Origin header) and any whitelisted origin
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true)
+    return cb(new Error('Not allowed by CORS'))
+  }
+} : undefined))
 app.use(express.json())
 
 // Initialize Supabase admin client with error handling
@@ -55,6 +72,74 @@ try {
 } catch (error) {
   console.error('❌ Failed to initialize web-push:', error.message);
 }
+
+// ---- Auth middleware (C3/C4 hardening) ----
+// Resolve the Supabase user from a Bearer token, then confirm they're an admin.
+async function getAdminFromReq(req) {
+  if (!supabaseAdmin) return null
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token) return null
+  const { data: { user } = {}, error } = await supabaseAdmin.auth.getUser(token)
+  if (error || !user) return null
+  const { data: admin } = await supabaseAdmin
+    .from('admin_users')
+    .select('id')
+    .eq('email', user.email)
+    .maybeSingle()
+  return admin ? user : null
+}
+
+async function requireAdmin(req, res, next) {
+  if (!supabaseAdmin) return res.status(500).json({ error: 'Database not available' })
+  const admin = await getAdminFromReq(req)
+  if (!admin) return res.status(403).json({ error: 'Admin access required' })
+  req.adminUser = admin
+  next()
+}
+
+// Require any authenticated Supabase user (resource-abuse endpoints).
+async function requireUser(req, res, next) {
+  if (!supabaseAdmin) return res.status(500).json({ error: 'Database not available' })
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token) return res.status(401).json({ error: 'Authentication required' })
+  const { data: { user } = {}, error } = await supabaseAdmin.auth.getUser(token)
+  if (error || !user) return res.status(401).json({ error: 'Authentication required' })
+  req.authUser = user
+  next()
+}
+
+// Accept a valid user JWT OR a trusted server-to-server secret (used by the cron
+// reminders below that POST to /api/push/send from inside this process).
+function requireUserOrInternal(req, res, next) {
+  const internal = req.headers['x-internal-secret']
+  if (process.env.INTERNAL_API_SECRET && internal === process.env.INTERNAL_API_SECRET) {
+    req.internalCall = true
+    return next()
+  }
+  return requireUser(req, res, next)
+}
+
+// Per-IP rate limiters to cap abuse / cost on the formerly-open endpoints.
+const chatLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, max: 30,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' }
+})
+const tokenLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, max: 60,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' }
+})
+const sendLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, max: 60,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' },
+  skip: (req) => !!process.env.INTERNAL_API_SECRET
+    && req.headers['x-internal-secret'] === process.env.INTERNAL_API_SECRET
+})
+// ---- end auth middleware ----
 
 // Create any auth account (admin or company)
 app.post('/api/create-account', async (req, res) => {
@@ -124,7 +209,7 @@ app.post('/api/create-account', async (req, res) => {
 })
 
 // Delete auth account
-app.post('/api/delete-account', async (req, res) => {
+app.post('/api/delete-account', requireAdmin, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
@@ -140,7 +225,7 @@ app.post('/api/delete-account', async (req, res) => {
 })
 
 // Get user by email (for admin deletion)
-app.post('/api/get-user-by-email', async (req, res) => {
+app.post('/api/get-user-by-email', requireAdmin, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
@@ -194,7 +279,7 @@ app.post('/api/confirm-company-account', async (req, res) => {
 })
 
 // Reset password endpoint
-app.post('/api/reset-password', async (req, res) => {
+app.post('/api/reset-password', requireAdmin, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
@@ -224,6 +309,21 @@ app.post('/api/reset-password', async (req, res) => {
   }
   
   try {
+    // H1: only allow a reset that was actually requested (a pending row must exist).
+    const { data: pendingReq, error: reqError } = await supabaseAdmin
+      .from('password_reset_requests')
+      .select('id')
+      .eq('email', email)
+      .eq('status', 'pending')
+      .maybeSingle()
+    if (reqError) {
+      console.error('Reset request lookup error:', reqError)
+      return res.status(500).json({ error: 'Could not verify reset request' })
+    }
+    if (!pendingReq) {
+      return res.status(400).json({ error: 'No pending reset request for this email' })
+    }
+
     // Find user by email
     const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers()
     if (listError) {
@@ -266,7 +366,7 @@ app.post('/api/reset-password', async (req, res) => {
   }
 })
 
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', requireUser, chatLimiter, async (req, res) => {
   try {
     const { messages, system } = req.body
     console.log('=== CHAT API CALLED ===')
@@ -474,7 +574,7 @@ app.post('/api/push/subscribe', async (req, res) => {
 });
 
 // Send push notification
-app.post('/api/push/send', async (req, res) => {
+app.post('/api/push/send', requireUserOrInternal, sendLimiter, async (req, res) => {
   if (!supabaseAdmin) {
     return res.status(500).json({ error: 'Database not available' });
   }
@@ -514,7 +614,7 @@ app.use('/api/quota', quotaRoutes);
 app.use('/api/google-meet', googleMeetRoutes);
 
 // Simple Agora token endpoint (no auth required for demo)
-app.post('/api/agora/token', async (req, res) => {
+app.post('/api/agora/token', requireUser, tokenLimiter, async (req, res) => {
   try {
     const { channelName, uid, role } = req.body;
     
@@ -595,7 +695,7 @@ cron.schedule('0 * * * *', async () => {
       try {
         await fetch('https://zero-effort-server.onrender.com/api/push/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
           body: JSON.stringify({
             user_id: apt.applicant_id,
             user_type: 'applicant',
@@ -629,7 +729,7 @@ cron.schedule('0 * * * *', async () => {
         if (aptDateTime >= in1Hour && aptDateTime <= in1HourPlus5) {
           await fetch('https://zero-effort-server.onrender.com/api/push/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
             body: JSON.stringify({
               user_id: apt.applicant_id,
               user_type: 'applicant',

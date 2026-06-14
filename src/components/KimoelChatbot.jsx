@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { authHeaders } from '../lib/apiAuth'
 import { Bot, MessageCircle, X, Send } from 'lucide-react'
 
 export default function KimoelChatbot() {
@@ -201,7 +202,7 @@ BEHAVIOR GUIDELINES:
 
       const response = await fetch('https://zero-effort-server.onrender.com/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({ system: systemPrompt, messages: conversationHistory })
       })
 

@@ -8,6 +8,7 @@ import AgoraVideoCall from '../../components/AgoraVideoCall';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { authHeaders } from '../../lib/apiAuth';
 
 // Skeleton card component
 function SkeletonCard() {
@@ -215,7 +216,7 @@ export default function CompanyApplicants() {
         
         await fetch('https://zero-effort-server.onrender.com/api/push/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await authHeaders(),
           body: JSON.stringify({
             user_id: selectedApp.applicant_id,
             user_type: 'applicant',
@@ -549,7 +550,7 @@ export default function CompanyApplicants() {
                       
                       await fetch('https://zero-effort-server.onrender.com/api/push/send', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: await authHeaders(),
                         body: JSON.stringify({
                           user_id: selectedApp.applicant_id,
                           user_type: 'applicant',
