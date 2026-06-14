@@ -788,7 +788,10 @@ export default function PortalNav({ portalTag, links, userInitials, userName, co
                     {/* My Profile */}
                     <button
                       onClick={() => {
-                        const profilePath = location.pathname.includes('/applicant') ? '/applicant/profile' : '/company/profile';
+                        const profilePath =
+                          portalType === 'applicant' ? '/applicant/profile'
+                          : portalType === 'company' ? '/company/profile'
+                          : '/admin/settings';
                         navigate(profilePath);
                         setIsProfileDropdownOpen(false);
                       }}
