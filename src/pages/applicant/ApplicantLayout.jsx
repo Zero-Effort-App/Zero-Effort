@@ -205,8 +205,42 @@ export default function ApplicantLayout() {
     return () => navigator.serviceWorker?.removeEventListener('message', onSwMessage);
   }, [user?.id]);
 
+  // iOS fallback: a tapped push just reopens the PWA and ignores the ?call= URL, so on
+  // startup also ask the database directly for a recent ringing call and pop the modal.
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { data: calls, error } = await supabase
+        .from('call_sessions')
+        .select('id, channel_name, status, created_at')
+        .eq('applicant_id', user.id)
+        .eq('status', 'ringing')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (error || !calls || !calls.length) return;
+      const call = calls[0];
+      // Only ring for calls started in the last 90s (ignore stale rows).
+      const ageMs = Date.now() - new Date(call.created_at).getTime();
+      if (ageMs < 90000) {
+        setIncomingCall((prev) => prev || {
+          interviewId: call.id,
+          channelName: call.channel_name,
+          hrName: 'HR Representative',
+          companyName: 'Company',
+        });
+      }
+    })();
+  }, [user?.id]);
+
   // Call handlers
-  const handleAcceptCall = () => {
+  const handleAcceptCall = async () => {
+    // Mark the call active so reopening the app doesn't re-ring it.
+    if (incomingCall?.interviewId) {
+      await supabase
+        .from('call_sessions')
+        .update({ status: 'active' })
+        .eq('id', incomingCall.interviewId);
+    }
     setActiveCall(incomingCall);
     setIncomingCall(null);
   };
